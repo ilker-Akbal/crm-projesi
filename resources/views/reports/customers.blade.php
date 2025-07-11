@@ -3,7 +3,7 @@
 <section class="content">
  <div class="container-fluid">
   <div class="card card-primary card-outline">
-   <div class="card-header"><h3 class="card-title">Ürün Stok Raporu</h3></div>
+   <div class="card-header"><h3 class="card-title">Müşteri Raporu</h3></div>
 
    <div class="card-body p-0">
     <div class="table-responsive">
@@ -11,21 +11,23 @@
        <thead>
          <tr>
            <th>ID</th>
-           <th>Ürün</th>
-           <th>Stok Miktarı</th>
-           <th>Güncelleme Tarihi</th>
+           <th>Adı</th>
+           <th>Türü</th>
+           <th>Telefon</th>
+           <th>E-posta</th>
          </tr>
        </thead>
        <tbody>
-         @forelse($stocks as $s)
+         @forelse($customers as $c)
            <tr>
-             <td>{{ $s->id }}</td>
-             <td>{{ $s->product?->product_name }}</td>
-             <td>{{ $s->stock_quantity }}</td>
-             <td>{{ $s->update_date }}</td>
+             <td>{{ $c->id }}</td>
+             <td>{{ $c->customer_name }}</td>
+             <td>{{ $c->customer_type }}</td>
+             <td>{{ $c->phone }}</td>
+             <td>{{ $c->email }}</td>
            </tr>
          @empty
-           <tr><td colspan="4" class="text-center p-4">Veri bulunamadı</td></tr>
+           <tr><td colspan="5" class="text-center p-4">Veri bulunamadı</td></tr>
          @endforelse
        </tbody>
      </table>

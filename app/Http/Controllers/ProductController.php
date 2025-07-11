@@ -3,62 +3,36 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+// use App\Models\Product;   // Gerçek veri ekleyince açın
+// use App\Models\Customer;  // 〃
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /** GET /products ─ Liste */
     public function index()
     {
-        //
+        // $products = Product::with('customer')->get();
+        $products = collect();                 // şimdilik boş koleksiyon
+        return view('products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    /** GET /products/create ─ Form */
     public function create()
     {
-        //
+        // $customers = Customer::orderBy('customer_name')->get();
+        $customers = collect();                // şimdilik boş
+        return view('products.create', compact('customers'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    /** POST /products ─ demo */
     public function store(Request $request)
     {
-        //
+        return back()->with('success', 'Demo aşamasında veri kaydedilmiyor.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /* Diğer CRUD metodları ileride doldurulabilir */
+    public function show($id)    {}
+    public function edit($id)    {}
+    public function update(Request $r, $id) {}
+    public function destroy($id) {}
 }

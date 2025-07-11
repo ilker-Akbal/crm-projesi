@@ -3,62 +3,37 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+// use App\Models\CurrentMovement;   // Gerçek veri eklediğinizde açın
+// use App\Models\CurrentCard;
 
 class MovementController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /** GET /movements  */
     public function index()
     {
-        //
+        // $movements = CurrentMovement::with('currentCard.customer')->get();
+        $movements = collect();      // Şimdilik boş
+        return view('movements.index', compact('movements'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    /** GET /movements/create */
     public function create()
     {
-        //
+        // $accounts = CurrentCard::with('customer')->get();
+        $accounts = collect();       // Şimdilik boş
+        return view('movements.create', compact('accounts'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    /** POST /movements  – sadece test amaçlı */
     public function store(Request $request)
     {
-        //
+        // İleride validasyon + kayıt eklersiniz
+        return back()->with('success', 'Demo: hareket kaydedilmedi, yalnızca sayfa yüklendi.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /* Diğer metotlar boş bırakıldı */
+    public function show($id)    {}
+    public function edit($id)    {}
+    public function update(Request $r, $id) {}
+    public function destroy($id) {}
 }

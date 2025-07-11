@@ -6,59 +6,31 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /** GET /users */
     public function index()
     {
-        //
+        // $users = User::all();  // Gerçek model ekleyince açın
+        $users = collect();      // şimdilik boş
+        return view('users.index', compact('users'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    /** GET /users/create */
     public function create()
     {
-        //
+        return view('users.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    /** GET /users/roles */
+    public function roles()
     {
-        //
+        $roles = ['admin', 'manager', 'user']; // örnek roller
+        return view('users.roles', compact('roles'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /* Diğer CRUD metotlarını boş bırakıyoruz */
+    public function store(Request $r) {}
+    public function show(string $id)  {}
+    public function edit(string $id)  {}
+    public function update(Request $r, string $id) {}
+    public function destroy(string $id) {}
 }

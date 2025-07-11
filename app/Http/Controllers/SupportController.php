@@ -3,62 +3,42 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+// use App\Models\SupportRequest;  // Gerçek veriye geçince açarsınız
 
 class SupportController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /** GET /support ─ Liste */
     public function index()
     {
-        //
+        $supports = collect();          // şimdilik boş koleksiyon
+        return view('support.index', compact('supports'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    /** GET /support/create ─ Form */
     public function create()
     {
-        //
+        $customers = collect();         // ileride Customer::all()
+        return view('support.create', compact('customers'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    /** GET /support/pending */
+    public function pending()
     {
-        //
+        $supports = collect();
+        return view('support.pending', compact('supports'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    /** GET /support/resolved */
+    public function resolved()
     {
-        //
+        $supports = collect();
+        return view('support.resolved', compact('supports'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /* Aşağıdaki metodlar şimdilik boş; CRUD’a geçtiğinizde doldurursunuz */
+    public function store(Request $r)   {}
+    public function show($id)          {}
+    public function edit($id)          {}
+    public function update(Request $r,$id) {}
+    public function destroy($id)       {}
 }

@@ -1,60 +1,59 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\OfferController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductStockController;
-use App\Http\Controllers\ProductPriceController;
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\MovementController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SupportController;
-use App\Http\Controllers\ActionController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\{
+    CompanyController, CustomerController, ContactController, OrderController,
+    OfferController, ProductController, ProductStockController, ProductPriceController,
+    AccountController, MovementController, ReportController, SupportController,
+    ActionController, UserController, ReminderController
+};
 
-// Dashboard (Anasayfa)
+/* -------------------------------------------------
+ |  Dashboard (Anasayfa)
+ |-------------------------------------------------*/
 Route::view('/', 'dashboard')->name('dashboard.index');
 
-// Resource Route'lar
-Route::resource('customers', CustomerController::class);
-Route::resource('companies', CompanyController::class);
-Route::resource('contacts', ContactController::class);
-Route::resource('orders', OrderController::class);
-Route::resource('offers', OfferController::class);
-Route::resource('products', ProductController::class);
-Route::resource('product_stocks', ProductStockController::class);
-Route::resource('product_prices', ProductPriceController::class);
-Route::resource('accounts', AccountController::class);
-Route::resource('movements', MovementController::class);
-Route::resource('reports', ReportController::class);
-Route::resource('support', SupportController::class);
-Route::resource('actions', ActionController::class);
-Route::resource('users', UserController::class);
-Route::resource('reminders', ReminderController::class);
+/* -------------------------------------------------
+ |  ÖZEL ROUTE’LAR  (resource’lardan ÖNCE!)
+ |-------------------------------------------------*/
 
-// === Özel Route'lar ===
+/* Support */
+Route::get('support/pending',   [SupportController::class, 'pending' ])->name('support.pending');
+Route::get('support/resolved',  [SupportController::class, 'resolved'])->name('support.resolved');
 
-// Support özel route'ları
-Route::get('support/pending', [SupportController::class, 'pending'])->name('support.pending');
-Route::get('support/resolved', [SupportController::class, 'resolved'])->name('support.resolved');
+/* Reports */
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('sales',                   [ReportController::class, 'sales'               ])->name('sales');
+    Route::get('customers',               [ReportController::class, 'customers'           ])->name('customers');
+    Route::get('product_stock',           [ReportController::class, 'productStock'        ])->name('product_stock');
+    Route::get('current_account_summary', [ReportController::class, 'currentAccountSummary'])->name('account_summary');
+    Route::get('support_request',         [ReportController::class, 'supportRequest'      ])->name('support');
+});
 
-// Reports özel route'ları
-Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
-Route::get('reports/customers', [ReportController::class, 'customers'])->name('reports.customers');
-Route::get('reports/product_stock', [ReportController::class, 'productStock'])->name('reports.product_stock');
-Route::get('reports/current_account_summary', [ReportController::class, 'currentAccountSummary'])->name('reports.account_summary');
-Route::get('reports/support-request', [ReportController::class, 'supportRequest'])->name('reports.support');
-
-// Actions özel route
+/* Actions */
 Route::get('actions/by-customer', [ActionController::class, 'byCustomer'])->name('actions.by-customer');
 
-// Customers detay sayfası (şimdilik parametresiz, daha sonra ID ile yapılabilir)
+/* Customers & Users ekstra sayfalar */
 Route::get('customers/details', [CustomerController::class, 'details'])->name('customers.details');
+Route::get('users/roles',       [UserController::class,    'roles'  ])->name('users.roles');
 
-// Users -> Roles sayfası (şimdilik boş sayfa olabilir)
-Route::get('users/roles', [UserController::class, 'roles'])->name('users.roles');
+/* -------------------------------------------------
+ |  RESOURCE ROUTE’LAR
+ |-------------------------------------------------*/
+Route::resources([
+    'customers'       => CustomerController::class,
+    'companies'       => CompanyController::class,
+    'contacts'        => ContactController::class,
+    'orders'          => OrderController::class,
+    'offers'          => OfferController::class,
+    'products'        => ProductController::class,
+    'product_stocks'  => ProductStockController::class,
+    'product_prices'  => ProductPriceController::class,
+    'accounts'        => AccountController::class,
+    'movements'       => MovementController::class,
+    'reports'         => ReportController::class,   // buradaki “show” rotası artık /reports/{id}
+    'support'         => SupportController::class,
+    'actions'         => ActionController::class,
+    'users'           => UserController::class,
+    'reminders'       => ReminderController::class,
+]);

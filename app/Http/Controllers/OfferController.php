@@ -3,62 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+// use App\Models\Offer;     // İleride gerçek veride açarsınız
+// use App\Models\Customer;
+// use App\Models\Order;
+// use App\Models\Product;
 
 class OfferController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /** GET /offers  – liste */
     public function index()
     {
-        //
+        // $offers = Offer::with('customer')->get();
+        $offers = collect();           // şimdilik boş
+        return view('offers.index', compact('offers'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    /** GET /offers/create – form */
     public function create()
     {
-        //
+        // $customers = Customer::orderBy('customer_name')->get();
+        // $orders    = Order::select('id')->get();
+        // $products  = Product::with('price')->get();
+        $customers = collect();        // şimdilik boş
+        $orders    = collect();
+        $products  = collect();
+
+        return view('offers.create', compact('customers', 'orders', 'products'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    /** POST /offers – şimdilik kayıt yapmıyoruz */
     public function store(Request $request)
     {
-        //
+        return back()->with('success', 'Demo aşamasında veri kaydedilmiyor.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    /* Diğer metodlar ileride doldurulabilir */
+    public function show($id)    {}
+    public function edit($id)    {}
+    public function update(Request $r, $id) {}
+    public function destroy($id) {}
 }
