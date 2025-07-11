@@ -1,49 +1,50 @@
 @extends('layouts.app')
 
-@section('title', 'Yeni Firma Ekle')
-
 @section('content')
-<div class="container">
-  <h1>Yeni Firma Ekle</h1>
-  <form action="#" method="POST">
-    @csrf
-
-    <div class="form-group">
-      <label for="company_name">Firma Adı</label>
-      <input type="text" class="form-control" id="company_name" name="company_name" required>
+<section class="content">
+ <div class="container-fluid">
+  <div class="card card-primary card-outline">
+   <div class="card-header d-flex justify-content-between align-items-center">
+     <h3 class="card-title">Companies</h3>
+     <a href="{{ route('companies.create') }}" class="btn btn-sm btn-primary">Add Company</a>
+   </div>
+   <div class="card-body p-0">
+    <div class="table-responsive">
+     <table class="table table-hover mb-0" id="companies-table">
+      <thead>
+       <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Tax #</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Customer</th>
+        <th>Actions</th>
+       </tr>
+      </thead>
+      <tbody>
+       @foreach ($companies as $c)
+       <tr>
+        <td>{{ $c->id }}</td>
+        <td>{{ $c->company_name }}</td>
+        <td>{{ $c->tax_number }}</td>
+        <td>{{ $c->phone_number }}</td>
+        <td>{{ $c->email }}</td>
+        <td>{{ $c->customer?->customer_name }}</td>
+        <td>
+          <a href="{{ route('companies.edit',$c) }}" class="btn btn-sm btn-warning">Edit</a>
+          <form action="{{ route('companies.destroy',$c) }}" method="POST" class="d-inline">
+            @csrf @method('DELETE')
+            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">Delete</button>
+          </form>
+        </td>
+       </tr>
+       @endforeach
+      </tbody>
+     </table>
     </div>
-
-    <div class="form-group">
-      <label for="tax_number">Vergi Numarası</label>
-      <input type="text" class="form-control" id="tax_number" name="tax_number">
-    </div>
-
-    <div class="form-group">
-      <label for="address">Adres</label>
-      <textarea class="form-control" id="address" name="address"></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="phone_number">Telefon</label>
-      <input type="text" class="form-control" id="phone_number" name="phone_number">
-    </div>
-
-    <div class="form-group">
-      <label for="email">E-posta</label>
-      <input type="email" class="form-control" id="email" name="email">
-    </div>
-
-    <div class="form-group">
-      <label for="registration_date">Kayıt Tarihi</label>
-      <input type="date" class="form-control" id="registration_date" name="registration_date">
-    </div>
-
-    <div class="form-group">
-      <label for="current_role">Cari Rol</label>
-      <input type="text" class="form-control" id="current_role" name="current_role">
-    </div>
-
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-  </form>
-</div>
+   </div>
+  </div>
+ </div>
+</section>
 @endsection
