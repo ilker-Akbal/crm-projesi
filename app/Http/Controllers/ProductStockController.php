@@ -3,36 +3,40 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\ProductStock;   // Gerçek veride açarsınız
-// use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\Product;
 
 class ProductStockController extends Controller
 {
-    /** GET /product_stocks  */
+    // GET /product_stocks
     public function index()
     {
-        // $productStocks = ProductStock::with('product')->get();
-        $productStocks = collect();          // Şimdilik boş
+        $productStocks = ProductStock::with('product')
+            ->orderBy('update_date','desc')
+            ->get();
+
         return view('product_stocks.index', compact('productStocks'));
     }
 
-    /** GET /product_stocks/create */
+    // GET /product_stocks/create
     public function create()
     {
-        // $products = Product::orderBy('product_name')->get();
-        $products = collect();               // Şimdilik boş
+        $products = Product::orderBy('product_name')->get();
         return view('product_stocks.create', compact('products'));
     }
 
-    /** POST /product_stocks  (demo) */
+    // POST /product_stocks
     public function store(Request $request)
     {
-        return back()->with('success', 'Demo aşamasında veri kaydedilmiyor.');
-    }
+        $data = $request->validate([
+            'product_id'     => 'required|exists:products,id',
+            'stock_quantity' => 'required|numeric|min:0',
+            'update_date'    => 'required|date',
+        ]);
 
-    /* Diğer CRUD metodları sonra doldurulabilir */
-    public function show($id)    {}
-    public function edit($id)    {}
-    public function update(Request $r, $id) {}
-    public function destroy($id) {}
+        ProductStock::create($data);
+
+        return redirect()->route('product_stocks.index')
+            ->with('success','Stock entry added.');
+    }
 }

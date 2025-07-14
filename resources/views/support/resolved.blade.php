@@ -2,34 +2,36 @@
 
 @section('content')
 <section class="content">
- <div class="container-fluid">
-  <div class="card card-success card-outline">
-   <div class="card-header"><h3 class="card-title">Resolved Support Requests</h3></div>
-
-   <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead>
-          <tr>
-            <th>ID</th><th>Customer</th><th>Title</th><th>Resolved At</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($supports as $s)
-            <tr>
-              <td>{{ $s->id }}</td>
-              <td>{{ $s->customer?->customer_name }}</td>
-              <td>{{ $s->title }}</td>
-              <td>{{ $s->updated_at }}</td>
-            </tr>
-          @empty
-            <tr><td colspan="4" class="text-center">No resolved requests.</td></tr>
-          @endforelse
-        </tbody>
-      </table>
+  <div class="container-fluid">
+    <div class="card card-success card-outline">
+      <div class="card-header"><h3 class="card-title">Resolved Requests</h3></div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Customer</th><th>Title</th><th>Resolved At</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($supports as $s)
+                <tr>
+                  <td>{{ $s->id }}</td>
+                  <td>{{ $s->customer->customer_name }}</td>
+                  <td>{{ $s->Title }}</td>
+                  <td>{{ $s->updated_at->format('Y-m-d') }}</td>
+                  <td>
+                    <a href="{{ route('support.show',$s) }}" class="btn btn-sm btn-info">View</a>
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="5" class="text-center">No resolved requests.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-   </div>
   </div>
- </div>
 </section>
 @endsection

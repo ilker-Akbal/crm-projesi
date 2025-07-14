@@ -300,9 +300,9 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ route('customers.details') }}" class="nav-link">
+              <a href="{{ route('customers.show', 5) }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Customer Details</p>
+                <p>Customer Show</p>
               </a>
             </li>
           </ul>

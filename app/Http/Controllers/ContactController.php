@@ -1,37 +1,78 @@
 <?php
+// app/Http/Controllers/ContactController.php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\Contact;   // Gerçek veri ekleyince açın
-// use App\Models\Company;   // create() sayfasındaki şirket listesi için
+use App\Models\Contact;
+use App\Models\Company;
 
 class ContactController extends Controller
 {
-    /** GET /contacts  ─ Liste  */
+    // Liste
     public function index()
     {
-        // Şimdilik boş koleksiyon gönderiyoruz
-        // $contacts = Contact::with('company')->get();
-        $contacts = collect();
-
+        $contacts = Contact::with('company')->get();
         return view('contacts.index', compact('contacts'));
     }
 
-    /** GET /contacts/create  ─ Form  */
+    // Yeni
     public function create()
     {
-        // Formda “Bağlı Şirket” seçilecekse:
-        // $companies = Company::orderBy('company_name')->get();
-        $companies = collect();
-
+        $companies = Company::orderBy('Company_name')->get();
         return view('contacts.create', compact('companies'));
     }
 
-    /* Diğer CRUD metodlarını daha sonra doldurabilirsiniz */
-    public function store(Request $request) {}
-    public function show($id) {}
-    public function edit($id) {}
-    public function update(Request $request, $id) {}
-    public function destroy($id) {}
+    // Kaydet
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'company_id' => 'nullable|exists:companies,id',
+            'name'       => 'required|string|max:255',
+            'position'   => 'nullable|string|max:255',
+            'email'      => 'nullable|email|max:255',
+            'phone'      => 'nullable|string|max:50',
+        ]);
+
+        Contact::create($data);
+
+        return redirect()
+            ->route('contacts.index')
+            ->with('success', 'Contact created successfully.');
+    }
+
+    // Düzenle
+    public function edit(Contact $contact)
+    {
+        $companies = Company::orderBy('Company_name')->get();
+        return view('contacts.edit', compact('contact','companies'));
+    }
+
+    // Güncelle
+    public function update(Request $request, Contact $contact)
+    {
+        $data = $request->validate([
+            'company_id' => 'nullable|exists:companies,id',
+            'name'       => 'required|string|max:255',
+            'position'   => 'nullable|string|max:255',
+            'email'      => 'nullable|email|max:255',
+            'phone'      => 'nullable|string|max:50',
+        ]);
+
+        $contact->update($data);
+
+        return redirect()
+            ->route('contacts.index')
+            ->with('success', 'Contact updated successfully.');
+    }
+
+    // Sil
+    public function destroy(Contact $contact)
+    {
+        $contact->delete();
+
+        return redirect()
+            ->route('contacts.index')
+            ->with('success', 'Contact deleted successfully.');
+    }
 }

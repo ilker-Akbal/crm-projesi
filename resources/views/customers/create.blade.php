@@ -1,60 +1,88 @@
 @extends('layouts.app')
+
 @section('content')
-<section class="content">
- <div class="container-fluid">
-  <div class="card card-primary card-outline">
-   <div class="card-header"><h3 class="card-title">Add Company</h3></div>
-   <form action="{{ route('companies.store') }}" method="POST">
-    @csrf
-    <div class="card-body">
-     @include('partials.alerts')
-     <div class="row">
-      <div class="col-md-6">
-        <div class="form-group">
-          <label for="company_name">Company Name</label>
-          <input type="text" name="company_name" id="company_name" class="form-control" required value="{{ old('company_name') }}">
+<div class="container">
+    <h2>Add New Customer</h2>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+            </ul>
         </div>
-      </div>
-      <div class="col-md-6">
+    @endif
+
+    <form action="{{ route('customers.store') }}" method="POST">
+        @csrf
+
         <div class="form-group">
-          <label for="tax_number">Tax Number</label>
-          <input type="text" name="tax_number" id="tax_number" class="form-control" value="{{ old('tax_number') }}">
+            <label for="customer_name">Name *</label>
+            <input type="text"
+                   name="customer_name"
+                   id="customer_name"
+                   class="form-control @error('customer_name') is-invalid @enderror"
+                   value="{{ old('customer_name') }}"
+                   required>
+            @error('customer_name')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
-      </div>
-     </div>
-     <div class="row">
-      <div class="col-md-6">
+
         <div class="form-group">
-          <label for="phone_number">Phone</label>
-          <input type="text" name="phone_number" id="phone_number" class="form-control" value="{{ old('phone_number') }}">
+            <label for="customer_type">Type *</label>
+            <select name="customer_type"
+                    id="customer_type"
+                    class="form-control @error('customer_type') is-invalid @enderror"
+                    required>
+                <option value="" disabled {{ old('customer_type') ? '' : 'selected' }}>-- select type --</option>
+                <option value="customer" {{ old('customer_type')=='customer' ? 'selected' : '' }}>Customer</option>
+                <option value="supplier" {{ old('customer_type')=='supplier' ? 'selected' : '' }}>Supplier</option>
+                <option value="candidate" {{ old('customer_type')=='candidate' ? 'selected' : '' }}>Candidate</option>
+            </select>
+            @error('customer_type')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
-      </div>
-      <div class="col-md-6">
+
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}">
+            <label for="phone">Phone</label>
+            <input type="text"
+                   name="phone"
+                   id="phone"
+                   class="form-control @error('phone') is-invalid @enderror"
+                   value="{{ old('phone') }}">
+            @error('phone')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
-      </div>
-     </div>
-     <div class="form-group">
-        <label for="address">Address</label>
-        <textarea name="address" id="address" class="form-control" rows="2">{{ old('address') }}</textarea>
-     </div>
-     <div class="form-group">
-        <label for="customer_id">Belongs to Customer</label>
-        <select name="customer_id" id="customer_id" class="form-control">
-          <option value="">-- select --</option>
-          @foreach($customers as $cust)
-            <option value="{{ $cust->id }}" {{ old('customer_id')==$cust->id ? 'selected' : '' }}>{{ $cust->customer_name }}</option>
-          @endforeach
-        </select>
-     </div>
-    </div>
-    <div class="card-footer">
-      @include('partials.form-buttons')
-    </div>
-   </form>
-  </div>
- </div>
-</section>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email"
+                   name="email"
+                   id="email"
+                   class="form-control @error('email') is-invalid @enderror"
+                   value="{{ old('email') }}">
+            @error('email')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address</label>
+            <textarea name="address"
+                      id="address"
+                      class="form-control @error('address') is-invalid @enderror"
+                      rows="3">{{ old('address') }}</textarea>
+            @error('address')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ route('customers.index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
 @endsection

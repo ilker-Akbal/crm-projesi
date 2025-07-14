@@ -3,37 +3,81 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\Account;     // Gerçek veri geldiğinde açın
-// use App\Models\Customer;
+use App\Models\Account;
+use App\Models\Customer;
 
 class AccountController extends Controller
 {
-    /** GET /accounts  */
+    // GET /accounts
     public function index()
     {
-        // $accounts = Account::with('customer')->get();
-        $accounts = collect();          // Şimdilik boş
+        $accounts = Account::with('customer')
+            ->orderBy('opening_date','desc')
+            ->get();
+
         return view('accounts.index', compact('accounts'));
     }
 
-    /** GET /accounts/create */
+    // GET /accounts/create
     public function create()
     {
-        // $customers = Customer::orderBy('customer_name')->get();
-        $customers = collect();         // Şimdilik boş
+        $customers = Customer::orderBy('customer_name')->get();
         return view('accounts.create', compact('customers'));
     }
 
-    /** POST /accounts  – şimdilik sahte geri dönüş */
+    // POST /accounts
     public function store(Request $request)
     {
-        // Validasyon + kayıt sonra eklenecek
-        return back()->with('success', 'Demo: veri kaydedilmedi, sadece sayfa yüklendi.');
+        $data = $request->validate([
+            'customer_id'  => 'required|exists:customers,id',
+            'balance'      => 'required|numeric|min:0',
+            'opening_date' => 'required|date',
+        ]);
+
+        Account::create($data);
+
+        return redirect()
+            ->route('accounts.index')
+            ->with('success', 'Account created successfully.');
     }
 
-    /* Diğer metodlar şimdilik boş */
-    public function show($id)    {}
-    public function edit($id)    {}
-    public function update(Request $r, $id) {}
-    public function destroy($id) {}
+    // GET /accounts/{account}
+    public function show(Account $account)
+    {
+        $account->load('customer');
+        return view('accounts.show', compact('account'));
+    }
+
+    // GET /accounts/{account}/edit
+    public function edit(Account $account)
+    {
+        $customers = Customer::orderBy('customer_name')->get();
+        return view('accounts.edit', compact('account','customers'));
+    }
+
+    // PUT /accounts/{account}
+    public function update(Request $request, Account $account)
+    {
+        $data = $request->validate([
+            'customer_id'  => 'required|exists:customers,id',
+            'balance'      => 'required|numeric|min:0',
+            'opening_date' => 'required|date',
+        ]);
+
+        $account->update($data);
+
+        return redirect()
+            ->route('accounts.index')
+            ->with('success', 'Account updated successfully.');
+    }
+
+    // DELETE /accounts/{account}
+    public function destroy(Account $account)
+    {
+        $account->delete();
+
+        return redirect()
+            ->route('accounts.index')
+            ->with('success', 'Account deleted successfully.');
+    }
 }

@@ -3,50 +3,54 @@
 @section('content')
 <section class="content">
   <div class="container-fluid">
+    @include('partials.alerts')
     <div class="card card-outline card-primary">
       <div class="card-header"><h3 class="card-title">Add Reminder</h3></div>
-
-      <div class="card-body">
-        {{-- Demo form – şimdilik kayıt yapmaz --}}
-        <form>
+      <form action="{{ route('reminders.store') }}" method="POST">
+        @csrf
+        <div class="card-body">
           <div class="form-group">
-            <label>Title</label>
-            <input type="text" class="form-control" placeholder="Reminder title">
+            <label for="title">title *</label>
+            <input type="text" name="title" id="title"
+                   class="form-control" value="{{ old('title') }}" required>
           </div>
-
           <div class="form-group">
-            <label>Reminder Date</label>
-            <input type="date" class="form-control">
+            <label for="reminder_date">Reminder Date *</label>
+            <input type="date" name="reminder_date" id="reminder_date"
+                   class="form-control" value="{{ old('reminder_date', today()->toDateString()) }}" required>
           </div>
-
           <div class="form-group">
-            <label>Customer</label>
-            <select class="form-control">
+            <label for="customer_id">Customer *</label>
+            <select name="customer_id" id="customer_id" class="form-control" required>
               <option value="">-- select --</option>
               @foreach($customers as $c)
-                <option value="{{ $c->id }}">{{ $c->customer_name }}</option>
+                <option value="{{ $c->id }}" {{ old('customer_id')==$c->id?'selected':'' }}>
+                  {{ $c->customer_name }}
+                </option>
               @endforeach
             </select>
           </div>
-
           <div class="form-group">
-            <label>User</label>
-            <select class="form-control">
+            <label for="user_id">User *</label>
+            <select name="user_id" id="user_id" class="form-control" required>
               <option value="">-- select --</option>
               @foreach($users as $u)
-                <option value="{{ $u->id }}">{{ $u->username }}</option>
+                <option value="{{ $u->id }}" {{ old('user_id')==$u->id?'selected':'' }}>
+                  {{ $u->username }}
+                </option>
               @endforeach
             </select>
           </div>
-
           <div class="form-group">
-            <label>Explanation</label>
-            <textarea class="form-control" rows="3" placeholder="…"></textarea>
+            <label for="explanation">Explanation</label>
+            <textarea name="explanation" id="explanation" rows="3"
+                      class="form-control">{{ old('explanation') }}</textarea>
           </div>
-
-          <button type="submit" class="btn btn-primary">Kaydet (demo)</button>
-        </form>
-      </div>
+        </div>
+        <div class="card-footer">
+          @include('partials.form-buttons')
+        </div>
+      </form>
     </div>
   </div>
 </section>

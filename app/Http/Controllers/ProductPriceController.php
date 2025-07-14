@@ -3,37 +3,40 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\ProductPrice;   // Gerçek veritabanına geçtiğinizde açın
-// use App\Models\Product;
+use App\Models\ProductPrice;
+use App\Models\Product;
 
 class ProductPriceController extends Controller
 {
-    /** GET /product_prices  */
+    // GET /product_prices
     public function index()
     {
-        // $productPrices = ProductPrice::with('product')->get();
-        $productPrices = collect();          // Şimdilik boş veri
+        $productPrices = ProductPrice::with('product')
+            ->orderBy('updated_at','desc')
+            ->get();
+
         return view('product_prices.index', compact('productPrices'));
     }
 
-    /** GET /product_prices/create */
+    // GET /product_prices/create
     public function create()
     {
-        // $products = Product::orderBy('product_name')->get();
-        $products = collect();               // Şimdilik boş
+        $products = Product::orderBy('product_name')->get();
         return view('product_prices.create', compact('products'));
     }
 
-    /** POST /product_prices  */
+    // POST /product_prices
     public function store(Request $request)
     {
-        // Validasyon + kayıt işlemi sonra eklenecek
-        return back()->with('success', 'Demo: veri kaydedilmedi, sadece sayfa yüklendi.');
-    }
+        $data = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'price'      => 'required|numeric|min:0',
+            'updated_at' => 'required|date',
+        ]);
 
-    /* Diğer metodlar (show/edit/update/destroy) şimdilik boş bırakıldı */
-    public function show($id)    {}
-    public function edit($id)    {}
-    public function update(Request $r, $id) {}
-    public function destroy($id) {}
+        ProductPrice::create($data);
+
+        return redirect()->route('product_prices.index')
+            ->with('success','Price added successfully.');
+    }
 }

@@ -11,50 +11,51 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    /* ===  Satış Raporu  === */
+    /** Satış Raporu */
     public function sales()
     {
-        // orders tablosu customer ilişkisiyle
         $sales = Order::with('customer')
-                      ->latest('order_date')
+                      ->orderByDesc('order_date')
                       ->get();
 
         return view('reports.sales', compact('sales'));
     }
 
-    /* ===  Müşteri Raporu  === */
+    /** Müşteri Raporu */
     public function customers()
     {
-        $customers = Customer::all();
+        $customers = Customer::orderBy('customer_name')->get();
         return view('reports.customers', compact('customers'));
     }
 
-    /* ===  Ürün Stok Raporu  === */
+    /** Ürün Stok Raporu */
     public function productStock()
     {
         $stocks = ProductStock::with('product')->get();
         return view('reports.product_stock', compact('stocks'));
     }
 
-    /* ===  Cari Hesap Özeti  === */
+    /** Cari Hesap Özeti */
     public function currentAccountSummary()
     {
-        $accounts = CurrentCard::with('customer')->get();
+        $accounts = CurrentCard::with('customer')
+                               ->orderByDesc('opening_date')
+                               ->get();
+
         return view('reports.current_account', compact('accounts'));
     }
 
-    /* ===  Destek Talep Raporu  === */
+    /** Destek Talep Raporu */
     public function supportRequest()
     {
-        $requests = SupportRequest::with('customer')->latest()->get();
+        $requests = SupportRequest::with('customer')
+                                  ->orderByDesc('registration_date')
+                                  ->get();
+
         return view('reports.support_request', compact('requests'));
     }
 
-    /*
-     |--------------------------------------------------------------
-     |  Resource route’tan gelen diğer metotlar (şimdilik boş)
-     |--------------------------------------------------------------
-     */
+    // Resource rotadan gelenler şimdilik boş
     public function index()   {}
     public function create()  {}
     public function store(Request $r) {}

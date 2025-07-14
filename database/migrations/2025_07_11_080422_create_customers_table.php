@@ -1,36 +1,28 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateCustomersTable extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-       Schema::create('customers', function (Blueprint $table) {
-    $table->id();
-    $table->string('customer_name');
-    $table->string('customer_type');
-    $table->string('phone')->nullable();
-    $table->string('email')->nullable();
-    $table->string('address')->nullable();
-    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-    $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
-    $table->timestamps();
-});
-
-
+        Schema::create('customers', function (Blueprint $table) {
+            $table->id();
+            $table->string('customer_name');
+            $table->enum('customer_type', ['candidate','customer','supplier']);
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->text('address')->nullable();
+            // created_by sütununu buraya ekleyin
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->constrained('users');
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('customers');
     }
-};
+}

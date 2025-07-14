@@ -1,27 +1,91 @@
 <?php
+// app/Http/Controllers/CompanyController.php
 
 namespace App\Http\Controllers;
 
-use App\Models\Company;   // <-- Modeliniz varsa
-use App\Models\Customer;  // create() sayfası için
+use Illuminate\Http\Request;
+use App\Models\Company;
+use App\Models\Customer;
 
 class CompanyController extends Controller
 {
-    /** /companies  --------------------------------------------------*/
+    // Liste
     public function index()
     {
-        // Henüz veri eklemediyseniz collect() kullanılabilir
-        $companies = Company::with('customer')->get();   // yoksa: $companies = collect();
-
+        $companies = Company::with('customer')->get();
         return view('companies.index', compact('companies'));
     }
 
-    /** /companies/create  ------------------------------------------*/
+    // Yeni
     public function create()
     {
-        // Formdaki “Bağlı Müşteri” listesi için; ihtiyacınız yoksa silin
         $customers = Customer::orderBy('customer_name')->get();
-
         return view('companies.create', compact('customers'));
+    }
+
+    // Kaydet
+   public function store(Request $request)
+{
+    $data = $request->validate([
+        'company_name'      => 'required|string|max:255',
+        'tax_number'        => 'nullable|string|max:100',
+        'address'           => 'nullable|string',
+        'phone_number'      => 'nullable|string|max:50',
+        'email'             => 'nullable|email|max:255',
+        'registration_date' => 'nullable|date',
+        'current_role'      => 'required|in:customer,supplier,candidate',
+        'customer_id'       => 'nullable|exists:customers,id',
+    ]);
+
+    Company::create($data);
+
+    return redirect()
+        ->route('companies.index')
+        ->with('success', 'Firma başarıyla oluşturuldu.');
+}
+
+    // Detay
+    public function show(Company $company)
+    {
+        $company->load('customer','contacts');
+        return view('companies.show', compact('company'));
+    }
+
+    // Düzenle
+    public function edit(Company $company)
+    {
+        $customers = Customer::orderBy('customer_name')->get();
+        return view('companies.edit', compact('company','customers'));
+    }
+
+    // Güncelle
+    public function update(Request $request, Company $company)
+    {
+        $data = $request->validate([
+            'Company_name'      => 'required|string|max:255',
+            'tax_number'        => 'nullable|string|max:100',
+            'Adress'            => 'nullable|string',
+            'phone_number'      => 'nullable|string|max:50',
+            'Email'             => 'nullable|email|max:255',
+            'registration_date' => 'nullable|date',
+            'current_role'      => 'nullable|string|max:100',
+            'customer_id'       => 'nullable|exists:customers,id',
+        ]);
+
+        $company->update($data);
+
+        return redirect()
+            ->route('companies.index')
+            ->with('success', 'Company updated successfully.');
+    }
+
+    // Sil
+    public function destroy(Company $company)
+    {
+        $company->delete();
+
+        return redirect()
+            ->route('companies.index')
+            ->with('success', 'Company deleted successfully.');
     }
 }

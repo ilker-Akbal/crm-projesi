@@ -1,4 +1,5 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
@@ -10,15 +11,16 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // tablo adı "users" olduğu için property gerekmez
     protected $fillable = [
-        'username', 'role', 'password', 'active',
-        'created_by', 'updated_by',
+        'username',
+        'Role',
+        'active',
+        'created_by',
+        'updated_by',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password','remember_token'];
 
-    /* ======= İlişkiler ======= */
-    public function actions()    { return $this->hasMany(Action::class); }
-    public function reminders()  { return $this->hasMany(Reminder::class); }
+    public function actions()   { return $this->hasMany(Action::class); }
+    public function reminders() { return $this->hasMany(Reminder::class); }
 }

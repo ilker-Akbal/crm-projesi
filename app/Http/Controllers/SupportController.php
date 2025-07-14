@@ -3,42 +3,107 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// use App\Models\SupportRequest;  // Gerçek veriye geçince açarsınız
+use App\Models\SupportRequest;
+use App\Models\Customer;
 
 class SupportController extends Controller
 {
-    /** GET /support ─ Liste */
+    /** GET /support */
     public function index()
     {
-        $supports = collect();          // şimdilik boş koleksiyon
+        $supports = SupportRequest::with('customer')
+            ->orderBy('registration_date', 'desc')
+            ->get();
+
         return view('support.index', compact('supports'));
     }
 
-    /** GET /support/create ─ Form */
+    /** GET /support/create */
     public function create()
     {
-        $customers = collect();         // ileride Customer::all()
+        $customers = Customer::orderBy('customer_name')->get();
         return view('support.create', compact('customers'));
+    }
+
+    /** POST /support */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'customer_id'       => 'required|exists:customers,id',
+            'title'             => 'required|string|max:255',
+            'explanation'       => 'nullable|string',
+            'situation'         => 'required|in:pending,resolved',
+            'registration_date' => 'required|date',
+        ]);
+
+        SupportRequest::create($data);
+
+        return redirect()
+            ->route('support.index')
+            ->with('success', 'Support request created successfully.');
+    }
+
+    /** GET /support/{id} */
+    public function show(SupportRequest $support)
+    {
+        $support->load('customer');
+        return view('support.show', compact('support'));
+    }
+
+    /** GET /support/{id}/edit */
+    public function edit(SupportRequest $support)
+    {
+        $customers = Customer::orderBy('customer_name')->get();
+        return view('support.edit', compact('support', 'customers'));
+    }
+
+    /** PUT /support/{id} */
+    public function update(Request $request, SupportRequest $support)
+    {
+        $data = $request->validate([
+            'customer_id'       => 'required|exists:customers,id',
+            'title'             => 'required|string|max:255',
+            'explanation'       => 'nullable|string',
+            'situation'         => 'required|in:pending,resolved',
+            'registration_date' => 'required|date',
+        ]);
+
+        $support->update($data);
+
+        return redirect()
+            ->route('support.index')
+            ->with('success', 'Support request updated successfully.');
+    }
+
+    /** DELETE /support/{id} */
+    public function destroy(SupportRequest $support)
+    {
+        $support->delete();
+
+        return redirect()
+            ->route('support.index')
+            ->with('success', 'Support request deleted successfully.');
     }
 
     /** GET /support/pending */
     public function pending()
     {
-        $supports = collect();
+        $supports = SupportRequest::with('customer')
+            ->where('situation', 'pending')
+            ->orderBy('registration_date', 'desc')
+            ->get();
+
         return view('support.pending', compact('supports'));
     }
 
     /** GET /support/resolved */
     public function resolved()
     {
-        $supports = collect();
+        $supports = SupportRequest::with('customer')
+            ->where('situation', 'resolved')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
         return view('support.resolved', compact('supports'));
     }
-
-    /* Aşağıdaki metodlar şimdilik boş; CRUD’a geçtiğinizde doldurursunuz */
-    public function store(Request $r)   {}
-    public function show($id)          {}
-    public function edit($id)          {}
-    public function update(Request $r,$id) {}
-    public function destroy($id)       {}
 }
