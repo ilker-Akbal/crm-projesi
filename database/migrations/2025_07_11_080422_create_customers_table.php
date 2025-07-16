@@ -23,6 +23,13 @@ class CreateCustomersTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('customers');
+        Schema::table('customers', function (Blueprint $table) {
+            $table->dropForeign(['created_by']);
+            $table->dropForeign(['updated_by']);
+            $table->unsignedBigInteger('created_by')->nullable(false)->change();
+            $table->unsignedBigInteger('updated_by')->nullable(false)->change();
+            $table->foreign('created_by')->references('id')->on('users');
+            $table->foreign('updated_by')->references('id')->on('users');
+        });
     }
 }

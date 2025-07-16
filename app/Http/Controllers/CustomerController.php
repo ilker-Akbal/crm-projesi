@@ -64,7 +64,7 @@ class CustomerController extends Controller
             ]);
         });
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
                          ->with('success','Müşteri ve kullanıcı başarıyla oluşturuldu.');
     }
 
@@ -82,45 +82,30 @@ class CustomerController extends Controller
 
     // 6) PUT/PATCH /customers/{customer}
     public function update(Request $request, Customer $customer)
-    {
-        $request->merge(['active' => $request->has('active') ? 1 : 0]);
+{
+    // Sadece customer alanları
+    $data = $request->validate([
+        'customer_name' => 'required|string|max:255',
+        'customer_type' => 'required|in:customer,supplier,candidate',
+        'phone'         => 'nullable|string|max:50',
+        'email'         => 'nullable|email|max:255',
+        'address'       => 'nullable|string',
+    ]);
 
-        $data = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_type' => 'required|in:customer,supplier,candidate',
-            'phone'         => 'nullable|string|max:50',
-            'email'         => 'nullable|email|max:255',
-            'address'       => 'nullable|string',
-            'username'      => 'required|string|unique:users,username,' . $customer->user->id,
-            'password'      => 'nullable|string|min:8|confirmed',
-            'active'        => 'boolean',
-        ]);
+    // Güncelle ve audit
+    $customer->update([
+        'customer_name' => $data['customer_name'],
+        'customer_type' => $data['customer_type'],
+        'phone'         => $data['phone'] ?? null,
+        'email'         => $data['email'] ?? null,
+        'address'       => $data['address'] ?? null,
+        'updated_by'    => Auth::id() ?? 1,
+    ]);
 
-        DB::transaction(function () use ($data, $request, $customer) {
-            // 1️⃣ müşteri güncelle
-            $customer->update([
-                'customer_name' => $data['customer_name'],
-                'customer_type' => $data['customer_type'],
-                'phone'         => $data['phone'] ?? null,
-                'email'         => $data['email'] ?? null,
-                'address'       => $data['address'] ?? null,
-                'updated_by'    => Auth::id() ?? 1,
-            ]);
-
-            // 2️⃣ ilişkili kullanıcı güncelle
-            $user = $customer->user;
-            $user->username = $data['username'];
-            if (!empty($data['password'])) {
-                $user->password = Hash::make($data['password']);
-            }
-            $user->active = $request->has('active');
-            $user->updated_by = Auth::id() ?? 1;
-            $user->save();
-        });
-
-        return redirect()->route('customers.index')
-                         ->with('success','Müşteri ve kullanıcı başarıyla güncellendi.');
-    }
+    return redirect()
+        ->route('admin.customers.index')
+        ->with('success','Müşteri başarıyla güncellendi.');
+}
 
     // 7) DELETE /customers/{customer}
     public function destroy(Customer $customer)
@@ -133,7 +118,7 @@ class CustomerController extends Controller
             $customer->delete();
         });
 
-        return redirect()->route('customers.index')
+        return redirect()->route('admin.customers.index')
                          ->with('success','Müşteri ve kullanıcı başarıyla silindi.');
     }
 }

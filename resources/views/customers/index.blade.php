@@ -5,7 +5,7 @@
     <h2>Customers</h2>
 
     <div class="mb-3">
-        <a href="{{ route('customers.create') }}" class="btn btn-primary">Add New Customer</a>
+        <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add New Customer</a>
     </div>
 
     <table class="table table-bordered">
@@ -26,9 +26,9 @@
                     <td>{{ ucfirst($customer->customer_type) }}</td>
                     <td>{{ $customer->email }}</td>
                     <td>
-                        <a href="{{ route('customers.show', $customer) }}" class="btn btn-sm btn-info">View</a>
-                        <a href="{{ route('customers.edit', $customer) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline">
+                        <a href="{{ route('admin.customers.show', $customer) }}" class="btn btn-sm btn-info">View</a>
+                        <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button 

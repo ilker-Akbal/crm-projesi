@@ -15,7 +15,7 @@
 
       </div>
       <div class="card-footer">
-        <a href="{{ route('users.index') }}" class="btn btn-secondary">Back</a>
+        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Back</a>
       </div>
     </div>
   </div>

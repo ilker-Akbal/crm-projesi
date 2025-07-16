@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Middleware;
 
 class AuthController extends Controller
 {
@@ -13,25 +14,42 @@ class AuthController extends Controller
     public function showLogin()  { return view('auth.login'); }
 
     public function login(Request $r)
-    {
-        $creds = $r->validate(['username'=>'required','password'=>'required']);
-        $creds['active'] = 1;                                   // aktif kullanıcı
+{
+    $r->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        if (Auth::attempt($creds, $r->boolean('remember'))) {
-            $r->session()->regenerate();
-            return redirect()->intended(route('dashboard.index'));
-        }
-        return back()->withErrors(['username'=>'Invalid credentials'])->withInput();
+    // ➊ ENV admin kontrolü
+    if (
+        $r->username === env('ADMIN_USERNAME')
+        && $r->password === env('ADMIN_PASSWORD')
+    ) {
+        // admin olarak işaretle
+        $r->session()->put('is_admin', true);
+        return redirect()->route('admin.dashboard');
     }
 
-    public function logout(Request $r)
-    {
-        Auth::logout();
-        $r->session()->invalidate();
-        $r->session()->regenerateToken();
-        return redirect()->route('login');
+    // ➋ normal kullanıcı girişi
+    $creds = $r->only('username','password') + ['active' => 1];
+    if (Auth::attempt($creds, $r->boolean('remember'))) {
+        $r->session()->regenerate();
+        return redirect()->intended(route('dashboard.index'));
     }
 
-    /* ------------- Register ekle ------------- */
+    return back()->withErrors(['username'=>'Geçersiz kimlik bilgileri'])->withInput();
+}
+
+public function logout(Request $r)
+{
+    // oturumdan admin flag’i sil
+    $r->session()->forget('is_admin');
+    Auth::logout();
+    $r->session()->invalidate();
+    $r->session()->regenerateToken();
+    return redirect()->route('login');
+}
+
+
    
 }

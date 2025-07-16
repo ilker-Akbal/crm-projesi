@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -39,7 +41,7 @@ class UserController extends Controller
         User::create($data);
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index')
             ->with('success', 'User created successfully.');
     }
 
@@ -69,18 +71,34 @@ class UserController extends Controller
         $user->update($data);
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index')
             ->with('success', 'User updated successfully.');
     }
 
     /** DELETE /users/{user} */
     public function destroy(User $user)
-    {
+{
+    \DB::transaction(function() use ($user) {
+        // varsayılan devretme kullanıcısı (ör: ilk kullanıcı)
+        $fallback = User::first()?->id ?? null;
+
+        // created_by/updated_by olan tüm müşteri kayıtlarını devret
+        \App\Models\Customer::where('created_by', $user->id)
+            ->update(['created_by' => $fallback]);
+
+        \App\Models\Customer::where('updated_by', $user->id)
+            ->update(['updated_by' => $fallback]);
+
+        // (Eğer başka modellerde de benzer alanlar varsa, onları da ekleyin)
+
+        // Son olarak kullanıcıyı sil
         $user->delete();
-        return redirect()
-            ->route('users.index')
-            ->with('success', 'User deleted successfully.');
-    }
+    });
+
+    return redirect()
+        ->route('admin.users.index')
+        ->with('success','User deleted successfully.');
+}
 
     /** GET /users/roles */
     public function roles()

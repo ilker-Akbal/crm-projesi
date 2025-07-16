@@ -14,7 +14,7 @@
         </div>
     @endif
 
-    <form action="{{ route('customers.store') }}" method="POST">
+    <form action="{{ route('admin.customers.store') }}" method="POST">
         @csrf
 
         <div class="form-group">
@@ -126,7 +126,7 @@
 </div>
 </div>
         <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{{ route('customers.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 @endsection

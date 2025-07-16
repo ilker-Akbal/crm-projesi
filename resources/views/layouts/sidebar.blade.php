@@ -279,50 +279,10 @@
 
         <!-- Customers -->
 {{-- ===================== Customers ===================== --}}
-@if(auth()->user()?->role === 'admin')
-<li class="nav-item has-treeview">
-  <a href="#" class="nav-link">
-    <i class="nav-icon fas fa-user"></i>
-    <p>Customers <i class="right fas fa-angle-left"></i></p>
-  </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item">
-      <a href="{{ route('customers.create') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i><p>Add Customer</p>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="{{ route('customers.index') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i><p>View Customers</p>
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
+
 
 
        {{-- ====================== Users ======================== --}}
-@if(auth()->user()?->role === 'admin')
-<li class="nav-item has-treeview">
-  <a href="#" class="nav-link">
-    <i class="nav-icon fas fa-users"></i>
-    <p>Users <i class="right fas fa-angle-left"></i></p>
-  </a>
-  <ul class="nav nav-treeview">
-   
-    <li class="nav-item">
-      <a href="{{ route('users.index') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i><p>View Users</p>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="{{ route('users.roles') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i><p>User Roles</p>
-      </a>
-    </li>
-  </ul>
-</li>
-@endif
 
 
         <!-- Reminders -->

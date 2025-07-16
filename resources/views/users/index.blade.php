@@ -7,7 +7,7 @@
     <div class="card card-outline card-primary">
       <div class="card-header d-flex justify-content-between">
         <h3 class="card-title">Users</h3>
-        <a href="{{ route('users.create') }}" class="btn btn-sm btn-primary">Add User</a>
+        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">Add User</a>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -34,9 +34,9 @@
                   @endif
                 </td>
                 <td>
-                  <a href="{{ route('users.show', $u) }}" class="btn btn-xs btn-info">View</a>
-                  <a href="{{ route('users.edit', $u) }}" class="btn btn-xs btn-warning">Edit</a>
-                  <form action="{{ route('users.destroy', $u) }}" method="POST" class="d-inline">
+                  <a href="{{ route('admin.users.show', $u) }}" class="btn btn-xs btn-info">View</a>
+                  <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-xs btn-warning">Edit</a>
+                  <form action="{{ route('admin.users.destroy', $u) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
                     <button class="btn btn-xs btn-danger" onclick="return confirm('Delete this user?')">Del</button>
                   </form>

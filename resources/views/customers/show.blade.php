@@ -11,6 +11,6 @@
         <p><strong>Email:</strong> {{ $customer->email }}</p>
         <p><strong>Address:</strong> {{ $customer->address }}</p>
     </div>
-    <a href="{{ route('customers.index') }}" class="btn btn-secondary mt-3">Back to List</a>
+    <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary mt-3">Back to List</a>
 </div>
 @endsection

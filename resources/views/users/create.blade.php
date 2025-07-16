@@ -13,7 +13,7 @@
         <h3 class="card-title">Kullanıcı Ekle</h3>
       </div>
 
-      <form action="{{ route('users.store') }}" method="POST">
+      <form action="{{ route('admin.users.store') }}" method="POST">
         @csrf
         <div class="card-body">
 
@@ -84,7 +84,7 @@
         </div> {{-- /.card-body --}}
 
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('users.index') }}" class="btn btn-secondary mr-2">İptal</a>
+          <a href="{{ route('admin.users.index') }}" class="btn btn-secondary mr-2">İptal</a>
           <button type="submit" class="btn btn-primary">Kaydet</button>
         </div>
       </form>
