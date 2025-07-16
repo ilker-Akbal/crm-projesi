@@ -112,25 +112,8 @@
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
       </div>
-      <div class="form-group col-md-4">
-        <label for="customer_id">Müşteri (opsiyonel)</label>
-        <select
-          id="customer_id"
-          name="customer_id"
-          class="form-control @error('customer_id') is-invalid @enderror"
-        >
-          <option value="">-- seçiniz --</option>
-          @foreach($customers as $cust)
-            <option
-              value="{{ $cust->id }}"
-              {{ old('customer_id') == $cust->id ? 'selected' : '' }}
-            >{{ $cust->customer_name }}</option>
-          @endforeach
-        </select>
-        @error('customer_id')
-          <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-      </div>
+      <input type="hidden" name="customer_id" 
+         value="{{ auth()->user()->customer_id }}">
     </div>
 
     <button type="submit" class="btn btn-primary">Kaydet</button>

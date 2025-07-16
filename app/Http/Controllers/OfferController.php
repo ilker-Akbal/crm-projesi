@@ -2,77 +2,154 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Offer;
 use App\Models\Customer;
 use App\Models\Order;
+use Illuminate\Http\Request;
 
 class OfferController extends Controller
 {
+    // GET /offers
     public function index()
     {
-        $offers = Offer::with('customer')->orderBy('offer_date','desc')->get();
-        return view('offers.index',compact('offers'));
+        $offers = Offer::with('customer')->orderBy('offer_date', 'desc')->get();
+        return view('offers.index', compact('offers'));
     }
 
+    // GET /offers/create
     public function create()
     {
         $customers = Customer::orderBy('customer_name')->get();
-        $orders    = Order::orderBy('Order_Date','desc')->get();
-        return view('offers.create',compact('customers','orders'));
+        $orders    = Order::orderBy('Order_Date', 'desc')->get();
+        return view('offers.create', compact('customers', 'orders'));
     }
 
+    // POST /offers
     public function store(Request $request)
     {
         $data = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'order_id'    => 'nullable|exists:orders,id',
-            'offer_date'  => 'required|date',
-            'valid_until' => 'nullable|date|after_or_equal:offer_date',
-            'status'      => 'required|in:hazırlanıyor,gönderildi,kabul,reddedildi',
-            'total_amount'=> 'nullable|numeric|min:0',
+            'customer_id'           => 'required|exists:customers,id',
+            'order_id'              => 'nullable|exists:orders,id',
+            'offer_date'            => 'required|date',
+            'valid_until'           => 'nullable|date|after_or_equal:offer_date',
+            'status'                => 'required|in:hazırlanıyor,gönderildi,kabul,reddedildi',
+            'total_amount'          => 'nullable|numeric|min:0',
+
+            // ――― items (opsiyonel) ―――
+            'items'                 => 'nullable|array',
+            'items.*.product_id'    => 'required_with:items.*|exists:products,id',
+            'items.*.amount'        => 'required_with:items.*|numeric|min:1',
+            'items.*.unit_price'    => 'required_with:items.*|numeric|min:0',
         ]);
 
-        Offer::create($data);
+        // toplamı satırlardan hesapla (varsa)
+        $total = 0;
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $total += $item['amount'] * $item['unit_price'];
+            }
+        } else {
+            $total = $data['total_amount'] ?? 0;
+        }
+
+        $offer = Offer::create([
+            'customer_id'  => $data['customer_id'],
+            'order_id'     => $data['order_id'] ?? null,
+            'offer_date'   => $data['offer_date'],
+            'valid_until'  => $data['valid_until'] ?? null,
+            'status'       => $data['status'],
+            'total_amount' => $total,
+        ]);
+
+        // satırlar geldiyse pivot tabloya ekle
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $offer->products()->attach(
+                    $item['product_id'],
+                    ['amount' => $item['amount'], 'unit_price' => $item['unit_price']]
+                );
+            }
+        }
 
         return redirect()->route('offers.index')
-            ->with('success','Offer created successfully.');
+                         ->with('success', 'Offer created successfully.');
     }
 
+    // GET /offers/{offer}
     public function show(Offer $offer)
     {
-        $offer->load('customer','order');
-        return view('offers.show',compact('offer'));
+        $offer->load('customer', 'order', 'products');
+        return view('offers.show', compact('offer'));
     }
 
+    // GET /offers/{offer}/edit
     public function edit(Offer $offer)
     {
         $customers = Customer::orderBy('customer_name')->get();
-        $orders    = Order::orderBy('Order_Date','desc')->get();
-        return view('offers.edit',compact('offer','customers','orders'));
+        $orders    = Order::orderBy('Order_Date', 'desc')->get();
+        $offer->load('products');
+        return view('offers.edit', compact('offer', 'customers', 'orders'));
     }
 
+    // PUT /offers/{offer}
     public function update(Request $request, Offer $offer)
     {
         $data = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'order_id'    => 'nullable|exists:orders,id',
-            'offer_date'  => 'required|date',
-            'valid_until' => 'nullable|date|after_or_equal:offer_date',
-            'status'      => 'required|in:hazırlanıyor,gönderildi,kabul,reddedildi',
-            'total_amount'=> 'nullable|numeric|min:0',
+            'customer_id'           => 'required|exists:customers,id',
+            'order_id'              => 'nullable|exists:orders,id',
+            'offer_date'            => 'required|date',
+            'valid_until'           => 'nullable|date|after_or_equal:offer_date',
+            'status'                => 'required|in:hazırlanıyor,gönderildi,kabul,reddedildi',
+            'total_amount'          => 'nullable|numeric|min:0',
+
+            // ――― items (opsiyonel) ―――
+            'items'                 => 'nullable|array',
+            'items.*.product_id'    => 'required_with:items.*|exists:products,id',
+            'items.*.amount'        => 'required_with:items.*|numeric|min:1',
+            'items.*.unit_price'    => 'required_with:items.*|numeric|min:0',
         ]);
 
-        $offer->update($data);
+        // toplam tutarı güncelle
+        $total = 0;
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $total += $item['amount'] * $item['unit_price'];
+            }
+        } else {
+            $total = $data['total_amount'] ?? 0;
+        }
+
+        $offer->update([
+            'customer_id'  => $data['customer_id'],
+            'order_id'     => $data['order_id'] ?? null,
+            'offer_date'   => $data['offer_date'],
+            'valid_until'  => $data['valid_until'] ?? null,
+            'status'       => $data['status'],
+            'total_amount' => $total,
+        ]);
+
+        // pivot tabloyu yeniden düzenle
+        $offer->products()->detach();
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                $offer->products()->attach(
+                    $item['product_id'],
+                    ['amount' => $item['amount'], 'unit_price' => $item['unit_price']]
+                );
+            }
+        }
 
         return redirect()->route('offers.index')
-            ->with('success','Offer updated successfully.');
+                         ->with('success', 'Offer updated successfully.');
     }
 
+    // DELETE /offers/{offer}
     public function destroy(Offer $offer)
     {
+        $offer->products()->detach();
         $offer->delete();
+
         return redirect()->route('offers.index')
-            ->with('success','Offer deleted successfully.');
+                         ->with('success', 'Offer deleted successfully.');
     }
 }

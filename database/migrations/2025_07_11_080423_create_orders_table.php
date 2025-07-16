@@ -13,7 +13,6 @@ return new class extends Migration
     {
       Schema::create('orders', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('contact_id')->constrained('contacts');
     $table->string('situation');
     $table->foreignId('customer_id')->constrained('customers');
     $table->date('order_date');

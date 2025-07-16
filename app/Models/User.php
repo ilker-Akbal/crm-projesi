@@ -11,10 +11,12 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = [
+     protected $fillable = [
         'username',
-        'Role',
+        'password',
+        'role',
         'active',
+        'customer_id',   
         'created_by',
         'updated_by',
     ];
@@ -22,5 +24,6 @@ class User extends Authenticatable
     protected $hidden = ['password','remember_token'];
 
     public function actions()   { return $this->hasMany(Action::class); }
+     public function customer() { return $this->belongsTo(Customer::class); }
     public function reminders() { return $this->hasMany(Reminder::class); }
 }

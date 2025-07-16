@@ -80,7 +80,51 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+        <hr>
+<h5>User Login</h5>
 
+<div class="form-row">
+  <div class="col-md-6 mb-3">
+    <label for="username">Username *</label>
+    <input type="text" name="username" id="username" class="form-control"
+           value="{{ old('username') }}" required>
+  </div>
+
+  <div class="col-md-6 mb-3">
+    <label for="password">Password *</label>
+    <input type="password" name="password" id="password" class="form-control" required>
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="col-md-6 mb-4">
+    <label for="password_confirmation">Confirm Password *</label>
+    <input type="password" name="password_confirmation"
+           id="password_confirmation" class="form-control" required>
+  </div>
+  <div class="col-md-3 mb-4 d-flex align-items-end">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+      <label class="form-check-label" for="active">Active</label>
+    </div>
+  </div>
+<div class="form-group">
+  <label for="role">Role *</label>
+  <select name="role" id="role"
+          class="form-control @error('role') is-invalid @enderror"
+          required>
+    <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- select role --</option>
+    @foreach($roles as $r)
+      <option value="{{ $r }}" {{ old('role') === $r ? 'selected' : '' }}>
+        {{ ucfirst($r) }}
+      </option>
+    @endforeach
+  </select>
+  @error('role')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
+</div>
+</div>
         <button type="submit" class="btn btn-primary">Save</button>
         <a href="{{ route('customers.index') }}" class="btn btn-secondary">Cancel</a>
     </form>

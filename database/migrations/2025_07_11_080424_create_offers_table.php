@@ -13,15 +13,26 @@ return new class extends Migration
     {
         Schema::create('offers', function (Blueprint $table) {
     $table->id();
+
     $table->foreignId('customer_id')->constrained('customers');
-    $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
+    $table->foreignId('order_id')->nullable()
+          ->constrained('orders')->nullOnDelete();
+
     $table->date('offer_date');
     $table->date('valid_until')->nullable();
     $table->string('status');
-    $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-    $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
+    // ------------- eklenen kolon -------------
+    $table->decimal('total_amount', 15, 2)->default(0);
+
+    $table->foreignId('created_by')->nullable()
+          ->constrained('users')->nullOnDelete();
+    $table->foreignId('updated_by')->nullable()
+          ->constrained('users')->nullOnDelete();
+
     $table->timestamps();
 });
+
 
 
     }

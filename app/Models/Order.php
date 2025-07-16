@@ -1,5 +1,4 @@
 <?php
-// app/Models/Order.php
 
 namespace App\Models;
 
@@ -11,13 +10,17 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'contacts',
+        
         'situation',
         'customer_id',
-        'order_Date',
+        'order_date',      // düzeltilmiş alan adları
         'delivery_date',
         'total_amount',
         'updated_by',
+    ];
+    protected $casts = [
+        'order_date'    => 'date',
+        'delivery_date' => 'date',
     ];
 
     public function customer()      { return $this->belongsTo(Customer::class); }
@@ -26,7 +29,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_products')
-                    ->withPivot(['amount','unit_price'])
+                    ->withPivot(['amount', 'unit_price'])
                     ->withTimestamps();
     }
 }

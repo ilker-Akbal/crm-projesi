@@ -5,29 +5,36 @@
   <title>@yield('title', 'CRM Panel')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- AdminLTE CSS -->
+  <!-- AdminLTE & FontAwesome -->
   <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
+  @stack('styles')
 </head>
-<body class="hold-transition sidebar-mini">
+
+<body class="hold-transition @auth sidebar-mini @else login-page @endauth">
+
 <div class="wrapper">
 
-  {{-- Navbar --}}
-  @include('layouts.navbar')
+  {{-- ===== Navbar & Sidebar sadece oturum açıksa ===== --}}
+  @auth
+    @include('layouts.navbar')
+    @include('layouts.sidebar')
+  @endauth
 
-  {{-- Sidebar --}}
-  @include('layouts.sidebar')
-
-  <!-- İçerik -->
+  {{-- ------- İçerik -------- --}}
   <div class="content-wrapper">
     @yield('content')
   </div>
 
 </div>
 
-<!-- AdminLTE JS -->
+<!-- AdminLTE & Bootstrap JS -->
 <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
+
+{{-- Proje JS --}}
+<script src="{{ asset('js/app.js') }}"></script>
+@stack('scripts')
 </body>
 </html>

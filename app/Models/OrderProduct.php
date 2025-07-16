@@ -1,5 +1,4 @@
 <?php
-// app/Models/OrderProduct.php
 
 namespace App\Models;
 
@@ -20,6 +19,6 @@ class OrderProduct extends Model
         'updated_by',
     ];
 
-    public function order()   { return $this->belongsTo(Order::class, 'Order_id'); }
-    public function product() { return $this->belongsTo(Product::class, 'Product_id'); }
+    public function order()   { return $this->belongsTo(Order::class, 'order_id'); }
+    public function product() { return $this->belongsTo(Product::class, 'product_id'); }
 }

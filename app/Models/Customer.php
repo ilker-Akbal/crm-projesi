@@ -40,4 +40,5 @@ class Customer extends Model
     public function reminders()       { return $this->hasMany(Reminder::class); }
     public function supportRequests() { return $this->hasMany(SupportRequest::class); }
     public function companies()       { return $this->hasMany(Company::class); }
+    public function user()   { return $this->hasOne(User::class); }
 }

@@ -16,15 +16,35 @@ use App\Http\Controllers\{
     SupportController,
     ActionController,
     UserController,
-    ReminderController
+    ReminderController,
+    DashboardController,
+    AuthController
 };
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard (Anasayfa)
-|--------------------------------------------------------------------------
-*/
-Route::view('/', 'dashboard')->name('dashboard.index');
+Route::middleware('guest')->group(function () {
+    Route::get ('/login',    [AuthController::class, 'showLogin'   ])->name('login');
+    Route::post('/login',    [AuthController::class, 'login'       ]);
+
+
+});
+
+/* ---------- Auth alanı ---------- */
+Route::middleware('auth')->group(function () {
+
+    /* Dashboard (index) */
+    Route::get('/', [DashboardController::class, 'index'])
+          ->name('dashboard.index');
+
+    /* Logout */
+    Route::post('/logout', [AuthController::class, 'logout'])
+          ->name('logout');
+
+    /* CRM kaynakları (orders, offers, …) */
+    Route::resources([
+        'customers'       => CustomerController::class,
+        'companies'       => CompanyController::class,
+        /* ... diğer resource rotalar ... */
+    ]);
 
 /*
 |--------------------------------------------------------------------------
@@ -92,3 +112,4 @@ Route::resources([
     'reminders'       => ReminderController::class,
     // support ve reports resource'ları zaten yukarıda ayrı tanımlı
 ]);
+});
