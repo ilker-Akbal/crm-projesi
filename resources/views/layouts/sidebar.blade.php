@@ -268,12 +268,7 @@
                 <p>View All Actions</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="{{ route('actions.by-customer') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Actions by Customer</p>
-              </a>
-            </li>
+           
           </ul>
         </li>
 

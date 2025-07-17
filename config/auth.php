@@ -1,4 +1,5 @@
 <?php
+use App\Models;
 
 return [
 
@@ -18,6 +19,7 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
+    
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards
@@ -40,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+        'driver'   => 'session',
+        'provider' => 'admins',
+    ],
     ],
 
     /*
@@ -63,6 +69,10 @@ return [
     'users' => [
         'driver' => 'eloquent',
         'model'  => App\Models\User::class,
+    ],
+     'admins' => [
+        'driver' => 'eloquent',
+        'model'  => App\Models\Admin::class,
     ],
 ],
 

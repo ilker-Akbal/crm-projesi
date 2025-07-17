@@ -20,46 +20,32 @@ use App\Http\Controllers\{
     ActionController,
     UserController,
     CustomerController,
-    ReminderController,
-    
+    ReminderController
 };
 
 /*
 |--------------------------------------------------------------------------
-| Misafir (Guest) Rotaları
+| 1) Normal Misafir (Guest) Rotaları
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
-    // Normal kullanıcı login
-    Route::get('/login',  [AuthController::class,'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class,'login']);
+    Route::get('login',  [AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AuthController::class, 'login']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin Misafir (Guest) Rotaları
-|--------------------------------------------------------------------------
-*/
-Route::prefix('admin')->name('admin.')->middleware('admin.guest')->group(function() {
-    // Admin login form & işlemi
-    Route::get ('/login',  [AdminAuthController::class,'showLogin'])->name('login');
-    Route::post('/login',  [AdminAuthController::class,'login']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Auth’li Normal Kullanıcı Rotaları
+| 2) Normal Authed Kullanıcı Rotaları
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Normal kullanıcı logout
-    Route::post('/logout', [AuthController::class,'logout'])->name('logout');
+    // Logout
+    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    // CRM Dashboard (manager/user)
-    Route::get('/', [DashboardController::class,'index'])
-         ->name('dashboard.index');
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 
-    // CRM kaynakları (users/customers hariç)
+    // CRM Kaynakları (customers ve users hariç)
     Route::resources([
         'companies'       => CompanyController::class,
         'contacts'        => ContactController::class,
@@ -74,52 +60,54 @@ Route::middleware('auth')->group(function () {
         'reminders'       => ReminderController::class,
     ]);
 
-    // Support
+    // Support – özel routelar
     Route::prefix('support')->name('support.')->group(function () {
-        Route::get('/',            [SupportController::class,'index']  )->name('index');
-        Route::get('create',       [SupportController::class,'create'] )->name('create');
-        Route::get('pending',      [SupportController::class,'pending'])->name('pending');
-        Route::get('resolved',     [SupportController::class,'resolved'])->name('resolved');
-        Route::post('/',           [SupportController::class,'store']  )->name('store');
-        Route::get('{support}/edit',[SupportController::class,'edit']  )->name('edit');
-        Route::put('{support}',    [SupportController::class,'update'])->name('update');
-        Route::delete('{support}', [SupportController::class,'destroy'])->name('destroy');
+        Route::get('/',             [SupportController::class, 'index']  )->name('index');
+        Route::get('create',        [SupportController::class, 'create'] )->name('create');
+        Route::get('pending',       [SupportController::class, 'pending'])->name('pending');
+        Route::get('resolved',      [SupportController::class, 'resolved'])->name('resolved');
+         Route::get('{support}',       [SupportController::class, 'show']    )->name('show');
+        Route::post('/',            [SupportController::class, 'store']  )->name('store');
+        Route::get('{support}/edit',[SupportController::class, 'edit']   )->name('edit');
+        Route::put('{support}',     [SupportController::class, 'update'] )->name('update');
+        Route::delete('{support}',  [SupportController::class, 'destroy'])->name('destroy');
     });
 
-    // Reports
+    // Reports – özel routelar
     Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/',                       [ReportController::class,'index']                  )->name('index');
-        Route::get('sales',                   [ReportController::class,'sales']                  )->name('sales');
-        Route::get('customers',               [ReportController::class,'customers']              )->name('customers');
-        Route::get('product-stock',           [ReportController::class,'productStock']           )->name('product_stock');
-        Route::get('current-account-summary', [ReportController::class,'currentAccountSummary'])->name('account_summary');
-        Route::get('support-request',         [ReportController::class,'supportRequest']        )->name('support');
+        Route::get('/',                       [ReportController::class, 'index']                 )->name('index');
+        Route::get('sales',                   [ReportController::class, 'sales']                 )->name('sales');
+        Route::get('customers',               [ReportController::class, 'customers']             )->name('customers');
+        Route::get('product-stock',           [ReportController::class, 'productStock']          )->name('product_stock');
+        Route::get('current-account-summary', [ReportController::class, 'currentAccountSummary'])->name('account_summary');
+        Route::get('support-request',         [ReportController::class, 'supportRequest']       )->name('support');
     });
 
-    // Actions by customer
-    Route::get('actions/by-customer',[ActionController::class,'byCustomer'])
-         ->name('actions.by-customer');
+    // Actions by Customer
+   Route::get('actions/by-customer', [ActionController::class, 'byCustomer'])
+     ->name('actions.by-customer');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin Panel – Tek bir ENV tabanlı admin
+| 3) Admin Panel Rotaları
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->name('admin.')->group(function(){
-    // Misafir admin
+
+    // 3a) Admin misafir (giriş yapmamışsa)
     Route::middleware('admin.guest')->group(function(){
-        Route::get('login',  [AdminAuthController::class,'showLogin'])->name('login');
-        Route::post('login', [AdminAuthController::class,'login']);
+        Route::get('login',  [AdminAuthController::class, 'showLogin'])->name('login');
+        Route::post('login', [AdminAuthController::class, 'login']);
     });
 
-    // Giriş yapmış admin
+    // 3b) Admin oturumlu
     Route::middleware('isAdmin')->group(function(){
-        Route::post('logout',[AdminAuthController::class,'logout'])->name('logout');
-        Route::get('/',      [AdminController::class,'index'])->name('dashboard');
+        Route::post('logout',[AdminAuthController::class, 'logout'])->name('logout');
+        Route::get('/',      [AdminController::class,     'index'] )->name('dashboard');
 
-        Route::resource('users', UserController::class)
-     ->only(['index','create','store','show','edit','update','destroy']);
+        Route::resource('users',     UserController::class);
         Route::resource('customers', CustomerController::class);
     });
+
 });

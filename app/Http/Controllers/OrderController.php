@@ -44,42 +44,42 @@ public function create()
 
 
     // POST /orders
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'customer_id'            => 'required|exists:customers,id',
-            'order_date'             => 'required|date',
-            'delivery_date'          => 'nullable|date|after_or_equal:order_date',
-            'items'                  => 'required|array|min:1',
-            'items.*.product_id'     => 'required|exists:products,id',
-            'items.*.amount'         => 'required|numeric|min:1',
-            'items.*.unit_price'     => 'required|numeric|min:0',
-        ]);
+   public function store(Request $request)
+{
+    $data = $request->validate([
+        'customer_id'           => 'required|exists:customers,id',
+        'order_date'            => 'required|date',
+        'delivery_date'         => 'nullable|date|after_or_equal:order_date',
+        'items'                 => 'required|array|min:1',
+        'items.*.product_id'    => 'required|exists:products,id',
+        'items.*.amount'        => 'required|numeric|min:1',
+        'items.*.unit_price'    => 'required|numeric|min:0',
+        'situation' => 'in:hazırlanıyor,tamamlandı'
+    ]);
 
-        // toplamı hesapla
-        $total = 0;
-        foreach ($data['items'] as $item) {
-            $total += $item['amount'] * $item['unit_price'];
-        }
+    // toplamı hesapla
+    $total = collect($data['items'])
+               ->reduce(fn($sum, $i) => $sum + $i['amount'] * $i['unit_price'], 0);
 
-        $order = Order::create([
-            'customer_id'   => $data['customer_id'],
-            'order_date'    => $data['order_date'],
-            'delivery_date' => $data['delivery_date'] ?? null,
-            'total_amount'  => $total,
-        ]);
+    $order = Order::create([
+        'customer_id'   => $data['customer_id'],
+        'order_date'    => $data['order_date'],
+        'delivery_date' => $data['delivery_date'] ?? null,
+        'situation'     => 'hazırlanıyor',      // ← burayı ekledik
+        'total_amount'  => $total,
+    ]);
 
-        // pivot ekle
-        foreach ($data['items'] as $item) {
-            $order->products()->attach(
-                $item['product_id'],
-                ['amount' => $item['amount'], 'unit_price' => $item['unit_price']]
-            );
-        }
-
-        return redirect()->route('orders.index')
-                         ->with('success', 'Order created successfully.');
+    // pivot ekle
+    foreach ($data['items'] as $item) {
+        $order->products()->attach(
+            $item['product_id'],
+            ['amount' => $item['amount'], 'unit_price' => $item['unit_price']]
+        );
     }
+
+    return redirect()->route('orders.index')
+                     ->with('success','Order created successfully.');
+}
 
     // GET /orders/{order}
     public function show(Order $order)

@@ -25,8 +25,8 @@
             <tr>
               <td>{{ $o->id }}</td>
               <td>{{ $o->customer->customer_name }}</td>
-              <td>{{ $o->Order_Date }}</td>
-              <td>{{ $o->Delivery_date }}</td>
+              <td>{{ $o->order_date }}</td>
+              <td>{{ $o->delivery_date }}</td>
               <td>{{ number_format($o->total_amount,2) }}</td>
               <td>
                 <a href="{{ route('orders.show',$o) }}" class="btn btn-sm btn-info">View</a>

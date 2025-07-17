@@ -16,10 +16,11 @@
 <div class="wrapper">
 
   {{-- ===== Navbar & Sidebar sadece oturum açıksa ===== --}}
-  @auth
+ @unless(request()->segment(1) === 'admin')
+    {{-- Normal CRM navbar ve sidebar --}}
     @include('layouts.navbar')
     @include('layouts.sidebar')
-  @endauth
+  @endunless
 
   {{-- ------- İçerik -------- --}}
   <div class="content-wrapper">

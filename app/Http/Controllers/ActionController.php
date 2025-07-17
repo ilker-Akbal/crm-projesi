@@ -103,6 +103,6 @@ class ActionController extends Controller
 
         $actions = $query->get();
 
-        return view('actions.by_customer', compact('actions','customers','selected'));
+        return view('actions.by-customer', compact('actions','customers','selected'));
     }
 }

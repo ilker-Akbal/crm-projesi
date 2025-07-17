@@ -7,7 +7,7 @@ use App\Models\Reminder;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\Auth;
 class ReminderController extends Controller
 {
     /** GET /reminders */
@@ -31,15 +31,17 @@ class ReminderController extends Controller
     }
 
     /** POST /reminders */
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $data = $request->validate([
             'title'         => 'required|string|max:255',
             'reminder_date' => 'required|date',
-            'customer_id'   => 'required|exists:customers,id',
-            'user_id'       => 'required|exists:users,id',
             'explanation'   => 'nullable|string',
         ]);
+
+        // oturum açan kullanıcı & müşterisinin ID’sini atıyoruz
+        $data['user_id']     = Auth::id();
+        $data['customer_id'] = Auth::user()->customer_id;
 
         Reminder::create($data);
 

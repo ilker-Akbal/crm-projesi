@@ -28,7 +28,7 @@
                 <tr>
                   <td>{{ $s->id }}</td>
                   <td>{{ $s->customer->customer_name }}</td>
-                  <td>{{ $s->Title }}</td>
+                  <td>{{ $s->title }}</td>
                   <td class="text-capitalize">{{ $s->situation }}</td>
                   <td>{{ $s->registration_date }}</td>
                   <td>{{ $s->updated_at->format('Y-m-d') }}</td>

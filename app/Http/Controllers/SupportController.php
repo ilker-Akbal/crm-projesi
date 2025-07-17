@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SupportRequest;
 use App\Models\Customer;
+use Illuminate\Support\Facades\Auth;
 
 class SupportController extends Controller
 {
@@ -26,23 +27,24 @@ class SupportController extends Controller
     }
 
     /** POST /support */
-    public function store(Request $request)
+   public function store(Request $request)
     {
         $data = $request->validate([
-            'customer_id'       => 'required|exists:customers,id',
             'title'             => 'required|string|max:255',
             'explanation'       => 'nullable|string',
             'situation'         => 'required|in:pending,resolved',
             'registration_date' => 'required|date',
         ]);
 
+        // oturum açan kullanıcının ilişkili customer_id'sini atıyoruz
+        $data['customer_id'] = Auth::user()->customer_id;
+
         SupportRequest::create($data);
 
         return redirect()
             ->route('support.index')
-            ->with('success', 'Support request created successfully.');
+            ->with('success','Support request created successfully.');
     }
-
     /** GET /support/{id} */
     public function show(SupportRequest $support)
     {
