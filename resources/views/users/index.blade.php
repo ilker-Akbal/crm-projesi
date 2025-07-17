@@ -1,3 +1,4 @@
+{{-- resources/views/admin/users/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -5,9 +6,12 @@
   <div class="container-fluid">
     
     <div class="card card-outline card-primary">
-      <div class="card-header d-flex justify-content-between">
+      <div class="card-header">
+        <div class="d-flex justify-content-between mb-2">
+           <a href="{{ url('/admin') }}" class="btn btn-sm btn-secondary">Geri</a>
+          <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">Add User</a>
+        </div>
         <h3 class="card-title">Users</h3>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">Add User</a>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">

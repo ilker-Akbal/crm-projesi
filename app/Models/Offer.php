@@ -20,6 +20,11 @@ class Offer extends Model
         'total_amount',
     ];
 
+    protected $casts = [
+      'offer_date'  => 'date',
+      'valid_until' => 'date',
+    ];
+
     public function customer()  { return $this->belongsTo(Customer::class); }
     public function order()     { return $this->belongsTo(Order::class); }
     public function lines()     { return $this->hasMany(OfferProduct::class); }

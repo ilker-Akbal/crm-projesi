@@ -6,7 +6,7 @@
   <div class="container-fluid">
 
     {{-- Genel flash / validasyon uyarıları --}}
-    @include('partials.alerts')
+    
 
     <div class="card card-outline card-primary">
       <div class="card-header">

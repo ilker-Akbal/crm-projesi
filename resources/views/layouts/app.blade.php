@@ -11,31 +11,41 @@
   @stack('styles')
 </head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
+@php
+  // /admin* URL’lerinde sidebar/layout hiç gelmesin
+  $isAdminArea = request()->is('admin*');
+@endphp
 
-<div class="wrapper">
+<body class="hold-transition {{ auth()->check() && ! $isAdminArea ? 'sidebar-mini layout-fixed' : '' }}">
 
-  {{-- ===== Navbar & Sidebar sadece oturum açıksa ===== --}}
- @unless(request()->segment(1) === 'admin')
-    {{-- Normal CRM navbar ve sidebar --}}
-    @include('layouts.navbar')
-    @include('layouts.sidebar')
-  @endunless
+  @auth
+    <div class="wrapper">
+      {{-- Navbar her zaman --}}
+       @include('layouts.navbar', [
+       'navAlignment' => $isAdminArea ? 'justify-content-start' : 'justify-content-center'
+     ])
 
-  {{-- ------- İçerik -------- --}}
-  <div class="content-wrapper">
+      {{-- Admin olmayan sayfalarda sidebar --}}
+      @unless($isAdminArea)
+        @include('layouts.sidebar')
+      @endunless
+
+      <div class="content-wrapper">
+        @yield('content')
+      </div>
+    </div>
+  @endauth
+
+  @guest
+    {{-- Guest yani login sayfası --}}
     @yield('content')
-  </div>
+  @endguest
 
-</div>
-
-<!-- AdminLTE & Bootstrap JS -->
-<script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
-<script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
-
-{{-- Proje JS --}}
-<script src="{{ asset('js/app.js') }}"></script>
-@stack('scripts')
+  <!-- AdminLTE & Bootstrap JS -->
+  <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
+  <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('dist/js/adminlte.min.js') }}"></script>
+  <script src="{{ asset('js/app.js') }}"></script>
+  @stack('scripts')
 </body>
 </html>

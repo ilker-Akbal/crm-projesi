@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container d-flex justify-content-center align-items-center" style="min-height:80vh">
+
+  <div class="container d-flex justify-content-center align-items-center " style="min-height:80vh">
   <div class="card shadow-sm" style="width:380px">
     <div class="card-body">
       <h4 class="mb-4 text-center">CRM Login</h4>
@@ -33,4 +34,6 @@
     </div>
   </div>
 </div>
+
+
 @endsection

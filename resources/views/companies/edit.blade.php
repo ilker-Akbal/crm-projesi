@@ -6,7 +6,7 @@
   <h1>Edit Company #{{ $company->id }}</h1>
   <form action="{{ route('companies.update',$company) }}" method="POST">
     @csrf @method('PUT')
-    @include('partials.alerts')
+    
 
     <div class="form-group">
       <label for="Company_name">Firma Adı</label>

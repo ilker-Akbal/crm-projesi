@@ -6,6 +6,8 @@
 
     <div class="mb-3">
         <a href="{{ route('admin.customers.create') }}" class="btn btn-primary">Add New Customer</a>
+        <a href="{{ url('/admin') }}" class="btn btn-sm btn-secondary">Geri</a>
+        
     </div>
 
     <table class="table table-bordered">
