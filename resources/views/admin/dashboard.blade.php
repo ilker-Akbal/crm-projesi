@@ -1,5 +1,5 @@
 {{-- resources/views/admin/dashboard.blade.php --}}
-@extends('layouts.admin-app')
+@extends('layouts.app')
 
 @section('title','Admin Dashboard')
 
@@ -10,6 +10,7 @@
   --secondary: #3f37c9;
   --text-dark: #2b2d42;
   --glass-bg: rgba(255,255,255,0.15);
+  --danger: #f72585;
 }
 .glass-card {
   background: var(--glass-bg);
@@ -31,17 +32,38 @@
   border-radius: 8px;
   font-weight:600;
 }
+.btn-glass-danger {
+  background: linear-gradient(135deg,var(--danger),#b5179e);
+  box-shadow: 0 4px 15px rgba(247,37,133,0.3);
+}
 .dashboard-icon {
   font-size:2.5rem;
   background: linear-gradient(135deg,var(--primary),var(--secondary));
   -webkit-background-clip:text;
   color:transparent;
 }
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
 </style>
 @endpush
 
 @section('content')
 <div class="container py-4">
+  <div class="header-actions">
+    <h2 style="color:var(--text-dark)">Admin Paneli</h2>
+    {{-- Çıkış butonu admin logout rotasına yönlendirildi --}}
+    <form action="{{ route('admin.logout') }}" method="POST">
+      @csrf
+      <button type="submit" class="btn-glass btn-glass-danger">
+        <i class="fas fa-sign-out-alt me-1"></i> Çıkış Yap
+      </button>
+    </form>
+  </div>
+
   <div class="row g-4">
     <div class="col-md-6">
       <a href="{{ route('admin.users.index') }}" class="glass-card d-block h-100 text-decoration-none">

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title', 'CRM Panel')</title>
+  <title>@yield('title', 'IKA CRM Panel')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- AdminLTE & FontAwesome -->
