@@ -18,7 +18,7 @@
                 <tr>
                   <td>{{ $s->id }}</td>
                   <td>{{ $s->customer->customer_name }}</td>
-                  <td>{{ $s->Title }}</td>
+                  <td>{{ $s->title }}</td>
                   <td>{{ $s->registration_date }}</td>
                   <td>
                     <a href="{{ route('support.show',$s) }}" class="btn btn-sm btn-info">View</a>

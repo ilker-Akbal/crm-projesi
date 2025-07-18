@@ -5,8 +5,8 @@
   <h2>Order #{{ $order->id }} Details</h2>
   <ul class="list-group">
     <li class="list-group-item"><strong>Customer:</strong> {{ $order->customer->customer_name }}</li>
-    <li class="list-group-item"><strong>Order Date:</strong> {{ $order->Order_Date }}</li>
-    <li class="list-group-item"><strong>Delivery Date:</strong> {{ $order->Delivery_date }}</li>
+    <li class="list-group-item"><strong>Order Date:</strong> {{ $order->order_date }}</li>
+    <li class="list-group-item"><strong>Delivery Date:</strong> {{ $order->delivery_date }}</li>
     <li class="list-group-item"><strong>Total:</strong> {{ number_format($order->total_amount,2) }}</li>
   </ul>
 

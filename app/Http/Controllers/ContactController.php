@@ -65,7 +65,14 @@ class ContactController extends Controller
             ->route('contacts.index')
             ->with('success', 'Contact updated successfully.');
     }
+     public function show(Contact $contact)
+    {
+        // İlişkili company bilgisini yükle
+        $contact->load('company');
 
+        // resources/views/contacts/show.blade.php dosyasına $contact'ı gönder
+        return view('contacts.show', compact('contact'));
+    }
     // Sil
     public function destroy(Contact $contact)
     {

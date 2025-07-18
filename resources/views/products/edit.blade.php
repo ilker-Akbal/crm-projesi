@@ -11,10 +11,10 @@
           @include('partials.alerts')
 
           <div class="form-group">
-            <label for="Product_name">Product Name *</label>
-            <input type="text" name="Product_name" id="Product_name"
+            <label for="product_name">Product Name *</label>
+            <input type="text" name="product_name" id="product_name"
                    class="form-control"
-                   value="{{ old('Product_name',$product->Product_name) }}" required>
+                   value="{{ old('product_name',$product->product_name) }}" required>
           </div>
 
           <div class="form-group">

@@ -18,6 +18,9 @@ class Company extends Model
         'created_by',
         'updated_by',
     ];
+      protected $casts = [
+      'registration_date' => 'date',
+    ];
     public function customer() { return $this->belongsTo(Customer::class); }
     public function contacts() { return $this->hasMany(Contact::class); }
 }

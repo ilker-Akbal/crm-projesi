@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Company;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Customer;
 
 class CompanyController extends Controller
@@ -62,22 +63,24 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company)
     {
         $data = $request->validate([
-            'Company_name'      => 'required|string|max:255',
-            'tax_number'        => 'nullable|string|max:100',
-            'Adress'            => 'nullable|string',
-            'phone_number'      => 'nullable|string|max:50',
-            'Email'             => 'nullable|email|max:255',
-            'registration_date' => 'nullable|date',
-            'current_role'      => 'nullable|string|max:100',
-            'customer_id'       => 'nullable|exists:customers,id',
-        ]);
+        'company_name'      => 'required|string|max:255',
+        'tax_number'        => 'nullable|string|max:100',
+        'address'           => 'nullable|string',
+        'phone_number'      => 'nullable|string|max:50',
+        'email'             => 'nullable|email|max:255',
+        'registration_date' => 'nullable|date',
+        'current_role'      => 'nullable|string|max:100',
+        'customer_id'       => 'nullable|exists:customers,id',  // ✔ kural
+    ]);
 
-        $company->update($data);
+        $data['customer_id'] = Auth::user()->customer_id;
 
-        return redirect()
-            ->route('companies.index')
-            ->with('success', 'Company updated successfully.');
-    }
+    $company->update($data);
+
+    return redirect()
+        ->route('companies.index')
+        ->with('success', 'Firma başarıyla güncellendi.');
+}
 
     // Sil
     public function destroy(Company $company)
