@@ -3,81 +3,116 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Account;
 use App\Models\Customer;
 
 class AccountController extends Controller
 {
-    // GET /accounts
+    /* -------------------------------------------------
+     |  GET /accounts  →  Liste
+     * ------------------------------------------------*/
     public function index()
     {
-        $accounts = Account::with('customer')
-            ->orderBy('opening_date','desc')
-            ->get();
+        $accounts = Account::where('customer_id', Auth::user()->customer_id)
+                           ->with('customer')
+                           ->orderBy('opening_date', 'desc')
+                           ->get();
 
         return view('accounts.index', compact('accounts'));
     }
 
-    // GET /accounts/create
+    /* -------------------------------------------------
+     |  GET /accounts/create  →  Form
+     * ------------------------------------------------*/
     public function create()
     {
-        $customers = Customer::orderBy('customer_name')->get();
+        // Başka müşteri seçimi yapılmasın
+        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+
         return view('accounts.create', compact('customers'));
     }
 
-    // POST /accounts
+    /* -------------------------------------------------
+     |  POST /accounts  →  Kaydet
+     * ------------------------------------------------*/
     public function store(Request $request)
     {
         $data = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
             'balance'      => 'required|numeric|min:0',
             'opening_date' => 'required|date',
         ]);
 
-        Account::create($data);
+        Account::create($data + [
+            'customer_id' => Auth::user()->customer_id,
+        ]);
 
-        return redirect()
-            ->route('accounts.index')
-            ->with('success', 'Account created successfully.');
+        return redirect()->route('accounts.index')
+                         ->with('success', 'Account created successfully.');
     }
 
-    // GET /accounts/{account}
+    /* -------------------------------------------------
+     |  GET /accounts/{account}  →  Detay
+     * ------------------------------------------------*/
     public function show(Account $account)
     {
+        $this->authorizeAccount($account);
+
         $account->load('customer');
+
         return view('accounts.show', compact('account'));
     }
 
-    // GET /accounts/{account}/edit
+    /* -------------------------------------------------
+     |  GET /accounts/{account}/edit  →  Form
+     * ------------------------------------------------*/
     public function edit(Account $account)
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        return view('accounts.edit', compact('account','customers'));
+        $this->authorizeAccount($account);
+
+        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+
+        return view('accounts.edit', compact('account', 'customers'));
     }
 
-    // PUT /accounts/{account}
+    /* -------------------------------------------------
+     |  PUT /accounts/{account}  →  Güncelle
+     * ------------------------------------------------*/
     public function update(Request $request, Account $account)
     {
+        $this->authorizeAccount($account);
+
         $data = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
             'balance'      => 'required|numeric|min:0',
             'opening_date' => 'required|date',
         ]);
 
         $account->update($data);
 
-        return redirect()
-            ->route('accounts.index')
-            ->with('success', 'Account updated successfully.');
+        return redirect()->route('accounts.index')
+                         ->with('success', 'Account updated successfully.');
     }
 
-    // DELETE /accounts/{account}
+    /* -------------------------------------------------
+     |  DELETE /accounts/{account}  →  Sil
+     * ------------------------------------------------*/
     public function destroy(Account $account)
     {
+        $this->authorizeAccount($account);
+
         $account->delete();
 
-        return redirect()
-            ->route('accounts.index')
-            ->with('success', 'Account deleted successfully.');
+        return redirect()->route('accounts.index')
+                         ->with('success', 'Account deleted successfully.');
+    }
+
+    /* -------------------------------------------------
+     |  Yardımcı: hesap sahibi mi?
+     * ------------------------------------------------*/
+    private function authorizeAccount(Account $account): void
+    {
+        if ($account->customer_id !== Auth::user()->customer_id) {
+            abort(403, 'Bu hesaba erişim yetkiniz yok.');
+        }
     }
 }

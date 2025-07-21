@@ -13,50 +13,70 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        /* Basit sayaçlar */
+        /** @var \App\Models\User $user */
+        $user        = auth()->user();
+        $customerId  = $user->customer_id;   // giriş yapan kullanıcının firması
+
+        /* ---------------------- METRİKLER ---------------------- */
         $metrics = [
-            'customers'        => Customer::count(),
-            'openOffers'       => Offer::where('status', 'hazırlanıyor')->count(),
-            'openOrders'       => Order::where('situation', 'hazırlanıyor')->count(),
-            'todayReminders'   => Reminder::whereDate('reminder_date', today())->count(),
-            'openSupports'     => SupportRequest::where('situation', 'açık')->count(),
+            // İsterseniz 'customers' metriğini kaldırabilirsiniz (zaten 1 olur)
+            'customers'      => 1,
+            'openOffers'     => Offer::where('customer_id', $customerId)
+                                      ->where('status', 'hazırlanıyor')
+                                      ->count(),
+            'openOrders'     => Order::where('customer_id', $customerId)
+                                      ->where('situation', 'hazırlanıyor')
+                                      ->count(),
+            'todayReminders' => Reminder::where('customer_id', $customerId)
+                                        ->whereDate('reminder_date', today())
+                                        ->count(),
+            'openSupports'   => SupportRequest::where('customer_id', $customerId)
+                                              ->where('situation', 'açık')
+                                              ->count(),
         ];
 
-        /* Aylık ciro (son 12 ay) */
-        /* Aylık ciro (son 12 ay) */
-$revenue = Order::selectRaw(
-                "DATE_FORMAT(order_date, '%Y-%m')  AS ym,
-                 SUM(total_amount)                 AS total"
-            )
-            ->where('order_date', '>=', now()->subMonths(11)->startOfMonth())
-            ->groupBy('ym')
-            ->orderBy('ym')
-            ->pluck('total', 'ym');
+        /* --------------------- AYLIK CİRO ---------------------- */
+        $revenue = Order::where('customer_id', $customerId)
+                        ->selectRaw("
+                            DATE_FORMAT(order_date, '%Y-%m') AS ym,
+                            SUM(total_amount)                AS total
+                        ")
+                        ->where('order_date', '>=', now()->subMonths(11)->startOfMonth())
+                        ->groupBy('ym')
+                        ->orderBy('ym')
+                        ->pluck('total', 'ym');
 
-        /* Top 5 ürün (adet) */
-        $topProducts = OrderProduct::selectRaw('product_id, sum(amount) as qty')
-                                   ->groupBy('product_id')
-                                   ->orderByDesc('qty')
-                                   ->with('product')           // ilişkili ürün adı için
-                                   ->limit(5)->get();
+        /* ------------------ EN ÇOK SATILAN 5 ------------------- */
+        $topProducts = OrderProduct::whereHas(
+                            'order',
+                            fn($q) => $q->where('customer_id', $customerId)
+                        )
+                        ->selectRaw('product_id, SUM(amount) AS qty')
+                        ->groupBy('product_id')
+                        ->orderByDesc('qty')
+                        ->with('product')
+                        ->limit(5)
+                        ->get();
 
-        /* Yaklaşan teslimler (önümüzdeki 10 gün) */
-        $upcoming = Order::whereBetween('delivery_date', [today(), today()->addDays(10)])
+        /* --------------- YAKLAŞAN TESLİMLER -------------------- */
+        $upcoming = Order::where('customer_id', $customerId)
+                         ->whereBetween('delivery_date', [today(), today()->addDays(10)])
                          ->orderBy('delivery_date')
                          ->with('customer')
                          ->get();
 
-        /* Düşük stok */
-        $lowStock = Product::with('stocks')
+        /* --------------- DÜŞÜK STOK ÜRÜNLER -------------------- */
+        $lowStock = Product::where('customer_id', $customerId)
+                           ->with('stocks')
                            ->get()
                            ->filter(fn($p) => optional($p->stocks->last())->stock_quantity < 20);
 
         return view('dashboard.index', compact(
-        'metrics',   // ← bu satır varsa Blade değişkeni görür
-        'revenue',
-        'topProducts',
-        'upcoming',
-        'lowStock'
-    ));
+            'metrics',
+            'revenue',
+            'topProducts',
+            'upcoming',
+            'lowStock'
+        ));
     }
 }

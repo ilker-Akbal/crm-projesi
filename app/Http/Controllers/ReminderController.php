@@ -3,35 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use App\Models\Reminder;
 use App\Models\Customer;
 use App\Models\User;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
+
 class ReminderController extends Controller
 {
-    /** GET /reminders */
+    /* -------------------------------------------------
+     |  GET /reminders → Liste
+     * ------------------------------------------------*/
     public function index()
-{
-    $reminders = Reminder::with(['customer', 'user'])
-                 ->latest('reminder_date')
-                 ->get();
-
-    return view('reminders.index', compact('reminders'));
-}
-
-
-    /** GET /reminders/create */
-    public function create()
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        $users     = User::orderBy('username')->get();
+        $reminders = Reminder::where('customer_id', Auth::user()->customer_id)
+                             ->with(['customer', 'user'])
+                             ->latest('reminder_date')
+                             ->get();
 
-        return view('reminders.create', compact('customers','users'));
+        return view('reminders.index', compact('reminders'));
     }
 
-    /** POST /reminders */
-   public function store(Request $request)
+    /* -------------------------------------------------
+     |  GET /reminders/create → Form
+     * ------------------------------------------------*/
+    public function create()
+    {
+        // Başka müşteri seçilmesin
+        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+
+        // Kullanıcı listesi – tüm aktif kullanıcılar veya dilerseniz
+        // aynı müşteri içindeki kullanıcılar filtrelenebilir
+        $users = User::orderBy('username')->get();
+
+        return view('reminders.create', compact('customers', 'users'));
+    }
+
+    /* -------------------------------------------------
+     |  POST /reminders → Kaydet
+     * ------------------------------------------------*/
+    public function store(Request $request)
     {
         $data = $request->validate([
             'title'         => 'required|string|max:255',
@@ -39,58 +50,79 @@ class ReminderController extends Controller
             'explanation'   => 'nullable|string',
         ]);
 
-        // oturum açan kullanıcı & müşterisinin ID’sini atıyoruz
-        $data['user_id']     = Auth::id();
-        $data['customer_id'] = Auth::user()->customer_id;
+        Reminder::create($data + [
+            'user_id'     => Auth::id(),
+            'customer_id' => Auth::user()->customer_id,
+        ]);
 
-        Reminder::create($data);
-
-        return redirect()
-            ->route('reminders.index')
-            ->with('success', 'Reminder created successfully.');
+        return redirect()->route('reminders.index')
+                         ->with('success', 'Reminder created successfully.');
     }
 
-    /** GET /reminders/{reminder} */
+    /* -------------------------------------------------
+     |  GET /reminders/{reminder} → Detay
+     * ------------------------------------------------*/
     public function show(Reminder $reminder)
     {
-        $reminder->load(['customer','user']);
+        $this->authorizeReminder($reminder);
+
+        $reminder->load(['customer', 'user']);
+
         return view('reminders.show', compact('reminder'));
     }
 
-    /** GET /reminders/{reminder}/edit */
+    /* -------------------------------------------------
+     |  GET /reminders/{reminder}/edit → Form
+     * ------------------------------------------------*/
     public function edit(Reminder $reminder)
     {
-        $customers = Customer::orderBy('customer_name')->get();
+        $this->authorizeReminder($reminder);
+
+        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
         $users     = User::orderBy('username')->get();
 
-        return view('reminders.edit', compact('reminder','customers','users'));
+        return view('reminders.edit', compact('reminder', 'customers', 'users'));
     }
 
-    /** PUT /reminders/{reminder} */
+    /* -------------------------------------------------
+     |  PUT /reminders/{reminder} → Güncelle
+     * ------------------------------------------------*/
     public function update(Request $request, Reminder $reminder)
     {
+        $this->authorizeReminder($reminder);
+
         $data = $request->validate([
             'title'         => 'required|string|max:255',
             'reminder_date' => 'required|date',
-            'customer_id'   => 'required|exists:customers,id',
-            'user_id'       => 'required|exists:users,id',
             'explanation'   => 'nullable|string',
         ]);
 
         $reminder->update($data);
 
-        return redirect()
-            ->route('reminders.index')
-            ->with('success', 'Reminder updated successfully.');
+        return redirect()->route('reminders.index')
+                         ->with('success', 'Reminder updated successfully.');
     }
 
-    /** DELETE /reminders/{reminder} */
+    /* -------------------------------------------------
+     |  DELETE /reminders/{reminder} → Sil
+     * ------------------------------------------------*/
     public function destroy(Reminder $reminder)
     {
+        $this->authorizeReminder($reminder);
+
         $reminder->delete();
 
-        return redirect()
-            ->route('reminders.index')
-            ->with('success', 'Reminder deleted successfully.');
+        return redirect()->route('reminders.index')
+                         ->with('success', 'Reminder deleted successfully.');
+    }
+
+    /* -------------------------------------------------
+     |  Yardımcı: hatırlatma sahibi mi?
+     * ------------------------------------------------*/
+    private function authorizeReminder(Reminder $reminder): void
+    {
+        if ($reminder->customer_id !== Auth::user()->customer_id) {
+            abort(403, 'Bu hatırlatmaya erişim yetkiniz yok.');
+        }
     }
 }
