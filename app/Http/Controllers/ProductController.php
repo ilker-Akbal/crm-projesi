@@ -11,7 +11,6 @@ use App\Models\ProductPrice;
 
 class ProductController extends Controller
 {
-    // GET /products
     public function index()
     {
         $products = Product::with('customer')
@@ -21,93 +20,103 @@ class ProductController extends Controller
         return view('products.index', compact('products'));
     }
 
-    // GET /products/create
-   public function create()
-{
-    $customers = Customer::orderBy('customer_name')->get();
+    public function create()
+    {
+        return view('products.create');
+    }
 
-    return view('products.create', compact('customers'));
-}
-
-public function store(Request $request)
-{
-    $data = $request->validate([
-        'product_name'     => 'required|string|max:255',
-        'customer_id'      => 'nullable|exists:customers,id',
-        'explanation'      => 'nullable|string',
-
-        // 𐄂 yeni alanlar
-        'stock_quantity'   => 'required|integer|min:0',
-        'price'            => 'required|numeric|min:0',
-    ]);
-
-    DB::transaction(function () use ($data) {
-
-        /* 1️⃣  ürün kaydı */
-        $product = Product::create([
-            'product_name' => $data['product_name'],
-            'customer_id'  => $data['customer_id'] ?? null,
-            'explanation'  => $data['explanation'] ?? null,
-            'created_by'   => auth()->id(),
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'product_name'     => 'required|string|max:255',
+            'explanation'      => 'nullable|string',
+            'stock_quantity'   => 'required|integer|min:0',
+            'price'            => 'required|numeric|min:0',
         ]);
 
-        /* 2️⃣  ilk stok */
-        ProductStock::create([
-            'product_id'     => $product->id,
-            'stock_quantity' => $data['stock_quantity'],
-            'update_date'    => now(),
-            'updated_by'     => auth()->id(),
-        ]);
+        $data['customer_id'] = auth()->user()->customer_id ?? null;
 
-        /* 3️⃣  ilk fiyat */
-        ProductPrice::create([
-            'product_id' => $product->id,
-            'price'      => $data['price'],
-            'updated_by' => auth()->id(),
-        ]);
-    });
+        DB::transaction(function () use ($data) {
+            $product = Product::create([
+                'product_name' => $data['product_name'],
+                'customer_id'  => $data['customer_id'],
+                'explanation'  => $data['explanation'] ?? null,
+                'created_by'   => auth()->id(),
+            ]);
 
-    return redirect()->route('products.index')
-                     ->with('success', 'Product, stock and price created successfully!');
-}
+            ProductStock::create([
+                'product_id'     => $product->id,
+                'stock_quantity' => $data['stock_quantity'],
+                'update_date'    => now(),
+                'updated_by'     => auth()->id(),
+            ]);
 
-    // GET /products/{product}
+            ProductPrice::create([
+                'product_id' => $product->id,
+                'price'      => $data['price'],
+                'updated_by' => auth()->id(),
+            ]);
+        });
+
+        return redirect()->route('products.index')
+                         ->with('success', 'Product, stock and price created successfully!');
+    }
+
     public function show(Product $product)
     {
         $product->load('customer','stocks','prices');
         return view('products.show', compact('product'));
     }
 
-    // GET /products/{product}/edit
     public function edit(Product $product)
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        return view('products.edit', compact('product','customers'));
+        return view('products.edit', compact('product'));
     }
 
-    // PUT /products/{product}
     public function update(Request $request, Product $product)
     {
         $data = $request->validate([
-            'product_name' => 'required|string|max:255',
-            'customer_id'  => 'nullable|exists:customers,id',
-            'explanation'  => 'nullable|string',
+            'product_name'   => 'required|string|max:255',
+            'explanation'    => 'nullable|string',
+            'stock_quantity' => 'nullable|integer|min:0',
+            'price'          => 'nullable|numeric|min:0',
         ]);
 
-        $product->update($data);
+        $data['customer_id'] = auth()->user()->customer_id ?? null;
 
-        return redirect()
-            ->route('products.index')
-            ->with('success','Product updated successfully.');
+        DB::transaction(function () use ($data, $product) {
+            $product->update([
+                'product_name' => $data['product_name'],
+                'explanation'  => $data['explanation'] ?? $product->explanation,
+                'customer_id'  => $data['customer_id'],
+                'updated_by'   => auth()->id(),
+            ]);
+
+            if (!is_null($data['stock_quantity'])) {
+                ProductStock::create([
+                    'product_id'     => $product->id,
+                    'stock_quantity' => $data['stock_quantity'],
+                    'update_date'    => now(),
+                    'updated_by'     => auth()->id(),
+                ]);
+            }
+
+            if (!is_null($data['price'])) {
+                ProductPrice::create([
+                    'product_id' => $product->id,
+                    'price'      => $data['price'],
+                    'updated_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
 
-    // DELETE /products/{product}
     public function destroy(Product $product)
     {
         $product->delete();
 
-        return redirect()
-            ->route('products.index')
-            ->with('success','Product deleted successfully.');
+        return redirect()->route('products.index')->with('success','Product deleted successfully.');
     }
 }

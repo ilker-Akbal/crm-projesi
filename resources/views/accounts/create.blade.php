@@ -10,17 +10,8 @@
         <div class="card-body">
           @include('partials.alerts')
 
-          <div class="form-group">
-            <label for="customer_id">Customer *</label>
-            <select name="customer_id" id="customer_id" class="form-control" required>
-              <option value="">-- select --</option>
-              @foreach($customers as $c)
-                <option value="{{ $c->id }}" {{ old('customer_id')==$c->id?'selected':'' }}>
-                  {{ $c->customer_name }}
-                </option>
-              @endforeach
-            </select>
-          </div>
+          {{-- Otomatik olarak giriş yapan kullanıcının customer_id bilgisi --}}
+          <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="form-group">
             <label for="balance">Balance *</label>

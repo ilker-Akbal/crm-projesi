@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Action;
-use App\Models\Customer;
-use App\Models\User;
 
 class ActionController extends Controller
 {
@@ -13,8 +11,9 @@ class ActionController extends Controller
     public function index()
     {
         $actions = Action::with(['customer', 'user'])
-            ->orderBy('action_date', 'desc')
-            ->get();
+                         ->where('customer_id', auth()->user()->customer_id) // sadece kendi firmasının kayıtları
+                         ->orderBy('action_date', 'desc')
+                         ->get();
 
         return view('actions.index', compact('actions'));
     }
@@ -22,24 +21,27 @@ class ActionController extends Controller
     /** GET /actions/create */
     public function create()
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        $users     = User::orderBy('username')->get();
-
-        return view('actions.create', compact('customers', 'users'));
+        // Artık müşteri ve kullanıcı listesine gerek yok
+        return view('actions.create');
     }
 
     /** POST /actions */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
-            'user_id'      => 'required|exists:users,id',
-            'action_type'  => 'required|string|max:255',
-            'action_date'  => 'required|date',
-            'updated_by'   => 'nullable|exists:users,id',
+        // 1) Formdan gelen verileri doğrula (yalnızca işlem bilgileri)
+        $validated = $request->validate([
+            'action_type' => 'required|string|max:255',
+            'action_date' => 'required|date',
         ]);
 
-        Action::create($data);
+        // 2) Modeli oluştur ve sistem alanlarını ata
+        Action::create([
+            'action_type' => $validated['action_type'],
+            'action_date' => $validated['action_date'],
+            'user_id'     => auth()->id(),
+            'customer_id' => auth()->user()->customer_id,
+            'updated_by'  => auth()->id(),
+        ]);
 
         return redirect()
             ->route('actions.index')
@@ -49,31 +51,35 @@ class ActionController extends Controller
     /** GET /actions/{action} */
     public function show(Action $action)
     {
-        $action->load(['customer','user']);
+        $this->authorizeAction($action);
+
+        $action->load(['customer', 'user']);
         return view('actions.show', compact('action'));
     }
 
     /** GET /actions/{action}/edit */
     public function edit(Action $action)
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        $users     = User::orderBy('username')->get();
+        $this->authorizeAction($action);
 
-        return view('actions.edit', compact('action','customers','users'));
+        return view('actions.edit', compact('action'));   // listeler kaldırıldı
     }
 
     /** PUT /actions/{action} */
     public function update(Request $request, Action $action)
     {
-        $data = $request->validate([
-            'customer_id'  => 'required|exists:customers,id',
-            'user_id'      => 'required|exists:users,id',
-            'action_type'  => 'required|string|max:255',
-            'action_date'  => 'required|date',
-            'updated_by'   => 'nullable|exists:users,id',
+        $this->authorizeAction($action);
+
+        $validated = $request->validate([
+            'action_type' => 'required|string|max:255',
+            'action_date' => 'required|date',
         ]);
 
-        $action->update($data);
+        $action->update([
+            'action_type' => $validated['action_type'],
+            'action_date' => $validated['action_date'],
+            'updated_by'  => auth()->id(),
+        ]);
 
         return redirect()
             ->route('actions.index')
@@ -83,6 +89,8 @@ class ActionController extends Controller
     /** DELETE /actions/{action} */
     public function destroy(Action $action)
     {
+        $this->authorizeAction($action);
+
         $action->delete();
 
         return redirect()
@@ -93,16 +101,32 @@ class ActionController extends Controller
     /** GET /actions/by-customer */
     public function byCustomer(Request $request)
     {
-        $customers = Customer::orderBy('customer_name')->get();
-        $selected  = $request->input('customer_id');
-        $query     = Action::with(['customer','user'])->orderBy('action_date','desc');
+        // İsteğe bağlı: admin yetkisine göre farklı müşteri seçimi yapılabilir
+        $selected = $request->input('customer_id');
 
-        if ($selected) {
+        $query = Action::with(['customer', 'user'])
+                       ->orderBy('action_date', 'desc');
+
+        // Admin değilse yalnızca kendi müşteri kaydını görsün
+        if (!auth()->user()->is_admin) {
+            $query->where('customer_id', auth()->user()->customer_id);
+        } elseif ($selected) {
             $query->where('customer_id', $selected);
         }
 
         $actions = $query->get();
 
-        return view('actions.by-customer', compact('actions','customers','selected'));
+        return view('actions.by-customer', compact('actions', 'selected'));
     }
-}
+
+    /* --------------------------------------------------------- */
+    /* Yardımcı metot                                             */
+    /* --------------------------------------------------------- */
+    private function authorizeAction(Action $action)
+    {
+        if ($action->customer_id !== auth()->user()->customer_id && !auth()->user()->is_admin) {
+            abort(403, 'Bu kayda erişim yetkiniz yok.');
+        }
+    } // <-- burası kapanmalı
+
+} // sınıf kapanışı burada olmalı

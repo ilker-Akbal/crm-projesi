@@ -16,17 +16,7 @@
                     class="form-control" value="{{ old('product_name') }}" required>
           </div>
 
-          <div class="form-group">
-            <label for="customer_id">Customer (optional)</label>
-            <select name="customer_id" id="customer_id" class="form-control">
-              <option value="">-- select --</option>
-              @foreach($customers as $c)
-                <option value="{{ $c->id }}" {{ old('customer_id')==$c->id?'selected':'' }}>
-                  {{ $c->customer_name }}
-                </option>
-              @endforeach
-            </select>
-          </div>
+          
 
           <div class="form-group">
             <label for="explanation">Explanation</label>

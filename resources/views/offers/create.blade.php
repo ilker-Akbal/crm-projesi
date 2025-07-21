@@ -10,20 +10,10 @@
         <div class="card-body">
           @include('partials.alerts')
 
+          {{-- Giriş yapan kullanıcının customer_id bilgisi --}}
+          <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
+
           <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="customer_id">Customer</label>
-                <select name="customer_id" id="customer_id" class="form-control" required>
-                  <option value="">-- select --</option>
-                  @foreach($customers as $c)
-                    <option value="{{ $c->id }}" {{ old('customer_id')==$c->id?'selected':'' }}>
-                      {{ $c->customer_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="order_id">Order (optional)</label>
@@ -51,17 +41,18 @@
                   class="form-control" value="{{ old('valid_until') }}">
               </div>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select name="status" id="status" class="form-control" required>
-              @foreach(['hazırlanıyor','gönderildi','kabul','reddedildi'] as $st)
-                <option value="{{ $st }}" {{ old('status')==$st?'selected':'' }}>
-                  {{ ucfirst($st) }}
-                </option>
-              @endforeach
-            </select>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control" required>
+                  @foreach(['hazırlanıyor','gönderildi','kabul','reddedildi'] as $st)
+                    <option value="{{ $st }}" {{ old('status')==$st?'selected':'' }}>
+                      {{ ucfirst($st) }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -70,6 +61,7 @@
               class="form-control" value="{{ old('total_amount',0) }}">
           </div>
         </div>
+
         <div class="card-footer d-flex justify-content-end">
           <a href="{{ route('offers.index') }}" class="btn btn-secondary mr-2">Cancel</a>
           <button type="submit" class="btn btn-primary">Save</button>

@@ -11,24 +11,12 @@
       <form action="{{ route('orders.store') }}" method="POST">
         @csrf
         <div class="card-body">
-          @include('partials.alerts')
+          <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
+
 
           {{-- ---------- Order Header ---------- --}}
           <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="customer_id">Customer</label>
-                <select name="customer_id" id="customer_id" class="form-control" required>
-                  <option value="">-- select --</option>
-                  @foreach ($customers as $c)
-                    <option value="{{ $c->id }}" {{ old('customer_id') == $c->id ? 'selected' : '' }}>
-                      {{ $c->customer_name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
-
+            
             <div class="col-md-4">
               <div class="form-group">
                 <label for="order_date">Order Date</label>

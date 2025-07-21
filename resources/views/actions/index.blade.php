@@ -8,7 +8,7 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Actions</h3>
         <div>
-          <a href="{{ route('actions.by-customer') }}" class="btn btn-sm btn-info">By Customer</a>
+          
           <a href="{{ route('actions.create') }}"     class="btn btn-sm btn-primary">New Action</a>
         </div>
       </div>
