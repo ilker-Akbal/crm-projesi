@@ -1,4 +1,6 @@
+{{-- resources/views/layouts/navbar.blade.php --}}
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+  {{-- Sol kısım --}}
   <ul class="navbar-nav">
     <li class="nav-item">
       <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
@@ -10,6 +12,14 @@
 
   {{-- Sağ kısım --}}
   <ul class="navbar-nav ml-auto">
+    {{-- Tam ekran --}}
+    <li class="nav-item">
+      <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </a>
+    </li>
+
+    {{-- Logout --}}
     @auth
       <li class="nav-item">
         <form action="{{ route('logout') }}" method="POST" class="d-inline">
@@ -22,3 +32,5 @@
     @endauth
   </ul>
 </nav>
+
+{{-- Dark‑mode devre dışı: ekstra CSS‑JS yok --}}

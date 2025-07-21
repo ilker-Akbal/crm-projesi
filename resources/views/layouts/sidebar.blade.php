@@ -1,7 +1,22 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-  <a href="#" class="brand-link">
-    <span class="brand-text font-weight-light">CRM Panel</span>
+  <!-- Logo ve Başlık -->
+  <a href="{{ route('dashboard.index') }}" class="brand-link d-flex align-items-center" style="gap: 10px;">
+    <!-- Logo (circle arka plan) -->
+    <div style="background-color: white; border-radius: 50%; padding: 6px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="Logo" style="max-height: 28px; max-width: 28px;">
+    </div>
+    <!-- Yazı (sidebar ile aynı font ama daha güçlü) -->
+    <span class="brand-text" style="
+        font-weight: 600;
+        font-size: 16px;
+        color: #f1f1f1;
+        letter-spacing: 0.5px;
+        font-family: inherit; /* Sidebar ile aynı font */
+      ">
+      IKA CRM SYSTEM
+    </span>
   </a>
+
   <div class="sidebar">
     <nav class="mt-2">
       <ul 
@@ -17,6 +32,8 @@
             <p>Dashboard</p>
           </a>
         </li>
+
+
 
         <!-- Companies -->
         <li class="nav-item has-treeview">
