@@ -12,18 +12,30 @@ class MovementController extends Controller
     /* -------------------------------------------------
      |  GET /movements  →  Liste
      * ------------------------------------------------*/
-    public function index()
-    {
-        $movements = CurrentMovement::whereHas(
-                'currentCard',
-                fn ($q) => $q->where('customer_id', Auth::user()->customer_id)
-            )
-            ->with('currentCard.customer')
-            ->orderBy('departure_date', 'desc')
-            ->get();
+    public function index(Request $req)
+{
+    $query = CurrentMovement::with('currentCard.customer')
+             ->latest('departure_date');
 
-        return view('movements.index', compact('movements'));
+    /* --- Filtreler --- */
+    if ($req->filled('type')) {
+        $query->where('movement_type', $req->type);           // Debit / Credit
     }
+    if ($req->filled('from')) {
+        $query->whereDate('departure_date', '>=', $req->from);
+    }
+    if ($req->filled('to')) {
+        $query->whereDate('departure_date', '<=', $req->to);
+    }
+    if ($req->filled('q')) {
+        $query->where('explanation', 'like', '%'.$req->q.'%');
+    }
+
+    $movements = $query->paginate(25)->withQueryString();
+
+    return view('movements.index', compact('movements'));
+}
+
 
     /* -------------------------------------------------
      |  GET /movements/create  →  Form

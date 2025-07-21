@@ -26,6 +26,7 @@
                    class="form-control"
                    value="{{ old('opening_date', $account->opening_date) }}" required>
           </div>
+          
         </div>
         <div class="card-footer d-flex justify-content-end">
           <a href="{{ route('accounts.index') }}" class="btn btn-secondary mr-2">Cancel</a>

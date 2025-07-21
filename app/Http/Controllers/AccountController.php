@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Account;
 use App\Models\Customer;
-
+use App\Models\CurrentMovement;
 class AccountController extends Controller
 {
     /* -------------------------------------------------
@@ -55,13 +55,25 @@ class AccountController extends Controller
      |  GET /accounts/{account}  →  Detay
      * ------------------------------------------------*/
     public function show(Account $account)
-    {
-        $this->authorizeAccount($account);
+{
+    $this->authorizeAccount($account);
 
-        $account->load('customer');
+    
+    // müşteri + hareketleri tek sorguda getir
+    $account->load(['customer', 'movements']);
 
-        return view('accounts.show', compact('account'));
-    }
+    // hareketlerin neti (credit - debit) — modelde hazır
+    $net       = $account->computed_balance;
+
+    // Açılış = mevcut - hareketlerin neti
+    $opening   = round($account->balance - $net, 2);
+
+    // Kapanış = cari tablo bakiyesi
+    $closing   = round($account->balance, 2);
+
+    return view('accounts.show', compact('account', 'opening', 'closing'));
+}
+
 
     /* -------------------------------------------------
      |  GET /accounts/{account}/edit  →  Form
