@@ -28,16 +28,25 @@ class OfferController extends Controller
      |  GET /offers/create  →  Form
      * ------------------------------------------------*/
     public function create()
-    {
-        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+{
+    $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+    $orders    = Order::where('customer_id', Auth::user()->customer_id)
+                      ->latest('order_date')
+                      ->get();
 
-        $orders = Order::where('customer_id', Auth::user()->customer_id)
-                       ->orderBy('order_date', 'desc')
-                       ->get();
+    /* ➊ Ürün listesi – en güncel fiyatıyla */
+    $products  = Product::where('customer_id', Auth::user()->customer_id)
+                        ->with(['prices' => fn($q) => $q->latest()->limit(1)])
+                        ->orderBy('product_name')
+                        ->get()
+                        ->map(fn($p) => [
+                            'id'           => $p->id,
+                            'product_name' => $p->product_name,
+                            'unit_price'   => optional($p->prices->first())->price ?? 0,
+                        ]);
 
-        return view('offers.create', compact('customers', 'orders'));
-    }
-
+    return view('offers.create', compact('customers','orders','products'));
+}
     /* -------------------------------------------------
      |  POST /offers  →  Kaydet
      * ------------------------------------------------*/
@@ -103,17 +112,26 @@ class OfferController extends Controller
      |  GET /offers/{offer}/edit  →  Form
      * ------------------------------------------------*/
     public function edit(Offer $offer)
-    {
-        $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+{
+    $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+    $orders    = Order::where('customer_id', Auth::user()->customer_id)
+                      ->latest('order_date')->get();
 
-        $orders = Order::where('customer_id', Auth::user()->customer_id)
-                       ->orderBy('order_date', 'desc')
-                       ->get();
+    /* ➊ aynı ürün listesi */
+    $products  = Product::where('customer_id', Auth::user()->customer_id)
+                        ->with(['prices' => fn($q) => $q->latest()->limit(1)])
+                        ->orderBy('product_name')
+                        ->get()
+                        ->map(fn($p) => [
+                            'id'           => $p->id,
+                            'product_name' => $p->product_name,
+                            'unit_price'   => optional($p->prices->first())->price ?? 0,
+                        ]);
 
-        $offer->load('products');
+    $offer->load('products');
 
-        return view('offers.edit', compact('offer', 'customers', 'orders'));
-    }
+    return view('offers.edit', compact('offer','customers','orders','products'));
+}
 
     /* -------------------------------------------------
      |  PUT /offers/{offer}  →  Güncelle

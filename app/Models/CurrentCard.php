@@ -14,12 +14,12 @@ class CurrentCard extends Model
 
     protected $fillable = [
         'customer_id',
-        'balance',        // Opsiyonel: hâlen tutuyorsanız
+        'balance',
         'opening_date',
         'updated_by',
     ];
 
-    /* ------------ İlişkiler ------------ */
+    /* ---------- İlişkiler ---------- */
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -27,38 +27,34 @@ class CurrentCard extends Model
 
     public function movements()
     {
-        // En yeni ilk sırada
         return $this->hasMany(CurrentMovement::class, 'current_id')
                     ->orderBy('departure_date', 'desc');
     }
 
-    /* ------------ Dinamik bakiye (Dr/Cr farkı) ------------ */
-    /* ------------ Dinamik bakiye (SQL üzerinden) ------------ */
-public function getComputedBalanceAttribute(): float
-{
-    // Tek sorguda toplar; lazy-load’a bağlı kalmaz
-    $sum = $this->movements()
-                ->selectRaw("
-                    SUM(
-                      CASE
-                        WHEN movement_type = ? THEN amount   -- Credit  → +
-                        WHEN movement_type = ? THEN -amount  -- Debit   → -
-                      END
-                    ) AS bal",
-                    [CurrentMovement::CREDIT, CurrentMovement::DEBIT]
-                )
-                ->value('bal');
+    /* ---------- Dinamik bakiye ---------- */
+    public function getComputedBalanceAttribute(): float
+    {
+        $sum = $this->movements()
+                    ->selectRaw("
+                        SUM(
+                          CASE
+                            WHEN movement_type = ? THEN amount
+                            WHEN movement_type = ? THEN -amount
+                          END
+                        ) AS bal",
+                        [CurrentMovement::CREDIT, CurrentMovement::DEBIT]
+                    )
+                    ->value('bal');
 
-    return round($sum ?? 0, 2);
-}
+        return round($sum ?? 0, 2);
+    }
 
-
-    /* ------------ Global Scope: sadece kendi müşterisi ------------ */
+    /* ---------- Global Scope: kendi müşterisi ---------- */
     protected static function booted()
     {
         if (auth()->check()) {
-            static::addGlobalScope('owner', function (Builder $builder) {
-                $builder->where('customer_id', auth()->user()->customer_id);
+            static::addGlobalScope('owner', function (Builder $b) {
+                $b->where('customer_id', auth()->user()->customer_id);
             });
         }
     }

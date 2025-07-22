@@ -8,117 +8,141 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Customer;
 use App\Models\User;
+use App\Models\Account;          // ✅ hesabı oluşturmak/silmek için
 
 class CustomerController extends Controller
 {
-    // 1) GET /customers
+    /* -------------------------------------------------
+     | 1) GET /customers
+     * ------------------------------------------------*/
     public function index()
     {
-        $customers = Customer::with('user')->get();
+        // kullanıcı & hesap tek seferde yüklensin
+        $customers = Customer::with(['user','account'])->get();
         return view('customers.index', compact('customers'));
     }
 
-    // 2) GET /customers/create
+    /* -------------------------------------------------
+     | 2) GET /customers/create
+     * ------------------------------------------------*/
     public function create()
-{
-    // BOŞ ÖĞE YOK: Sadece bu üç string var
-    $roles = ['admin', 'manager', 'user'];
-    return view('customers.create', compact('roles'));
-}
+    {
+        $roles = ['admin', 'manager', 'user'];
+        return view('customers.create', compact('roles'));
+    }
 
-    // 3) POST /customers
+    /* -------------------------------------------------
+     | 3) POST /customers
+     * ------------------------------------------------*/
     public function store(Request $request)
     {
-        // checkbox'ı boolean 1/0 olarak işleyelim
+        // checkbox'ı bool yap
         $request->merge(['active' => $request->has('active') ? 1 : 0]);
 
         $data = $request->validate([
-            'customer_name'    => 'required|string|max:255',
-            'customer_type'    => 'required|in:customer,supplier,candidate',
-            'phone'            => 'nullable|string|max:50',
-            'email'            => 'nullable|email|max:255',
-            'address'          => 'nullable|string',
-            'username'         => 'required|string|unique:users,username',
-            'password'         => 'required|string|min:8|confirmed',
-            'active'           => 'boolean',
-            'role'             => 'required|in:'.implode(',', ['admin','manager','user']),
+            'customer_name' => 'required|string|max:255',
+            'customer_type' => 'required|in:customer,supplier,candidate',
+            'phone'         => 'nullable|string|max:50',
+            'email'         => 'nullable|email|max:255',
+            'address'       => 'nullable|string',
+            'username'      => 'required|string|unique:users,username',
+            'password'      => 'required|string|min:8|confirmed',
+            'active'        => 'boolean',
+            'role'          => 'required|in:admin,manager,user',
         ]);
 
         DB::transaction(function () use ($data, $request) {
+
+            /* --- 1) Customer --- */
             $customer = Customer::create([
                 'customer_name' => $data['customer_name'],
                 'customer_type' => $data['customer_type'],
-                'phone'         => $data['phone'] ?? null,
-                'email'         => $data['email'] ?? null,
-                'address'       => $data['address'] ?? null,
+                'phone'         => $data['phone']    ?? null,
+                'email'         => $data['email']    ?? null,
+                'address'       => $data['address']  ?? null,
                 'created_by'    => Auth::id() ?? 1,
             ]);
 
+            /* --- 2) User (müşteriye bağlı) --- */
             User::create([
                 'username'    => $data['username'],
                 'password'    => Hash::make($data['password']),
                 'role'        => $data['role'],
-                'active'      => $request->has('active'),
+                'active'      => $request->active,
                 'customer_id' => $customer->id,
                 'created_by'  => Auth::id() ?? 1,
             ]);
+
+            /* --- 3) Tek hesap (Account) --- */
+            Account::create([
+                'customer_id' => $customer->id,
+                'balance'     => 0,
+                'opening_date'=> now(),
+                'updated_by'  => Auth::id() ?? 1,
+            ]);
         });
 
-        return redirect()->route('admin.customers.index')
-                         ->with('success','Müşteri ve kullanıcı başarıyla oluşturuldu.');
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('success', 'Müşteri, kullanıcı ve hesabı oluşturuldu.');
     }
 
-    // 4) GET /customers/{customer}
+    /* -------------------------------------------------
+     | 4) GET /customers/{customer}
+     * ------------------------------------------------*/
     public function show(Customer $customer)
     {
+        $customer->load(['user','account']);
         return view('customers.show', compact('customer'));
     }
 
-    // 5) GET /customers/{customer}/edit
+    /* -------------------------------------------------
+     | 5) GET /customers/{customer}/edit
+     * ------------------------------------------------*/
     public function edit(Customer $customer)
     {
         return view('customers.edit', compact('customer'));
     }
 
-    // 6) PUT/PATCH /customers/{customer}
+    /* -------------------------------------------------
+     | 6) PUT /customers/{customer}
+     * ------------------------------------------------*/
     public function update(Request $request, Customer $customer)
-{
-    // Sadece customer alanları
-    $data = $request->validate([
-        'customer_name' => 'required|string|max:255',
-        'customer_type' => 'required|in:customer,supplier,candidate',
-        'phone'         => 'nullable|string|max:50',
-        'email'         => 'nullable|email|max:255',
-        'address'       => 'nullable|string',
-    ]);
+    {
+        $data = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_type' => 'required|in:customer,supplier,candidate',
+            'phone'         => 'nullable|string|max:50',
+            'email'         => 'nullable|email|max:255',
+            'address'       => 'nullable|string',
+        ]);
 
-    // Güncelle ve audit
-    $customer->update([
-        'customer_name' => $data['customer_name'],
-        'customer_type' => $data['customer_type'],
-        'phone'         => $data['phone'] ?? null,
-        'email'         => $data['email'] ?? null,
-        'address'       => $data['address'] ?? null,
-        'updated_by'    => Auth::id() ?? 1,
-    ]);
+        $customer->update($data + ['updated_by' => Auth::id() ?? 1]);
 
-    return redirect()
-        ->route('admin.customers.index')
-        ->with('success','Müşteri başarıyla güncellendi.');
-}
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('success', 'Müşteri bilgileri güncellendi.');
+    }
 
-    // 7) DELETE /customers/{customer}
+    /* -------------------------------------------------
+     | 7) DELETE /customers/{customer}
+     * ------------------------------------------------*/
     public function destroy(Customer $customer)
     {
         DB::transaction(function () use ($customer) {
-            // önce kullanıcıyı sil (isteğe bağlı)
-            if ($customer->user) {
-                $customer->user->delete();
-            }
+
+            // 1) bağlı kullanıcı
+            $customer->user?->delete();
+
+            // 2) bağlı tek hesap
+            $customer->account?->delete();
+
+            // 3) müşteri
             $customer->delete();
         });
 
-        return redirect()->route('admin.customers.index')
-                         ->with('success','Müşteri ve kullanıcı başarıyla silindi.');
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('success', 'Müşteri, kullanıcı ve hesabı silindi.');
     }
 }

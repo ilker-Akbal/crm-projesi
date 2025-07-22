@@ -16,7 +16,7 @@
             <tr>
               <th>ID</th>
               <th>Customer</th>
-
+        
               <th>Opening Date</th>
               <th style="width:140px">Actions</th>
             </tr>

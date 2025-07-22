@@ -30,9 +30,11 @@ class Offer extends Model
     public function lines()     { return $this->hasMany(OfferProduct::class); }
 
     public function products()
-    {
-        return $this->belongsToMany(Product::class, 'offer_products')
-                    ->withPivot(['amount','unit_price'])
-                    ->withTimestamps();
-    }
+{
+    return $this->belongsToMany(Product::class, 'offer_products')
+                ->withPivot(['amount', 'unit_price'])
+                ->wherePivot('amount', '>', 0)   // <-- filtre eklendi
+                ->withTimestamps();
+}
+
 }

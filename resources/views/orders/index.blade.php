@@ -16,8 +16,11 @@
               <th>Customer</th>
               <th>Order Date</th>
               <th>Delivery Date</th>
-              <th>Total</th>
+               <th>payment status</th>
+               <th>Total</th>
               <th>Actions</th>
+             
+              
             </tr>
           </thead>
           <tbody>
@@ -27,6 +30,11 @@
               <td>{{ $o->customer->customer_name }}</td>
               <td>{{ $o->order_date }}</td>
               <td>{{ $o->delivery_date }}</td>
+              <td>
+  {{ $o->is_paid
+        ? '✓ Ödendi ('.optional($o->paid_at)->format('d.m.Y').')'
+        : 'Bekliyor' }}
+</td>
               <td>{{ number_format($o->total_amount,2) }}</td>
               <td>
                 <a href="{{ route('orders.show',$o) }}" class="btn btn-sm btn-info">View</a>
