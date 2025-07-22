@@ -33,19 +33,21 @@
         </div>
 
         {{-- Vergi Numarası --}}
-        <div class="form-group mb-3">
-          <label for="tax_number">Vergi Numarası</label>
-          <input
-            type="text"
-            class="form-control @error('tax_number') is-invalid @enderror"
-            id="tax_number"
-            name="tax_number"
-            value="{{ old('tax_number', $company->tax_number) }}"
-          >
-          @error('tax_number')
-            <div class="invalid-feedback">{{ $message }}</div>
-          @enderror
-        </div>
+       <div class="form-group mb-3">
+  <label for="tax_number">Vergi Numarası</label>
+  <input
+    type="text"
+    pattern="[0-9]*"
+    inputmode="numeric"
+    class="form-control @error('tax_number') is-invalid @enderror"
+    id="tax_number"
+    name="tax_number"
+    value="{{ old('tax_number', $company->tax_number) }}"
+  >
+  @error('tax_number')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
+</div>
 
         {{-- Adres --}}
         <div class="form-group mb-3">
@@ -63,18 +65,20 @@
 
         {{-- Telefon --}}
         <div class="form-group mb-3">
-          <label for="phone_number">Telefon</label>
-          <input
-            type="text"
-            class="form-control @error('phone_number') is-invalid @enderror"
-            id="phone_number"
-            name="phone_number"
-            value="{{ old('phone_number', $company->phone_number) }}"
-          >
-          @error('phone_number')
-            <div class="invalid-feedback">{{ $message }}</div>
-          @enderror
-        </div>
+  <label for="phone_number">Telefon</label>
+  <input
+    type="text"
+    pattern="[0-9]*"
+    inputmode="numeric"
+    class="form-control @error('phone_number') is-invalid @enderror"
+    id="phone_number"
+    name="phone_number"
+    value="{{ old('phone_number', $company->phone_number) }}"
+  >
+  @error('phone_number')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
+</div>
 
         {{-- E-Posta --}}
         <div class="form-group mb-3">

@@ -97,24 +97,35 @@ class ProductController extends Controller
      |  PUT /products/{product}  →  Güncelle
      * ------------------------------------------------*/
     public function update(Request $request, Product $product)
-    {
-        $this->authorizeProduct($product);
+{
+    $this->authorizeProduct($product);
 
-        $data = $request->validate([
-            'product_name'   => 'required|string|max:255',
-            'explanation'    => 'nullable|string',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'price'          => 'nullable|numeric|min:0',
+    $data = $request->validate([
+        'product_name'   => 'required|string|max:255',
+        'explanation'    => 'nullable|string',
+        'stock_quantity' => 'nullable|integer|min:0',
+        'price'          => 'nullable|numeric|min:0',
+    ]);
+
+    DB::transaction(function () use ($data, $product) {
+        // Ürünü güncelle
+        $product->update([
+            'product_name' => $data['product_name'],
+            'explanation'  => $data['explanation'] ?? $product->explanation,
+            'updated_by'   => Auth::id(),
         ]);
 
-        DB::transaction(function () use ($data, $product) {
-            $product->update([
-                'product_name' => $data['product_name'],
-                'explanation'  => $data['explanation'] ?? $product->explanation,
-                'updated_by'   => Auth::id(),
-            ]);
+        // Stok varsa güncelle, yoksa oluştur
+        if (!is_null($data['stock_quantity'])) {
+            $stock = ProductStock::where('product_id', $product->id)->first();
 
-            if (!is_null($data['stock_quantity'])) {
+            if ($stock) {
+                $stock->update([
+                    'stock_quantity' => $data['stock_quantity'],
+                    'update_date'    => now(),
+                    'updated_by'     => Auth::id(),
+                ]);
+            } else {
                 ProductStock::create([
                     'product_id'     => $product->id,
                     'stock_quantity' => $data['stock_quantity'],
@@ -122,19 +133,31 @@ class ProductController extends Controller
                     'updated_by'     => Auth::id(),
                 ]);
             }
+        }
 
-            if (!is_null($data['price'])) {
+        // Fiyat varsa güncelle, yoksa oluştur
+        if (!is_null($data['price'])) {
+            $price = ProductPrice::where('product_id', $product->id)->first();
+
+            if ($price) {
+                $price->update([
+                    'price'      => $data['price'],
+                    'updated_by' => Auth::id(),
+                ]);
+            } else {
                 ProductPrice::create([
                     'product_id' => $product->id,
                     'price'      => $data['price'],
                     'updated_by' => Auth::id(),
                 ]);
             }
-        });
+        }
+    });
 
-        return redirect()->route('products.index')
-                         ->with('success', 'Product updated successfully.');
-    }
+    return redirect()->route('products.index')
+                     ->with('success', 'Product updated successfully.');
+}
+
 
     /* -------------------------------------------------
      |  DELETE /products/{product}  →  Sil

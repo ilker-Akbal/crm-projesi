@@ -29,12 +29,14 @@
       <div class="form-group col-md-6">
         <label for="tax_number">Vergi Numarası</label>
         <input
-          type="text"
-          class="form-control @error('tax_number') is-invalid @enderror"
-          id="tax_number"
-          name="tax_number"
-          value="{{ old('tax_number') }}"
-        >
+  type="text"
+  pattern="[0-9]*"
+  inputmode="numeric"
+  class="form-control @error('tax_number') is-invalid @enderror"
+  id="tax_number"
+  name="tax_number"
+  value="{{ old('tax_number') }}"
+>
         @error('tax_number')
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -42,12 +44,14 @@
       <div class="form-group col-md-6">
         <label for="phone_number">Telefon</label>
         <input
-          type="text"
-          class="form-control @error('phone_number') is-invalid @enderror"
-          id="phone_number"
-          name="phone_number"
-          value="{{ old('phone_number') }}"
-        >
+  type="text"
+  pattern="[0-9]*"
+  inputmode="numeric"
+  class="form-control @error('phone_number') is-invalid @enderror"
+  id="phone_number"
+  name="phone_number"
+  value="{{ old('phone_number') }}"
+>
         @error('phone_number')
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
