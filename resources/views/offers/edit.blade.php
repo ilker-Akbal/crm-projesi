@@ -1,29 +1,29 @@
 {{-- resources/views/offers/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Edit Offer #'.$offer->id)
+@section('title', 'Teklifi Düzenle #'.$offer->id)
 
 @section('content')
 <section class="content">
   <div class="container-fluid">
     <div class="card card-outline card-primary">
-      <div class="card-header"><h3 class="card-title">Edit Offer #{{ $offer->id }}</h3></div>
+      <div class="card-header"><h3 class="card-title">Teklifi Düzenle #{{ $offer->id }}</h3></div>
 
       <form action="{{ route('offers.update', $offer) }}" method="POST">
         @csrf @method('PUT')
         <div class="card-body">
-          @include('partials.alerts')
+          
 
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="row">
-            {{-- Company --}}
+            {{-- Şirket --}}
             <div class="col-md-4">
               <div class="form-group">
-                <label for="company_id">Company (optional)</label>
+                <label for="company_id">Şirket (opsiyonel)</label>
                 <select name="company_id" id="company_id"
                         class="form-control @error('company_id') is-invalid @enderror">
-                  <option value="">-- select --</option>
+                  <option value="">-- seçiniz --</option>
                   @foreach($companies as $c)
                     <option value="{{ $c->id }}"
                       {{ old('company_id', $offer->company_id) == $c->id ? 'selected' : '' }}>
@@ -35,13 +35,13 @@
               </div>
             </div>
 
-            {{-- Related Order --}}
+            {{-- İlgili Sipariş --}}
             <div class="col-md-4">
               <div class="form-group">
-                <label for="order_id">Order (optional)</label>
+                <label for="order_id">Sipariş (opsiyonel)</label>
                 <select name="order_id" id="order_id"
                         class="form-control @error('order_id') is-invalid @enderror">
-                  <option value="">-- select --</option>
+                  <option value="">-- seçiniz --</option>
                   @foreach($orders as $o)
                     <option value="{{ $o->id }}"
                       {{ old('order_id', $offer->order_id) == $o->id ? 'selected' : '' }}>
@@ -53,10 +53,10 @@
               </div>
             </div>
 
-            {{-- Dates --}}
+            {{-- Tarihler --}}
             <div class="col-md-2">
               <div class="form-group">
-                <label for="offer_date">Offer Date</label>
+                <label for="offer_date">Teklif Tarihi</label>
                 <input type="date" name="offer_date" id="offer_date"
                        class="form-control @error('offer_date') is-invalid @enderror"
                        value="{{ old('offer_date', $offer->offer_date->format('Y-m-d')) }}" required>
@@ -66,7 +66,7 @@
 
             <div class="col-md-2">
               <div class="form-group">
-                <label for="valid_until">Valid Until</label>
+                <label for="valid_until">Geçerlilik Tarihi</label>
                 <input type="date" name="valid_until" id="valid_until"
                        class="form-control @error('valid_until') is-invalid @enderror"
                        value="{{ old('valid_until', optional($offer->valid_until)->format('Y-m-d')) }}">
@@ -74,10 +74,10 @@
               </div>
             </div>
 
-            {{-- Status --}}
+            {{-- Durum --}}
             <div class="col-md-4 mt-2">
               <div class="form-group">
-                <label for="status">Status</label>
+                <label for="status">Durum</label>
                 <select name="status" id="status"
                         class="form-control @error('status') is-invalid @enderror" required>
                   @foreach(['hazırlanıyor'=>'Hazırlanıyor','gönderildi'=>'Gönderildi','kabul'=>'Kabul','reddedildi'=>'Reddedildi'] as $key=>$label)
@@ -92,9 +92,9 @@
             </div>
           </div>
 
-          {{-- ---------- Offer Items ---------- --}}
+          {{-- ---------- Teklif Kalemleri ---------- --}}
           <hr>
-          <h5>Offer Items</h5>
+          <h5>Teklif Kalemleri</h5>
           <div id="items-container">
             @foreach(old('items', $offer->products->map(fn($p)=>[
                         'product_id'=>$p->id,
@@ -104,7 +104,7 @@
               <div class="row mb-2 item-row">
                 <div class="col-md-5">
                   <select name="items[{{ $i }}][product_id]" class="form-control" required>
-                    <option value="">-- Select Product --</option>
+                    <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
                       <option value="{{ $prod['id'] }}"
                         {{ $item['product_id']==$prod['id'] ? 'selected' : '' }}>
@@ -128,13 +128,13 @@
             @endforeach
           </div>
           <button type="button" id="add-item" class="btn btn-sm btn-outline-primary">
-            + Add Item
+            + Kalem Ekle
           </button>
         </div>
 
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('offers.index') }}" class="btn btn-secondary me-2">Cancel</a>
-          <button type="submit" class="btn btn-primary">Update Offer</button>
+          <a href="{{ route('offers.index') }}" class="btn btn-secondary me-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Teklifi Güncelle</button>
         </div>
       </form>
     </div>
@@ -156,7 +156,7 @@
       <div class="row mb-2 item-row">
         <div class="col-md-5">
           <select name="items[${idx}][product_id]" class="form-control" required>
-            <option value="">-- Select Product --</option>
+            <option value="">-- Ürün Seçiniz --</option>
             ${productOptions}
           </select>
         </div>

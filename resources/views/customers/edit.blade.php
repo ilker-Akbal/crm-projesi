@@ -7,7 +7,7 @@
       <h3 class="card-title mb-0">Müşteri Düzenle</h3>
     </div>
     <div class="card-body">
-      @include('partials.alerts')
+      
 
       <form action="{{ route('admin.customers.update', $customer) }}" method="POST">
         @csrf @method('PUT')
@@ -20,12 +20,12 @@
         </div>
 
         <div class="mb-3">
-          <label for="customer_type" class="form-label">Tip *</label>
+          <label for="customer_type" class="form-label">Tür *</label>
           <select name="customer_type" id="customer_type"
                   class="form-select @error('customer_type') is-invalid @enderror" required>
-            @foreach(['customer'=>'Customer','supplier'=>'Supplier','candidate'=>'Candidate'] as $val=>$lbl)
+            @foreach(['customer'=>'Müşteri','supplier'=>'Tedarikçi','candidate'=>'Aday'] as $val => $lbl)
               <option value="{{ $val }}"
-                      {{ old('customer_type',$customer->customer_type)==$val?'selected':'' }}>
+                      {{ old('customer_type', $customer->customer_type) == $val ? 'selected' : '' }}>
                 {{ $lbl }}
               </option>
             @endforeach
@@ -38,14 +38,14 @@
             <label for="phone" class="form-label">Telefon</label>
             <input type="text" name="phone" id="phone"
                    class="form-control @error('phone') is-invalid @enderror"
-                   value="{{ old('phone',$customer->phone) }}">
+                   value="{{ old('phone', $customer->phone) }}">
             @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
           <div class="col-md-6 mb-3">
             <label for="email" class="form-label">E-posta</label>
             <input type="email" name="email" id="email"
                    class="form-control @error('email') is-invalid @enderror"
-                   value="{{ old('email',$customer->email) }}">
+                   value="{{ old('email', $customer->email) }}">
             @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
         </div>
@@ -53,7 +53,7 @@
         <div class="mb-4">
           <label for="address" class="form-label">Adres</label>
           <textarea name="address" id="address" rows="3"
-                    class="form-control @error('address') is-invalid @enderror">{{ old('address',$customer->address) }}</textarea>
+                    class="form-control @error('address') is-invalid @enderror">{{ old('address', $customer->address) }}</textarea>
           @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 

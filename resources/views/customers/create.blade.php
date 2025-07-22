@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h2>Add New Customer</h2>
+    <h2>Yeni Müşteri Ekle</h2>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -18,7 +18,7 @@
         @csrf
 
         <div class="form-group">
-            <label for="customer_name">Name *</label>
+            <label for="customer_name">Adı *</label>
             <input type="text"
                    name="customer_name"
                    id="customer_name"
@@ -31,15 +31,15 @@
         </div>
 
         <div class="form-group">
-            <label for="customer_type">Type *</label>
+            <label for="customer_type">Türü *</label>
             <select name="customer_type"
                     id="customer_type"
                     class="form-control @error('customer_type') is-invalid @enderror"
                     required>
-                <option value="" disabled {{ old('customer_type') ? '' : 'selected' }}>-- select type --</option>
-                <option value="customer" {{ old('customer_type')=='customer' ? 'selected' : '' }}>Customer</option>
-                <option value="supplier" {{ old('customer_type')=='supplier' ? 'selected' : '' }}>Supplier</option>
-                <option value="candidate" {{ old('customer_type')=='candidate' ? 'selected' : '' }}>Candidate</option>
+                <option value="" disabled {{ old('customer_type') ? '' : 'selected' }}>-- tür seçiniz --</option>
+                <option value="customer" {{ old('customer_type')=='customer' ? 'selected' : '' }}>Müşteri</option>
+                <option value="supplier" {{ old('customer_type')=='supplier' ? 'selected' : '' }}>Tedarikçi</option>
+                <option value="candidate" {{ old('customer_type')=='candidate' ? 'selected' : '' }}>Aday</option>
             </select>
             @error('customer_type')
               <div class="invalid-feedback">{{ $message }}</div>
@@ -47,7 +47,7 @@
         </div>
 
         <div class="form-group">
-            <label for="phone">Phone</label>
+            <label for="phone">Telefon</label>
             <input type="text"
                    name="phone"
                    id="phone"
@@ -59,7 +59,7 @@
         </div>
 
         <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">E-posta</label>
             <input type="email"
                    name="email"
                    id="email"
@@ -71,7 +71,7 @@
         </div>
 
         <div class="form-group">
-            <label for="address">Address</label>
+            <label for="address">Adres</label>
             <textarea name="address"
                       id="address"
                       class="form-control @error('address') is-invalid @enderror"
@@ -80,53 +80,56 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+
         <hr>
-<h5>User Login</h5>
+        <h5>Kullanıcı Girişi</h5>
 
-<div class="form-row">
-  <div class="col-md-6 mb-3">
-    <label for="username">Username *</label>
-    <input type="text" name="username" id="username" class="form-control"
-           value="{{ old('username') }}" required>
-  </div>
+        <div class="form-row">
+          <div class="col-md-6 mb-3">
+            <label for="username">Kullanıcı Adı *</label>
+            <input type="text" name="username" id="username" class="form-control"
+                   value="{{ old('username') }}" required>
+          </div>
 
-  <div class="col-md-6 mb-3">
-    <label for="password">Password *</label>
-    <input type="password" name="password" id="password" class="form-control" required>
-  </div>
-</div>
+          <div class="col-md-6 mb-3">
+            <label for="password">Şifre *</label>
+            <input type="password" name="password" id="password" class="form-control" required>
+          </div>
+        </div>
 
-<div class="form-row">
-  <div class="col-md-6 mb-4">
-    <label for="password_confirmation">Confirm Password *</label>
-    <input type="password" name="password_confirmation"
-           id="password_confirmation" class="form-control" required>
-  </div>
-  <div class="col-md-3 mb-4 d-flex align-items-end">
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="active" name="active" checked>
-      <label class="form-check-label" for="active">Active</label>
-    </div>
-  </div>
-<div class="form-group">
-  <label for="role">Role *</label>
-  <select name="role" id="role"
-          class="form-control @error('role') is-invalid @enderror"
-          required>
-    <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- select role --</option>
-    @foreach($roles as $r)
-      <option value="{{ $r }}" {{ old('role') === $r ? 'selected' : '' }}>
-        {{ ucfirst($r) }}
-      </option>
-    @endforeach
-  </select>
-  @error('role')
-    <div class="invalid-feedback">{{ $message }}</div>
-  @enderror
-</div>
-</div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">Cancel</a>
+        <div class="form-row">
+          <div class="col-md-6 mb-4">
+            <label for="password_confirmation">Şifre (Tekrar) *</label>
+            <input type="password" name="password_confirmation"
+                   id="password_confirmation" class="form-control" required>
+          </div>
+          <div class="col-md-3 mb-4 d-flex align-items-end">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+              <label class="form-check-label" for="active">Aktif</label>
+            </div>
+          </div>
+
+          <div class="form-group col-md-3 mb-4">
+            <label for="role">Rol *</label>
+            <select name="role" id="role"
+                    class="form-control @error('role') is-invalid @enderror"
+                    required>
+              <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- rol seçiniz --</option>
+              @foreach($roles as $r)
+                <option value="{{ $r }}" {{ old('role') === $r ? 'selected' : '' }}>
+                  {{ ucfirst($r) }}
+                </option>
+              @endforeach
+            </select>
+            @error('role')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary">İptal</a>
     </form>
 </div>
 @endsection

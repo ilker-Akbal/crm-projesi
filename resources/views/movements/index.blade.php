@@ -7,31 +7,31 @@
     <div class="card card-outline card-primary">
       {{-- Başlık + Yeni Kayıt --}}
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title mb-0">Account Movements</h3>
-        <a href="{{ route('movements.create') }}" class="btn btn-sm btn-primary">Add Movement</a>
+        <h3 class="card-title mb-0">Hesap Hareketleri</h3>
+        <a href="{{ route('movements.create') }}" class="btn btn-sm btn-primary">Hareket Ekle</a>
       </div>
 
       {{-- ---- Filtre Formu ---- --}}
       <form method="GET" class="p-3 border-bottom">
         <div class="row g-2">
           <div class="col-sm">
-            <input type="date" name="from" value="{{ request('from') }}" class="form-control" placeholder="From">
+            <input type="date" name="from" value="{{ request('from') }}" class="form-control" placeholder="Başlangıç Tarihi">
           </div>
           <div class="col-sm">
-            <input type="date" name="to" value="{{ request('to') }}" class="form-control" placeholder="To">
+            <input type="date" name="to" value="{{ request('to') }}" class="form-control" placeholder="Bitiş Tarihi">
           </div>
           <div class="col-sm">
             <select name="type" class="form-select">
-              <option value="">All Types</option>
-              <option value="Debit"  @selected(request('type')=='Debit') >Debit</option>
-              <option value="Credit" @selected(request('type')=='Credit')>Credit</option>
+              <option value="">Tüm Türler</option>
+              <option value="Debit"  @selected(request('type')=='Debit') >Borç</option>
+              <option value="Credit" @selected(request('type')=='Credit')>Alacak</option>
             </select>
           </div>
           <div class="col-sm">
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search explanation">
+            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Açıklamada Ara">
           </div>
           <div class="col-auto">
-            <button class="btn btn-primary">Filter</button>
+            <button class="btn btn-primary">Filtrele</button>
           </div>
         </div>
       </form>
@@ -42,13 +42,13 @@
           <thead class="table-light">
             <tr>
               <th>ID</th>
-              <th>Account</th>
-              <th>Date</th>
-              <th class="text-end">Debit</th>
-              <th class="text-end">Credit</th>
-              <th class="text-end">Running&nbsp;Bal.</th>
-              <th>Explanation</th>
-              <th style="width:140px">Actions</th>
+              <th>Hesap</th>
+              <th>Tarih</th>
+              <th class="text-end">Borç</th>
+              <th class="text-end">Alacak</th>
+              <th class="text-end">Bakiye</th>
+              <th>Açıklama</th>
+              <th style="width:140px">İşlemler</th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +64,7 @@
                 <td>{{ $m->currentCard->customer->customer_name }} ({{ $m->current_id }})</td>
                 <td>{{ \Carbon\Carbon::parse($m->departure_date)->format('d.m.Y') }}</td>
 
-                {{-- Debit / Credit renkli hücreler --}}
+                {{-- Borç / Alacak renkli hücreler --}}
                 <td class="text-end text-danger">
                   {{ $m->movement_type=='Debit' ? number_format($m->amount,2) : '' }}
                 </td>
@@ -76,16 +76,16 @@
                 <td>{{ $m->explanation }}</td>
 
                 <td>
-                  <a href="{{ route('movements.show',$m) }}" class="btn btn-xs btn-info">View</a>
-                  <a href="{{ route('movements.edit',$m) }}" class="btn btn-xs btn-warning">Edit</a>
+                  <a href="{{ route('movements.show',$m) }}" class="btn btn-xs btn-info">Görüntüle</a>
+                  <a href="{{ route('movements.edit',$m) }}" class="btn btn-xs btn-warning">Düzenle</a>
                   <form action="{{ route('movements.destroy',$m) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
-                    <button onclick="return confirm('Delete?')" class="btn btn-xs btn-danger">Del</button>
+                    <button onclick="return confirm('Silinsin mi?')" class="btn btn-xs btn-danger">Sil</button>
                   </form>
                 </td>
               </tr>
             @empty
-              <tr><td colspan="8" class="text-center">No movements found.</td></tr>
+              <tr><td colspan="8" class="text-center">Hiç hareket bulunamadı.</td></tr>
             @endforelse
           </tbody>
         </table>

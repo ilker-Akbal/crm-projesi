@@ -1,4 +1,3 @@
-{{-- resources/views/dashboard.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -55,7 +54,7 @@
 </style>
 
 <div class="dashboard-grid">
-  <!-- 1. Quadrant: Metrics -->
+  <!-- 1. Bölüm: Metrikler -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">Genel Durum</div>
     <div class="dashboard-card-body metrics-container">
@@ -72,7 +71,7 @@
     </div>
   </div>
 
-  <!-- 2. Quadrant: Revenue Chart -->
+  <!-- 2. Bölüm: Aylık Gelir -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">Aylık Gelir</div>
     <div class="dashboard-card-body">
@@ -80,7 +79,7 @@
     </div>
   </div>
 
-  <!-- 3. Quadrant: Top Products Chart -->
+  <!-- 3. Bölüm: En Çok Satılan Ürünler -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">En Çok Satılan 5 Ürün</div>
     <div class="dashboard-card-body">
@@ -88,7 +87,7 @@
     </div>
   </div>
 
-  <!-- 4. Quadrant: Notifications -->
+  <!-- 4. Bölüm: Uyarılar -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">Uyarılar</div>
     <div class="dashboard-card-body">

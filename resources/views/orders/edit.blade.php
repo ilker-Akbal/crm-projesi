@@ -1,14 +1,13 @@
-{{-- resources/views/orders/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Edit Order #' . $order->id)
+@section('title', 'Sipariş Düzenle #' . $order->id)
 
 @section('content')
 <section class="content">
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header">
-        <h3 class="card-title">Edit Order #{{ $order->id }}</h3>
+        <h3 class="card-title">Sipariş Düzenle #{{ $order->id }}</h3>
       </div>
 
       <form action="{{ route('orders.update', $order) }}" method="POST">
@@ -16,24 +15,24 @@
         @method('PUT')
 
         <div class="card-body">
-          @include('partials.alerts')
+          
 
           {{-- Giriş yapan kullanıcının customer_id’si --}}
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
-          {{-- Order Type --}}
+          {{-- Sipariş Türü --}}
           <div class="form-group">
-            <label>Order Type *</label><br>
+            <label>Sipariş Türü *</label><br>
             <label class="mr-3">
               <input type="radio" name="order_type" value="sale"
                      {{ old('order_type', $order->order_type) == 'sale' ? 'checked' : '' }}>
-              Sale
+              Satış
             </label>
 
             <label>
               <input type="radio" name="order_type" value="purchase"
                      {{ old('order_type', $order->order_type) == 'purchase' ? 'checked' : '' }}>
-              Purchase
+              Satın Alma
             </label>
 
             @error('order_type')
@@ -41,9 +40,9 @@
             @enderror
           </div>
 
-          {{-- Order Date --}}
+          {{-- Sipariş Tarihi --}}
           <div class="form-group">
-            <label for="order_date">Order Date</label>
+            <label for="order_date">Sipariş Tarihi</label>
             <input
               type="date"
               name="order_date"
@@ -57,9 +56,9 @@
             @enderror
           </div>
 
-          {{-- Delivery Date --}}
+          {{-- Teslim Tarihi --}}
           <div class="form-group">
-            <label for="delivery_date">Delivery Date</label>
+            <label for="delivery_date">Teslim Tarihi</label>
             <input
               type="date"
               name="delivery_date"
@@ -74,8 +73,8 @@
 
           <hr>
 
-          {{-- Order Items --}}
-          <h5>Order Items</h5>
+          {{-- Sipariş Kalemleri --}}
+          <h5>Sipariş Kalemleri</h5>
           <div id="items-container">
             @php
               $oldItems = old('items', $order->products->map(function($p) {
@@ -91,7 +90,7 @@
               <div class="row mb-2 item-row">
                 <div class="col-md-5">
                   <select name="items[{{ $i }}][product_id]" class="form-control">
-                    <option value="">-- Select Product --</option>
+                    <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
                       <option value="{{ $prod->id }}"
                         {{ $item['product_id'] == $prod->id ? 'selected' : '' }}>
@@ -115,15 +114,15 @@
                 </div>
               </div>
             @empty
-              {{-- No existing items --}}
+              {{-- Kalem yok --}}
             @endforelse
           </div>
 
           <button type="button" id="add-item" class="btn btn-sm btn-outline-primary">
-            + Add Item
+            + Kalem Ekle
           </button>
 
-          {{-- Payment checkbox --}}
+          {{-- Ödeme durumu checkbox --}}
           <div class="form-group mt-3">
             <label>
               <input type="checkbox" name="is_paid" value="1"
@@ -134,8 +133,8 @@
         </div>
 
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('orders.index') }}" class="btn btn-secondary mr-2">Cancel</a>
-          <button type="submit" class="btn btn-primary">Update Order</button>
+          <a href="{{ route('orders.index') }}" class="btn btn-secondary mr-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Siparişi Güncelle</button>
         </div>
       </form>
     </div>
@@ -145,7 +144,7 @@
 
 @push('scripts')
 <script>
-  // Item satırı ekle/sil
+  // Kalem satırı ekle/sil
   document.getElementById('add-item').addEventListener('click', () => {
     const container = document.getElementById('items-container');
     const index = container.querySelectorAll('.item-row').length;
@@ -154,7 +153,7 @@
     row.innerHTML = `
       <div class="col-md-5">
         <select name="items[${index}][product_id]" class="form-control">
-          <option value="">-- Select Product --</option>
+          <option value="">-- Ürün Seçiniz --</option>
           @foreach($products as $prod)
             <option value="{{ $prod->id }}">{{ $prod->product_name }}</option>
           @endforeach

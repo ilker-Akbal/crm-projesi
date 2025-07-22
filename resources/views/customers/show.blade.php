@@ -2,15 +2,15 @@
 
 @section('content')
 <div class="container">
-    <h2>Customer Details</h2>
+    <h2>Müşteri Detayları</h2>
     <div class="card p-3">
         <p><strong>ID:</strong> {{ $customer->id }}</p>
-        <p><strong>Name:</strong> {{ $customer->customer_name }}</p>
-        <p><strong>Type:</strong> {{ $customer->customer_type }}</p>
-        <p><strong>Phone:</strong> {{ $customer->phone }}</p>
-        <p><strong>Email:</strong> {{ $customer->email }}</p>
-        <p><strong>Address:</strong> {{ $customer->address }}</p>
+        <p><strong>Ad:</strong> {{ $customer->customer_name }}</p>
+        <p><strong>Tip:</strong> {{ $customer->customer_type }}</p>
+        <p><strong>Telefon:</strong> {{ $customer->phone }}</p>
+        <p><strong>E-posta:</strong> {{ $customer->email }}</p>
+        <p><strong>Adres:</strong> {{ $customer->address }}</p>
     </div>
-    <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary mt-3">Back to List</a>
+    <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary mt-3">Listeye Geri Dön</a>
 </div>
 @endsection

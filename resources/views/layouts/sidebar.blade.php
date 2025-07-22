@@ -1,72 +1,55 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Logo ve Başlık -->
   <a href="{{ route('dashboard.index') }}" class="brand-link d-flex align-items-center" style="gap: 10px;">
-    <!-- Logo (circle arka plan) -->
     <div style="background-color: white; border-radius: 50%; padding: 6px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
       <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="Logo" style="max-height: 28px; max-width: 28px;">
     </div>
-    <!-- Yazı (sidebar ile aynı font ama daha güçlü) -->
-    <span class="brand-text" style="
-        font-weight: 600;
-        font-size: 16px;
-        color: #f1f1f1;
-        letter-spacing: 0.5px;
-        font-family: inherit; /* Sidebar ile aynı font */
-      ">
-      IKA CRM SYSTEM
+    <span class="brand-text" style="font-weight: 600; font-size: 16px; color: #f1f1f1; letter-spacing: 0.5px; font-family: inherit;">
+      IKA CRM SİSTEMİ
     </span>
   </a>
 
   <div class="sidebar">
     <nav class="mt-2">
-      <ul 
-        class="nav nav-pills nav-sidebar flex-column" 
-        data-widget="treeview" 
-        role="menu" 
-        data-accordion="false"
-      >
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
         <!-- Dashboard -->
         <li class="nav-item">
           <a href="{{ route('dashboard.index') }}" class="nav-link">
             <i class="nav-icon fas fa-tachometer-alt"></i>
-            <p>Dashboard</p>
+            <p>Kontrol Paneli</p>
           </a>
         </li>
-
-
 
         <!-- Companies -->
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-building"></i>
-            <p>
-              Companies
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Şirketler <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('companies.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Company</p>
+                <p>Şirket Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('companies.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Companies</p>
+                <p>Şirketleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('contacts.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Contacts</p>
+                <p>Kişileri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('contacts.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Contact</p>
+                <p>Kişi Ekle</p>
               </a>
             </li>
           </ul>
@@ -76,34 +59,31 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-shopping-cart"></i>
-            <p>
-              Orders
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Siparişler <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('orders.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Order</p>
+                <p>Sipariş Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('orders.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Order View</p>
+                <p>Siparişleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('offers.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Offer</p>
+                <p>Teklifleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('offers.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Offer</p>
+                <p>Teklif Ekle</p>
               </a>
             </li>
           </ul>
@@ -113,34 +93,31 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-box-open"></i>
-            <p>
-              Products
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Ürünler <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('products.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Product</p>
+                <p>Ürün Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('products.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Products</p>
+                <p>Ürünleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('product_stocks.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Product Stocks</p>
+                <p>Stok Durumu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('product_prices.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Product Prices</p>
+                <p>Ürün Fiyatları</p>
               </a>
             </li>
           </ul>
@@ -150,29 +127,25 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-handshake"></i>
-            <p>
-              Accounts
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Hesaplar <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
-            
             <li class="nav-item">
               <a href="{{ route('accounts.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Accounts</p>
+                <p>Hesapları Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('movements.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Movement</p>
+                <p>Hareket Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('movements.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Movements</p>
+                <p>Hareketleri Görüntüle</p>
               </a>
             </li>
           </ul>
@@ -182,40 +155,37 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-chart-line"></i>
-            <p>
-              Reports
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Raporlar <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('reports.sales') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Sales Report</p>
+                <p>Satış Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.customers') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Customer Report</p>
+                <p>Müşteri Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.product_stock') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Product Stock Report</p>
+                <p>Stok Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.account_summary') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Current Account Summary</p>
+                <p>Hesap Özeti</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.support') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Support Request Report</p>
+                <p>Destek Talepleri</p>
               </a>
             </li>
           </ul>
@@ -225,34 +195,31 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-headset"></i>
-            <p>
-              Support
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Destek <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('support.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Create Support Request</p>
+                <p>Destek Talebi Oluştur</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Support Requests</p>
+                <p>Tüm Talepler</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.pending') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Pending Requests</p>
+                <p>Bekleyen Talepler</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.resolved') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Resolved Requests</p>
+                <p>Çözülen Talepler</p>
               </a>
             </li>
           </ul>
@@ -262,56 +229,41 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-tasks"></i>
-            <p>
-              Actions
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Faaliyetler <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('actions.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Action</p>
+                <p>Faaliyet Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('actions.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View All Actions</p>
+                <p>Tüm Faaliyetler</p>
               </a>
             </li>
-           
           </ul>
         </li>
-
-        <!-- Customers -->
-{{-- ===================== Customers ===================== --}}
-
-
-
-       {{-- ====================== Users ======================== --}}
-
 
         <!-- Reminders -->
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-bell"></i>
-            <p>
-              Reminders
-              <i class="right fas fa-angle-left"></i>
-            </p>
+            <p>Hatırlatmalar <i class="right fas fa-angle-left"></i></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('reminders.create') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add Reminder</p>
+                <p>Hatırlatma Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reminders.index') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>View Reminders</p>
+                <p>Hatırlatmaları Görüntüle</p>
               </a>
             </li>
           </ul>

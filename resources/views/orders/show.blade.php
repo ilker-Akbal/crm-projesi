@@ -2,18 +2,18 @@
 
 @section('content')
 <div class="container">
-  <h2>Order #{{ $order->id }} Details</h2>
+  <h2>Sipariş #{{ $order->id }} Detayları</h2>
   <ul class="list-group">
-    <li class="list-group-item"><strong>Customer:</strong> {{ $order->customer->customer_name }}</li>
-    <li class="list-group-item"><strong>Order Date:</strong> {{ $order->order_date }}</li>
-    <li class="list-group-item"><strong>Delivery Date:</strong> {{ $order->delivery_date }}</li>
-    <li class="list-group-item"><strong>Total:</strong> {{ number_format($order->total_amount,2) }}</li>
+    <li class="list-group-item"><strong>Müşteri:</strong> {{ $order->customer->customer_name }}</li>
+    <li class="list-group-item"><strong>Sipariş Tarihi:</strong> {{ $order->order_date }}</li>
+    <li class="list-group-item"><strong>Teslim Tarihi:</strong> {{ $order->delivery_date }}</li>
+    <li class="list-group-item"><strong>Toplam:</strong> {{ number_format($order->total_amount,2) }}</li>
   </ul>
 
-  <h4 class="mt-4">Items</h4>
+  <h4 class="mt-4">Ürünler</h4>
   <table class="table table-bordered">
     <thead>
-      <tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr>
+      <tr><th>Ürün</th><th>Miktar</th><th>Birim Fiyat</th><th>Ara Toplam</th></tr>
     </thead>
     <tbody>
       @foreach($order->products as $p)
@@ -27,6 +27,6 @@
     </tbody>
   </table>
 
-  <a href="{{ route('orders.index') }}" class="btn btn-secondary">Back to List</a>
+  <a href="{{ route('orders.index') }}" class="btn btn-secondary">Listeye Dön</a>
 </div>
 @endsection
