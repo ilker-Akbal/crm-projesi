@@ -5,19 +5,19 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title">Current Account Summary</h3>
+        <h3 class="card-title">Cari Hesap Özeti</h3>
         <!-- Hızlı Arama (Sağa Hizalı) -->
         <div class="ml-auto">
-          <input type="text" id="accountSearch" class="form-control" placeholder="Search accounts..." style="max-width: 250px;">
+          <input type="text" id="accountSearch" class="form-control" placeholder="Hesaplarda ara..." style="max-width: 250px;">
         </div>
       </div>
       <div class="card-body">
         <div class="row text-center">
-          <!-- Donut Chart -->
+          <!-- Pasta Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="accountDonutChart" style="height:220px; max-width:320px;"></canvas>
           </div>
-          <!-- Bar Chart -->
+          <!-- Çubuk Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="accountBarChart" style="height:220px; max-width:380px;"></canvas>
           </div>
@@ -30,10 +30,10 @@
           <table class="table table-hover mb-0" id="accountTable">
             <thead>
               <tr>
-                <th>Account ID</th>
-                <th>Customer</th>
-                <th>Balance</th>
-                <th>Opening Date</th>
+                <th>Hesap ID</th>
+                <th>Müşteri</th>
+                <th>Bakiye</th>
+                <th>Açılış Tarihi</th>
               </tr>
             </thead>
             <tbody>
@@ -46,7 +46,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="4" class="text-center p-4">No data found</td>
+                  <td colspan="4" class="text-center p-4">Veri bulunamadı</td>
                 </tr>
               @endforelse
             </tbody>
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const customers = @json($accounts->pluck('customer.customer_name'));
   const balances = @json($accounts->pluck('balance'));
 
-  // Donut Chart (Balance Dağılımı)
+  // Pasta Grafiği (Bakiye Dağılımı)
   const ctxDonut = document.getElementById('accountDonutChart').getContext('2d');
   new Chart(ctxDonut, {
     type: 'doughnut',
@@ -83,14 +83,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Bar Chart (Balance Karşılaştırma)
+  // Çubuk Grafiği (Bakiye Karşılaştırma)
   const ctxBar = document.getElementById('accountBarChart').getContext('2d');
   new Chart(ctxBar, {
     type: 'bar',
     data: {
       labels: customers,
       datasets: [{
-        label: 'Balance',
+        label: 'Bakiye',
         data: balances,
         backgroundColor: '#4e73df'
       }]

@@ -5,24 +5,24 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title">Customer Report</h3>
+        <h3 class="card-title">Müşteri Raporu</h3>
         <!-- Hızlı Arama (Sağa Hizalı) -->
         <div class="ml-auto">
-          <input type="text" id="customerSearch" class="form-control" placeholder="Search customers..." style="max-width: 250px;">
+          <input type="text" id="customerSearch" class="form-control" placeholder="Müşterilerde ara..." style="max-width: 250px;">
         </div>
       </div>
 
       <!-- Grafik ve Toplam Bilgi -->
       <div class="card-body">
         <div class="row text-center">
-          <!-- Donut Chart -->
+          <!-- Pasta Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="customerDonutChart" style="height:220px; max-width:320px;"></canvas>
           </div>
           <!-- Toplam Müşteri Kartı -->
           <div class="col-md-6 d-flex align-items-center justify-content-center">
             <div style="font-size: 1.5rem; font-weight: bold; background:#f4f6f9; border-radius:8px; padding:20px;">
-              Total Customers: {{ $customers->count() }}
+              Toplam Müşteri: {{ $customers->count() }}
             </div>
           </div>
         </div>
@@ -35,10 +35,10 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Phone</th>
-                <th>Email</th>
+                <th>Ad</th>
+                <th>Tür</th>
+                <th>Telefon</th>
+                <th>E-posta</th>
               </tr>
             </thead>
             <tbody>
@@ -52,7 +52,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center p-4">No data found</td>
+                  <td colspan="5" class="text-center p-4">Veri bulunamadı</td>
                 </tr>
               @endforelse
             </tbody>
@@ -68,7 +68,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // Donut Chart: Her müşteri farklı renk
+  // Pasta Grafiği: Her müşteri farklı renk
   const customerNames = @json($customers->pluck('customer_name'));
   const counts = Array(customerNames.length).fill(1);
 

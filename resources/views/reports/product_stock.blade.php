@@ -6,20 +6,20 @@
     <div class="card card-outline card-primary">
       <!-- Kart Başlığı + Hızlı Arama -->
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title">Product Stock Report</h3>
+        <h3 class="card-title">Ürün Stok Raporu</h3>
         <div class="ml-auto">
-          <input type="text" id="stockSearch" class="form-control" placeholder="Search products..." style="max-width: 250px;">
+          <input type="text" id="stockSearch" class="form-control" placeholder="Ürünlerde ara..." style="max-width: 250px;">
         </div>
       </div>
 
       <!-- Grafikler -->
       <div class="card-body">
         <div class="row text-center">
-          <!-- Donut Chart -->
+          <!-- Pasta Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="stockDonutChart" style="height:220px; max-width:320px;"></canvas>
           </div>
-          <!-- Bar Chart -->
+          <!-- Çubuk Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="stockBarChart" style="height:220px; max-width:380px;"></canvas>
           </div>
@@ -33,9 +33,9 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Product</th>
-                <th>Stock Quantity</th>
-                <th>Update Date</th>
+                <th>Ürün</th>
+                <th>Stok Miktarı</th>
+                <th>Güncelleme Tarihi</th>
               </tr>
             </thead>
             <tbody>
@@ -48,7 +48,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="4" class="text-center p-4">No data found</td>
+                  <td colspan="4" class="text-center p-4">Veri bulunamadı</td>
                 </tr>
               @endforelse
             </tbody>
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const productNames = @json($stocks->pluck('product.product_name'));
   const stockQuantities = @json($stocks->pluck('stock_quantity'));
 
-  // Donut Chart (Stok Dağılımı)
+  // Pasta Grafiği (Stok Dağılımı)
   const ctxDonut = document.getElementById('stockDonutChart').getContext('2d');
   new Chart(ctxDonut, {
     type: 'doughnut',
@@ -85,16 +85,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Bar Chart (Stok Karşılaştırma)
+  // Çubuk Grafiği (Stok Karşılaştırma)
   const ctxBar = document.getElementById('stockBarChart').getContext('2d');
   new Chart(ctxBar, {
     type: 'bar',
     data: {
       labels: productNames,
       datasets: [{
-        label: 'Stock Quantity',
+        label: 'Stok Miktarı',
         data: stockQuantities,
-        backgroundColor: stockQuantities.map(qty => qty < 10 ? '#e74a3b' : '#4e73df') // Kritik stokları kırmızı renkte göster
+        backgroundColor: stockQuantities.map(qty => qty < 10 ? '#e74a3b' : '#4e73df') // Kritik stokları kırmızı göster
       }]
     },
     options: {

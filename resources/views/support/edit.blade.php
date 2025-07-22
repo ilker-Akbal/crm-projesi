@@ -4,24 +4,24 @@
 @section('content')
 <section class="content">
   <div class="container-fluid">
-    @include('partials.alerts')
+   
 
     <div class="card card-outline card-primary">
       <div class="card-header">
-        <h3 class="card-title">Edit Support Request</h3>
+        <h3 class="card-title">Destek Talebini Düzenle</h3>
       </div>
 
       <form action="{{ route('support.update', $support) }}" method="POST">
         @csrf
         @method('PUT')
         <div class="card-body">
-          {{-- Customer --}}
+          {{-- Müşteri --}}
           <div class="form-group">
-            <label for="customer_id">Customer *</label>
+            <label for="customer_id">Müşteri *</label>
             <select name="customer_id" id="customer_id"
                     class="form-control @error('customer_id') is-invalid @enderror"
                     required>
-              <option value="">-- select --</option>
+              <option value="">-- seçiniz --</option>
               @foreach($customers as $c)
                 <option value="{{ $c->id }}"
                         {{ old('customer_id', $support->customer_id)==$c->id ? 'selected' : '' }}>
@@ -32,9 +32,9 @@
             @error('customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          {{-- Title --}}
+          {{-- Başlık --}}
           <div class="form-group">
-            <label for="title">Title *</label>
+            <label for="title">Başlık *</label>
             <input type="text"
                    name="title"
                    id="title"
@@ -44,9 +44,9 @@
             @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          {{-- Explanation --}}
+          {{-- Açıklama --}}
           <div class="form-group">
-            <label for="explanation">Explanation</label>
+            <label for="explanation">Açıklama</label>
             <textarea name="explanation"
                       id="explanation"
                       rows="4"
@@ -54,22 +54,22 @@
             @error('explanation')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          {{-- Situation --}}
+          {{-- Durum --}}
           <div class="form-group">
-            <label for="situation">Status *</label>
+            <label for="situation">Durum *</label>
             <select name="situation"
                     id="situation"
                     class="form-control @error('situation') is-invalid @enderror"
                     required>
-              <option value="pending"  {{ old('situation', $support->situation)=='pending'  ? 'selected' : '' }}>Pending</option>
-              <option value="resolved" {{ old('situation', $support->situation)=='resolved' ? 'selected' : '' }}>Resolved</option>
+              <option value="pending"  {{ old('situation', $support->situation)=='pending'  ? 'selected' : '' }}>Beklemede</option>
+              <option value="resolved" {{ old('situation', $support->situation)=='resolved' ? 'selected' : '' }}>Çözüldü</option>
             </select>
             @error('situation')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          {{-- Registration Date --}}
+          {{-- Kayıt Tarihi --}}
           <div class="form-group">
-            <label for="registration_date">Registration Date *</label>
+            <label for="registration_date">Kayıt Tarihi *</label>
             <input type="date"
                    name="registration_date"
                    id="registration_date"
@@ -81,8 +81,8 @@
         </div>
 
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('support.index') }}" class="btn btn-secondary me-2">Cancel</a>
-          <button type="submit" class="btn btn-primary">Update</button>
+          <a href="{{ route('support.index') }}" class="btn btn-secondary me-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Güncelle</button>
         </div>
       </form>
     </div>

@@ -1,11 +1,12 @@
+{{-- resources/views/admin/users/edit.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
 <section class="content">
   <div class="container" style="max-width: 600px;">
 
-    {{-- global flash + error partial varsa ekle --}}
-    @include('partials.alerts')
+    {{-- global flash + hata uyarıları --}}
+   
 
     <div class="card card-outline card-warning shadow-sm rounded">
       <div class="card-header bg-warning">
@@ -13,29 +14,36 @@
       </div>
 
       <form action="{{ route('admin.users.update', $user) }}" method="POST">
-        @csrf @method('PUT')
+        @csrf
+        @method('PUT')
         <div class="card-body">
 
           {{-- Kullanıcı Adı --}}
           <div class="form-group mb-3">
             <label for="username" class="fw-semibold">Kullanıcı Adı <span class="text-danger">*</span></label>
-            <input type="text"
-                   id="username"
-                   name="username"
-                   class="form-control @error('username') is-invalid @enderror"
-                   value="{{ old('username', $user->username) }}"
-                   required>
+            <input 
+              type="text"
+              id="username"
+              name="username"
+              class="form-control @error('username') is-invalid @enderror"
+              value="{{ old('username', $user->username) }}"
+              required
+            >
             @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           {{-- Rol --}}
           <div class="form-group mb-3">
             <label for="role" class="fw-semibold">Rol <span class="text-danger">*</span></label>
-            <select id="role" name="role"
-                    class="form-select @error('role') is-invalid @enderror" required>
+            <select 
+              id="role" 
+              name="role"
+              class="form-select @error('role') is-invalid @enderror" 
+              required
+            >
               <option value="">-- Seçiniz --</option>
               @foreach($roles as $r)
-                <option value="{{ $r }}" {{ old('role', $user->role)===$r ? 'selected' : '' }}>
+                <option value="{{ $r }}" {{ old('role', $user->role) === $r ? 'selected' : '' }}>
                   {{ ucfirst($r) }}
                 </option>
               @endforeach
@@ -46,12 +54,15 @@
           {{-- Bağlı Müşteri --}}
           <div class="form-group mb-3">
             <label for="customer_id" class="fw-semibold">Bağlı Müşteri <span class="text-danger">*</span></label>
-            <select id="customer_id" name="customer_id"
-                    class="form-select @error('customer_id') is-invalid @enderror" required>
+            <select 
+              id="customer_id" 
+              name="customer_id"
+              class="form-select @error('customer_id') is-invalid @enderror" 
+              required
+            >
               <option value="">-- Seçiniz --</option>
               @foreach($customers as $c)
-                <option value="{{ $c->id }}"
-                        {{ old('customer_id', $user->customer_id)==$c->id ? 'selected' : '' }}>
+                <option value="{{ $c->id }}" {{ old('customer_id', $user->customer_id) == $c->id ? 'selected' : '' }}>
                   {{ $c->customer_name }}
                 </option>
               @endforeach
@@ -60,22 +71,29 @@
           </div>
 
           {{-- Aktif mi? --}}
-          <input type="hidden" name="active" value="0"> {{-- checkbox boş gelirse 0 gönder --}}
-
+          <input type="hidden" name="active" value="0">
           <div class="form-check form-switch mb-4">
-            <input class="form-check-input" type="checkbox" id="active" name="active"
-                   value="1" {{ old('active', $user->active) ? 'checked' : '' }}>
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              id="active" 
+              name="active"
+              value="1" 
+              {{ old('active', $user->active) ? 'checked' : '' }}
+            >
             <label class="form-check-label" for="active">Aktif Kullanıcı</label>
           </div>
 
-          {{-- (İsteğe bağlı) Şifre sıfırlama --}}
+          {{-- (İsteğe bağlı) Şifre Sıfırlama --}}
           <div class="form-group">
             <label for="password">Yeni Parola <small class="text-muted">(boş bırak = değişme)</small></label>
-            <input type="password"
-                   id="password"
-                   name="password"
-                   class="form-control @error('password') is-invalid @enderror"
-                   minlength="8">
+            <input 
+              type="password"
+              id="password"
+              name="password"
+              class="form-control @error('password') is-invalid @enderror"
+              minlength="8"
+            >
             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 

@@ -5,7 +5,7 @@
   <div class="container-fluid">
   
     <div class="card card-outline card-primary">
-      <div class="card-header"><h3 class="card-title">Add Reminder</h3></div>
+      <div class="card-header"><h3 class="card-title">Hatırlatıcı Ekle</h3></div>
       <form action="{{ route('reminders.store') }}" method="POST">
         @csrf
 
@@ -15,7 +15,7 @@
 
         <div class="card-body">
           <div class="form-group">
-            <label for="title">Title *</label>
+            <label for="title">Başlık *</label>
             <input type="text"
                    name="title"
                    id="title"
@@ -26,7 +26,7 @@
           </div>
 
           <div class="form-group">
-            <label for="reminder_date">Reminder Date *</label>
+            <label for="reminder_date">Hatırlatma Tarihi *</label>
             <input type="date"
                    name="reminder_date"
                    id="reminder_date"
@@ -37,7 +37,7 @@
           </div>
 
           <div class="form-group">
-            <label for="explanation">Explanation</label>
+            <label for="explanation">Açıklama</label>
             <textarea name="explanation"
                       id="explanation"
                       rows="3"
@@ -49,9 +49,9 @@
 
         <div class="card-footer d-flex justify-content-end">
           <a href="{{ route('reminders.index') }}" class="btn btn-secondary me-2">
-            Cancel
+            İptal
           </a>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
         </div>
       </form>
     </div>

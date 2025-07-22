@@ -5,17 +5,16 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header d-flex justify-content-between">
-        <h3 class="card-title">Product Prices</h3>
-        
+        <h3 class="card-title">Ürün Fiyatları</h3>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Product</th>
-              <th>Price</th>
-              <th>Updated At</th>
+              <th>Ürün</th>
+              <th>Fiyat</th>
+              <th>Güncelleme Tarihi</th>
             </tr>
           </thead>
           <tbody>
@@ -27,7 +26,9 @@
               <td>{{ $price->updated_at }}</td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">No price records.</td></tr>
+            <tr>
+              <td colspan="4" class="text-center">Fiyat kaydı bulunamadı.</td>
+            </tr>
             @endforelse
           </tbody>
         </table>

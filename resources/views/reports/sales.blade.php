@@ -4,20 +4,20 @@
 <section class="content">
   <div class="container-fluid">
     <div class="card card-outline card-primary">
+      <!-- Kart Başlığı + Hızlı Arama -->
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title">Sales Report</h3>
-        <!-- Hızlı Arama (Sağa Hizalı) -->
+        <h3 class="card-title">Satış Raporu</h3>
         <div class="ml-auto">
-          <input type="text" id="salesSearch" class="form-control" placeholder="Search sales..." style="max-width: 250px;">
+          <input type="text" id="salesSearch" class="form-control" placeholder="Satışlarda ara..." style="max-width: 250px;">
         </div>
       </div>
       <div class="card-body">
         <div class="row text-center">
-          <!-- Donut Chart -->
+          <!-- Pasta Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="salesDonutChart" style="height:220px; max-width:320px;"></canvas>
           </div>
-          <!-- Bar Chart -->
+          <!-- Çubuk Grafiği -->
           <div class="col-md-6 d-flex justify-content-center">
             <canvas id="salesBarChart" style="height:220px; max-width:380px;"></canvas>
           </div>
@@ -31,9 +31,9 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Customer</th>
-                <th>Order Date</th>
-                <th>Total Amount</th>
+                <th>Müşteri</th>
+                <th>Sipariş Tarihi</th>
+                <th>Toplam Tutar</th>
               </tr>
             </thead>
             <tbody>
@@ -46,7 +46,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="4" class="text-center p-4">No data found</td>
+                  <td colspan="4" class="text-center p-4">Veri bulunamadı</td>
                 </tr>
               @endforelse
             </tbody>
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const customers = @json($sales->pluck('customer.customer_name'));
   const totals = @json($sales->pluck('total_amount'));
 
-  // Donut Chart (Satışların oranı)
+  // Pasta Grafiği (Satış Dağılımı)
   const ctxDonut = document.getElementById('salesDonutChart').getContext('2d');
   new Chart(ctxDonut, {
     type: 'doughnut',
@@ -83,14 +83,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Bar Chart (Müşteri bazlı satışlar)
+  // Çubuk Grafiği (Müşteri Bazlı Satışlar)
   const ctxBar = document.getElementById('salesBarChart').getContext('2d');
   new Chart(ctxBar, {
     type: 'bar',
     data: {
       labels: customers,
       datasets: [{
-        label: 'Total Sales',
+        label: 'Toplam Satış',
         data: totals,
         backgroundColor: '#4e73df'
       }]

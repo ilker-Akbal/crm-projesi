@@ -4,8 +4,6 @@
 @section('content')
 <section class="content">
   <div class="container-fluid">
-
-    {{-- Genel flash / validasyon uyarıları --}}
     
 
     <div class="card card-outline card-primary">
@@ -17,27 +15,31 @@
         @csrf
         <div class="card-body">
 
-          {{-- Kullanıcı adı --------------------------------------------------- --}}
+          {{-- Kullanıcı adı --}}
           <div class="form-group">
             <label for="username">Kullanıcı Adı *</label>
-            <input  type="text"
-                    name="username"
-                    id="username"
-                    class="form-control @error('username') is-invalid @enderror"
-                    value="{{ old('username') }}"
-                    required>
+            <input  
+              type="text"
+              name="username"
+              id="username"
+              class="form-control @error('username') is-invalid @enderror"
+              value="{{ old('username') }}"
+              required
+            >
             @error('username')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
 
-          {{-- Rol seçimi ------------------------------------------------------ --}}
+          {{-- Rol seçimi --}}
           <div class="form-group">
             <label for="role">Rol *</label>
-            <select name="role"
-                    id="role"
-                    class="form-control @error('role') is-invalid @enderror"
-                    required>
+            <select 
+              name="role"
+              id="role"
+              class="form-control @error('role') is-invalid @enderror"
+              required
+            >
               <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- rol seçiniz --</option>
               @foreach (['admin','manager','user'] as $r)
                 <option value="{{ $r }}" {{ old('role') == $r ? 'selected' : '' }}>
@@ -49,44 +51,54 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
-          <div class="form-group">
-  <label for="customer_id">Bağlı Müşteri *</label>
-  <select name="customer_id" id="customer_id"
-          class="form-control @error('customer_id') is-invalid @enderror" required>
-    <option value="" disabled {{ old('customer_id') ? '' : 'selected' }}>-- müşteri seçiniz --</option>
-    @foreach($customers as $c)
-      <option value="{{ $c->id }}" {{ old('customer_id')==$c->id ? 'selected' : '' }}>
-        {{ $c->customer_name }}
-      </option>
-    @endforeach
-  </select>
-  @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
 
-          {{-- Şifre (isteğe bağlı) ------------------------------------------- --}}
+          {{-- Bağlı müşteri --}}
           <div class="form-group">
-            <label for="password">Parola </label>
-            <input  type="password"
-                    name="password"
-                    id="password"
-                    class="form-control @error('password') is-invalid @enderror">
+            <label for="customer_id">Bağlı Müşteri *</label>
+            <select 
+              name="customer_id"
+              id="customer_id"
+              class="form-control @error('customer_id') is-invalid @enderror"
+              required
+            >
+              <option value="" disabled {{ old('customer_id') ? '' : 'selected' }}>-- müşteri seçiniz --</option>
+              @foreach($customers as $c)
+                <option value="{{ $c->id }}" {{ old('customer_id') == $c->id ? 'selected' : '' }}>
+                  {{ $c->customer_name }}
+                </option>
+              @endforeach
+            </select>
+            @error('customer_id')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+          </div>
+
+          {{-- Parola (isteğe bağlı) --}}
+          <div class="form-group">
+            <label for="password">Parola</label>
+            <input  
+              type="password"
+              name="password"
+              id="password"
+              class="form-control @error('password') is-invalid @enderror"
+            >
             @error('password')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
 
-          {{-- Aktif mi?  ------------------------------------------------------ --}}
+          {{-- Aktif mi? --}}
           <div class="form-group mb-0">
-            {{-- İşaretlenmediğinde 0 göndermek için gizli input --}}
             <input type="hidden" name="active" value="0">
-
             <div class="custom-control custom-switch">
-              <input  type="checkbox"
-                      class="custom-control-input"
-                      id="active"
-                      name="active"
-                      value="1"
-                      {{ old('active', true) ? 'checked' : '' }}>
+              <input  
+                type="checkbox"
+                class="custom-control-input"
+                id="active"
+                name="active"
+                value="1"
+                {{ old('active', true) ? 'checked' : '' }}
+              >
               <label class="custom-control-label" for="active">Aktif mi?</label>
             </div>
             @error('active')

@@ -6,7 +6,7 @@
 
     <div class="card card-primary card-outline">
       <div class="card-header">
-        <h3 class="card-title">Create Support Request</h3>
+        <h3 class="card-title">Destek Talebi Oluştur</h3>
       </div>
 
       <form action="{{ route('support.store') }}" method="POST">
@@ -17,7 +17,7 @@
 
         <div class="card-body">
           <div class="form-group">
-            <label for="title">Title *</label>
+            <label for="title">Başlık *</label>
             <input name="title"
                    id="title"
                    class="form-control @error('title') is-invalid @enderror"
@@ -27,7 +27,7 @@
           </div>
 
           <div class="form-group">
-            <label for="explanation">Explanation</label>
+            <label for="explanation">Açıklama</label>
             <textarea name="explanation"
                       id="explanation"
                       rows="4"
@@ -36,19 +36,19 @@
           </div>
 
           <div class="form-group">
-            <label for="situation">Status *</label>
+            <label for="situation">Durum *</label>
             <select name="situation"
                     id="situation"
                     class="form-control @error('situation') is-invalid @enderror"
                     required>
-              <option value="pending"  {{ old('situation')=='pending'  ? 'selected':'' }}>Pending</option>
-              <option value="resolved" {{ old('situation')=='resolved' ? 'selected':'' }}>Resolved</option>
+              <option value="pending"  {{ old('situation')=='pending'  ? 'selected':'' }}>Beklemede</option>
+              <option value="resolved" {{ old('situation')=='resolved' ? 'selected':'' }}>Çözüldü</option>
             </select>
             @error('situation') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="form-group">
-            <label for="registration_date">Registration Date *</label>
+            <label for="registration_date">Kayıt Tarihi *</label>
             <input type="date"
                    name="registration_date"
                    id="registration_date"
@@ -60,8 +60,8 @@
         </div>
 
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('support.index') }}" class="btn btn-secondary me-2">Cancel</a>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <a href="{{ route('support.index') }}" class="btn btn-secondary me-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
         </div>
       </form>
     </div>

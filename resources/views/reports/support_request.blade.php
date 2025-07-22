@@ -6,9 +6,9 @@
     <div class="card card-outline card-primary">
       <!-- Kart Başlığı + Hızlı Arama -->
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="card-title">Support Request Report</h3>
+        <h3 class="card-title">Destek Talep Raporu</h3>
         <div class="ml-auto">
-          <input type="text" id="supportSearch" class="form-control" placeholder="Search requests..." style="max-width: 250px;">
+          <input type="text" id="supportSearch" class="form-control" placeholder="Taleplerde ara..." style="max-width: 250px;">
         </div>
       </div>
 
@@ -19,10 +19,10 @@
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Customer</th>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Registered Date</th>
+                <th>Müşteri</th>
+                <th>Başlık</th>
+                <th>Durum</th>
+                <th>Kayıt Tarihi</th>
               </tr>
             </thead>
             <tbody>
@@ -36,7 +36,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center p-4">No data found</td>
+                  <td colspan="5" class="text-center p-4">Veri bulunamadı</td>
                 </tr>
               @endforelse
             </tbody>
