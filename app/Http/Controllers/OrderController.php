@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\Company;
 
 class OrderController extends Controller
 {
@@ -14,7 +15,7 @@ class OrderController extends Controller
     public function index()
     {
         $orders = Order::where('customer_id', Auth::user()->customer_id)
-                       ->with('customer')
+                       ->with(['customer','company'])
                        ->latest('order_date')
                        ->get();
 
@@ -25,42 +26,45 @@ class OrderController extends Controller
     public function create()
     {
         $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+        $companies = Company::where('customer_id', Auth::user()->customer_id)
+                            ->orderBy('Company_name')->get();
 
-        $products = Product::where('customer_id', Auth::user()->customer_id)
-                           ->with(['prices' => fn($q) => $q->latest()->limit(1)])
-                           ->orderBy('product_name')
-                           ->get()
-                           ->map(fn($p) => [
-                               'id'           => $p->id,
-                               'product_name' => $p->product_name,
-                               'unit_price'   => optional($p->prices->first())->price ?? 0,
-                           ]);
+        $products  = Product::where('customer_id', Auth::user()->customer_id)
+                            ->with(['prices' => fn($q) => $q->latest()->limit(1)])
+                            ->orderBy('product_name')
+                            ->get()
+                            ->map(fn($p) => [
+                                'id'           => $p->id,
+                                'product_name' => $p->product_name,
+                                'unit_price'   => optional($p->prices->first())->price ?? 0,
+                            ]);
 
-        return view('orders.create', compact('customers', 'products'));
+        return view('orders.create', compact('customers','companies','products'));
     }
 
     /* ------------------------------------  POST /orders  */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order_type'             => 'required|in:sale,purchase',
-            'order_date'             => 'required|date',
-            'delivery_date'          => 'nullable|date|after_or_equal:order_date',
-            'items'                  => 'required|array|min:1',
-            'items.*.product_id'     => 'required|exists:products,id',
-            'items.*.amount'         => 'required|numeric|min:1',
-            'items.*.unit_price'     => 'required|numeric|min:0',
-            'situation'              => 'in:hazırlanıyor,tamamlandı',
-            'is_paid'                => 'sometimes|boolean',
+            'company_id'              => 'nullable|exists:companies,id',
+            'order_type'              => 'required|in:sale,purchase',
+            'order_date'              => 'required|date',
+            'delivery_date'           => 'nullable|date|after_or_equal:order_date',
+            'items'                   => 'required|array|min:1',
+            'items.*.product_id'      => 'required|exists:products,id',
+            'items.*.amount'          => 'required|numeric|min:1',
+            'items.*.unit_price'      => 'required|numeric|min:0',
+            'situation'               => 'in:hazırlanıyor,tamamlandı',
+            'is_paid'                 => 'sometimes|boolean',
         ]);
 
-        $total = collect($data['items'])
-                    ->reduce(fn($s, $i) => $s + $i['amount'] * $i['unit_price'], 0);
-
+        $total  = collect($data['items'])
+                     ->reduce(fn($s,$i)=> $s + $i['amount'] * $i['unit_price'], 0);
         $isPaid = $request->boolean('is_paid');
 
         $order = Order::create([
             'customer_id'   => Auth::user()->customer_id,
+            'company_id'    => $data['company_id'] ?? null,
             'order_type'    => $data['order_type'],
             'order_date'    => $data['order_date'],
             'delivery_date' => $data['delivery_date'] ?? null,
@@ -70,7 +74,6 @@ class OrderController extends Controller
             'paid_at'       => $isPaid ? now() : null,
         ]);
 
-        /* pivot */
         foreach ($data['items'] as $item) {
             $order->products()->attach(
                 $item['product_id'],
@@ -79,13 +82,13 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.index')
-                         ->with('success', 'Order created successfully.');
+                         ->with('success','Order created successfully.');
     }
 
     /* ------------------------------------  GET /orders/{order}  */
     public function show(Order $order)
     {
-        $order->load(['customer','products']);
+        $order->load(['customer','company','products']);
         return view('orders.show', compact('order'));
     }
 
@@ -95,33 +98,37 @@ class OrderController extends Controller
         $order->load('products');
 
         $customers = Customer::whereKey(Auth::user()->customer_id)->get();
+        $companies = Company::where('customer_id', Auth::user()->customer_id)
+                            ->orderBy('Company_name')->get();
         $products  = Product::where('customer_id', Auth::user()->customer_id)
                             ->orderBy('product_name')->get();
 
-        return view('orders.edit', compact('order','customers','products'));
+        return view('orders.edit', compact('order','customers','companies','products'));
     }
 
     /* ------------------------------------  PUT /orders/{order}  */
     public function update(Request $request, Order $order)
     {
         $data = $request->validate([
-            'order_type'             => 'required|in:sale,purchase',
-            'order_date'             => 'required|date',
-            'delivery_date'          => 'nullable|date|after_or_equal:order_date',
-            'items'                  => 'required|array|min:1',
-            'items.*.product_id'     => 'required|exists:products,id',
-            'items.*.amount'         => 'required|numeric|min:1',
-            'items.*.unit_price'     => 'required|numeric|min:0',
-            'situation'              => 'in:hazırlanıyor,tamamlandı',
-            'is_paid'                => 'sometimes|boolean',
+            'company_id'              => 'nullable|exists:companies,id',
+            'order_type'              => 'required|in:sale,purchase',
+            'order_date'              => 'required|date',
+            'delivery_date'           => 'nullable|date|after_or_equal:order_date',
+            'items'                   => 'required|array|min:1',
+            'items.*.product_id'      => 'required|exists:products,id',
+            'items.*.amount'          => 'required|numeric|min:1',
+            'items.*.unit_price'      => 'required|numeric|min:0',
+            'situation'               => 'in:hazırlanıyor,tamamlandı',
+            'is_paid'                 => 'sometimes|boolean',
         ]);
 
         $total  = collect($data['items'])
-                    ->reduce(fn($s,$i)=> $s + $i['amount'] * $i['unit_price'], 0);
+                     ->reduce(fn($s,$i)=> $s + $i['amount'] * $i['unit_price'], 0);
         $isPaid = $request->boolean('is_paid');
 
         $order->update([
             'customer_id'   => Auth::user()->customer_id,
+            'company_id'    => $data['company_id'] ?? null,
             'order_type'    => $data['order_type'],
             'order_date'    => $data['order_date'],
             'delivery_date' => $data['delivery_date'] ?? null,
@@ -131,7 +138,6 @@ class OrderController extends Controller
             'paid_at'       => $isPaid ? now() : null,
         ]);
 
-        /* pivot sync */
         $order->products()->sync([]);
         foreach ($data['items'] as $item) {
             $order->products()->attach(
@@ -141,7 +147,7 @@ class OrderController extends Controller
         }
 
         return redirect()->route('orders.index')
-                         ->with('success', 'Order updated successfully.');
+                         ->with('success','Order updated successfully.');
     }
 
     /* ------------------------------------  DELETE /orders/{order}  */
@@ -151,6 +157,6 @@ class OrderController extends Controller
         $order->delete();
 
         return redirect()->route('orders.index')
-                         ->with('success', 'Order deleted successfully.');
+                         ->with('success','Order deleted successfully.');
     }
 }

@@ -24,7 +24,7 @@ class Order extends Model
         'is_paid',
         'paid_at',
         'payment_movement_id',
-        'updated_by',
+        'updated_by','company_id',
     ];
 
     /*------------- Dönüşümler -------------*/
@@ -50,6 +50,9 @@ class Order extends Model
     /* Ödeme hareketi (OrderObserver oluşturuyor) */
     public function paymentMovement()
     {
+        
+    
         return $this->belongsTo(CurrentMovement::class, 'payment_movement_id');
     }
+    public function company() { return $this->belongsTo(Company::class); }
 }

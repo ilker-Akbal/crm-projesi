@@ -16,6 +16,23 @@
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="row">
+            {{-- Company (optional) --}}
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="company_id">Company (optional)</label>
+                <select name="company_id" id="company_id" class="form-control">
+                  <option value="">-- select --</option>
+                  @foreach($companies as $c)
+                    <option value="{{ $c->id }}"
+                      {{ old('company_id')==$c->id ? 'selected' : '' }}>
+                      {{ $c->company_name }}
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+
+            {{-- Order link (optional) --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="order_id">Order (optional)</label>
@@ -30,6 +47,7 @@
               </div>
             </div>
 
+            {{-- Offer / Valid dates --}}
             <div class="col-md-2">
               <div class="form-group">
                 <label for="offer_date">Offer Date</label>
@@ -47,7 +65,8 @@
               </div>
             </div>
 
-            <div class="col-md-4">
+            {{-- Status --}}
+            <div class="col-md-4 mt-3">
               <div class="form-group">
                 <label for="status">Status</label>
                 <select name="status" id="status" class="form-control" required>
@@ -122,9 +141,9 @@
 <script>
   /* Yeni satır ekle */
   document.getElementById('add-item').addEventListener('click', () => {
-    const c     = document.getElementById('items-container');
-    const idx   = c.querySelectorAll('.item-row').length;
-    const row   = document.createElement('div');
+    const c   = document.getElementById('items-container');
+    const idx = c.querySelectorAll('.item-row').length;
+    const row = document.createElement('div');
     row.className = 'row mb-2 item-row';
     row.innerHTML = `
       <div class="col-md-5">

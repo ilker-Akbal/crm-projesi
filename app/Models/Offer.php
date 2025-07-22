@@ -11,7 +11,7 @@ class Offer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_id',
+        'customer_id','company_id',
         'order_id',
         'offer_date',
         'valid_until',
@@ -28,7 +28,7 @@ class Offer extends Model
     public function customer()  { return $this->belongsTo(Customer::class); }
     public function order()     { return $this->belongsTo(Order::class); }
     public function lines()     { return $this->hasMany(OfferProduct::class); }
-
+    public function company() { return $this->belongsTo(Company::class); }
     public function products()
 {
     return $this->belongsToMany(Product::class, 'offer_products')

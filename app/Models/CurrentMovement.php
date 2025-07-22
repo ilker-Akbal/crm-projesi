@@ -62,6 +62,7 @@ class CurrentMovement extends Model
         $m->adjustCardBalance($delta);
     });
 }
+public function company() { return $this->belongsTo(Company::class); }
 
 
     /* --------- Yardımcı --------- */

@@ -21,24 +21,26 @@ class UserController extends Controller
 
     /** GET /users/create */
     public function create()
-    {
-        $roles = $this->roles;
-        return view('users.create', compact('roles'));
-    }
+{
+    $roles     = $this->roles;
+    $customers = Customer::orderBy('customer_name')->get();   // ➊
+    return view('users.create', compact('roles','customers'));
+}
 
     /** POST /users */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username',
-            'role'     => 'required|in:' . implode(',', $this->roles),
-            'active'   => 'nullable|boolean',
-        ]);
+    'username'    => 'required|string|max:255|unique:users,username',
+    'role'        => 'required|in:' . implode(',', $this->roles),
+    'customer_id' => 'required|exists:customers,id',          // ➋
+    'active'      => 'nullable|boolean',
+    'password'    => 'nullable|string|min:8',
+]);
 
-        // checkbox'tan gelmezse aktif kabul edelim
-        $data['active'] = $request->has('active');
-
-        User::create($data);
+$data['active']   = $request->has('active');
+$data['password'] = $data['password'] ? bcrypt($data['password']) : null;
+User::create($data);
 
         return redirect()
             ->route('admin.users.index')
@@ -53,22 +55,28 @@ class UserController extends Controller
 
     /** GET /users/{user}/edit */
     public function edit(User $user)
-    {
-        $roles = $this->roles;
-        return view('users.edit', compact('user','roles'));
-    }
+{
+    $roles     = $this->roles;
+    $customers = Customer::orderBy('customer_name')->get();   // ➊
+    return view('users.edit', compact('user','roles','customers'));
+}
 
     /** PUT /users/{user} */
     public function update(Request $request, User $user)
     {
-        $data = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
-            'role'     => 'required|in:' . implode(',', $this->roles),
-            'active'   => 'nullable|boolean',
-        ]);
-        $data['active'] = $request->has('active');
+       $data = $request->validate([
+    'username'    => 'required|string|max:255|unique:users,username,' . $user->id,
+    'role'        => 'required|in:' . implode(',', $this->roles),
+    'customer_id' => 'required|exists:customers,id',          // ➋
+    'active'      => 'nullable|boolean',
+    'password'    => 'nullable|string|min:8',
+]);
 
-        $user->update($data);
+$data['active']   = $request->has('active');
+if ($data['password']) $data['password'] = bcrypt($data['password']);
+else unset($data['password']);
+
+$user->update($data);
 
         return redirect()
             ->route('admin.users.index')

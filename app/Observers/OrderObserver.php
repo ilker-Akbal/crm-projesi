@@ -27,6 +27,7 @@ class OrderObserver
             if ($card) {
                 $movement = \App\Models\CurrentMovement::create([
                     'current_id'     => $card->id,
+                    'company_id'     => $order->company_id, 
                     'departure_date' => now(),
                     'movement_type'  => $order->order_type === 'sale'
                                         ? \App\Models\CurrentMovement::CREDIT

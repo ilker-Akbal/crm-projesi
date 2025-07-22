@@ -49,10 +49,23 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
+          <div class="form-group">
+  <label for="customer_id">Bağlı Müşteri *</label>
+  <select name="customer_id" id="customer_id"
+          class="form-control @error('customer_id') is-invalid @enderror" required>
+    <option value="" disabled {{ old('customer_id') ? '' : 'selected' }}>-- müşteri seçiniz --</option>
+    @foreach($customers as $c)
+      <option value="{{ $c->id }}" {{ old('customer_id')==$c->id ? 'selected' : '' }}>
+        {{ $c->customer_name }}
+      </option>
+    @endforeach
+  </select>
+  @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
 
           {{-- Şifre (isteğe bağlı) ------------------------------------------- --}}
           <div class="form-group">
-            <label for="password">Parola <small class="text-muted">(opsiyonel)</small></label>
+            <label for="password">Parola </label>
             <input  type="password"
                     name="password"
                     id="password"
