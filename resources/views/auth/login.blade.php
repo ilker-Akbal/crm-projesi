@@ -113,9 +113,12 @@
   <div class="glass-card p-4 p-md-5 mx-auto" style="max-width: 400px; width:100%;">
     <!-- Logo ve Başlık -->
     <div class="mb-4">
-      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="IKA Logo" class="brand-logo" style="width: 120px; height: 120px;">
-      <h3 class="brand-title">IKA CRM SYSTEM</h3>
-      <p class="brand-subtitle">Hoşgeldiniz, giriş yaparak devam edin</p>
+      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}"
+           alt="İKA Logo"
+           class="brand-logo"
+           style="width: 120px; height: 120px;">
+      <h3 class="brand-title">İKA CRM SİSTEMİ</h3>
+      <p class="brand-subtitle">Hoş geldiniz, giriş yaparak devam edin</p>
     </div>
 
     <!-- Form -->
@@ -124,14 +127,14 @@
 
       <div class="form-group">
         <label for="username" class="input-label">Kullanıcı Adı</label>
-        <input 
-          type="text" 
-          id="username" 
-          name="username" 
+        <input
+          type="text"
+          id="username"
+          name="username"
           class="form-control @error('username') is-invalid @enderror"
           placeholder="kullanıcı adınız"
-          value="{{ old('username') }}" 
-          required 
+          value="{{ old('username') }}"
+          required
           autofocus
         >
         @error('username')
@@ -141,10 +144,10 @@
 
       <div class="form-group">
         <label for="password" class="input-label">Parola</label>
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
+        <input
+          type="password"
+          id="password"
+          name="password"
           class="form-control @error('password') is-invalid @enderror"
           placeholder="••••••••"
           required

@@ -4,11 +4,13 @@
 <section class="content">
   <div class="container-fluid">
     <div class="card card-outline card-primary">
-      <div class="card-header"><h3 class="card-title">Action Detayı</h3></div>
+      <div class="card-header">
+        <h3 class="card-title">İşlem Detayı</h3>
+      </div>
 
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-3">Kayıt Sahibi (User)</dt>
+          <dt class="col-sm-3">Kayıt Sahibi (Kullanıcı)</dt>
           <dd class="col-sm-9">{{ $action->user->username }}</dd>
 
           <dt class="col-sm-3">Bağlı Müşteri</dt>

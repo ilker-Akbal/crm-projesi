@@ -1,7 +1,7 @@
 {{-- resources/views/admin/dashboard.blade.php --}}
 @extends('layouts.app')
 
-@section('title','Admin Dashboard')
+@section('title','Yönetim Paneli')  {{-- Başlık Türkçeye çevrildi --}}
 
 @push('styles')
 <style>
@@ -20,9 +20,7 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   transition: .3s;
 }
-.glass-card:hover {
-  transform: translateY(-2px);
-}
+.glass-card:hover { transform: translateY(-2px); }
 .btn-glass {
   background: linear-gradient(135deg,var(--primary),var(--secondary));
   box-shadow: 0 4px 15px rgba(67,97,238,0.3);
@@ -54,7 +52,7 @@
 @section('content')
 <div class="container py-4">
   <div class="header-actions">
-    <h2 style="color:var(--text-dark)">Admin Paneli</h2>
+    <h2 style="color:var(--text-dark)">Yönetim Paneli</h2>
     {{-- Çıkış butonu admin logout rotasına yönlendirildi --}}
     <form action="{{ route('admin.logout') }}" method="POST">
       @csrf

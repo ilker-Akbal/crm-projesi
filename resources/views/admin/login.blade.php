@@ -119,10 +119,15 @@
 <div class="d-flex vh-100 justify-content-center align-items-center px-3">
   <div class="glass-card p-4 p-md-5 mx-auto" style="max-width: 400px; width:100%;">
     <!-- Logo ve Başlık -->
-<div class="mb-4">
-  <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="IKA Logo" class="brand-logo" style="width: 120px; height: 120px;">
-  <p class="brand-subtitle" style="font-size: 1.1rem; font-weight: 500;">Yetkili girişi için bilgilerinizi girin</p>
-</div>
+    <div class="mb-4">
+      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}"
+           alt="İKA Logo"
+           class="brand-logo"
+           style="width: 120px; height: 120px;">
+      <p class="brand-subtitle" style="font-size: 1.1rem; font-weight: 500;">
+        Yetkili girişi için bilgilerinizi girin
+      </p>
+    </div>
 
     <!-- Form -->
     <form action="{{ route('admin.login') }}" method="POST">
@@ -131,13 +136,13 @@
       <div class="form-group">
         <label for="username" class="input-label">Kullanıcı Adı</label>
         <input 
-          type="text" 
-          name="username" 
-          id="username" 
-          class="form-control @error('username') is-invalid @enderror" 
-          placeholder="admin" 
-          value="{{ old('username') }}" 
-          required 
+          type="text"
+          name="username"
+          id="username"
+          class="form-control @error('username') is-invalid @enderror"
+          placeholder="admin"
+          value="{{ old('username') }}"
+          required
           autofocus
         >
         @error('username')
@@ -148,11 +153,11 @@
       <div class="form-group">
         <label for="password" class="input-label">Parola</label>
         <input 
-          type="password" 
-          name="password" 
-          id="password" 
-          class="form-control @error('password') is-invalid @enderror" 
-          placeholder="••••••••" 
+          type="password"
+          name="password"
+          id="password"
+          class="form-control @error('password') is-invalid @enderror"
+          placeholder="••••••••"
           required
         >
         @error('password')

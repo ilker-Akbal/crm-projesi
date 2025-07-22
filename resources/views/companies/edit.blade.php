@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="container mt-4">
-  @include('partials.alerts')
+ 
 
   <div class="card card-outline card-primary">
     <div class="card-header">

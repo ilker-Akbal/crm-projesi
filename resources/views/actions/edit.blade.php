@@ -3,9 +3,12 @@
 @section('content')
 <section class="content">
   <div class="container-fluid">
-    @include('partials.alerts')
+    
     <div class="card card-outline card-primary">
-      <div class="card-header"><h3 class="card-title">Edit Action #{{ $action->id }}</h3></div>
+      <div class="card-header">
+        <h3 class="card-title">İşlem Düzenle #{{ $action->id }}</h3>
+      </div>
+
       <form action="{{ route('actions.update', $action->id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -14,11 +17,11 @@
 
           {{-- Giriş yapan kullanıcının customer_id ve user_id bilgileri --}}
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
-          <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+          <input type="hidden" name="user_id"    value="{{ auth()->id() }}">
 
           {{-- Action Type (Dropdown) --}}
           <div class="form-group">
-            <label for="action_type">Type</label>
+            <label for="action_type">Tür</label>
             <select name="action_type" id="action_type" class="form-control" required>
               <option value="" disabled {{ old('action_type', $action->action_type) ? '' : 'selected' }}>-- Tür Seçiniz --</option>
               <option value="meeting" {{ old('action_type', $action->action_type) == 'meeting' ? 'selected' : '' }}>Toplantı</option>
@@ -31,7 +34,7 @@
 
           {{-- Action Date --}}
           <div class="form-group">
-            <label for="action_date">Date</label>
+            <label for="action_date">Tarih</label>
             <input type="date" name="action_date" id="action_date"
                    class="form-control"
                    value="{{ old('action_date', \Carbon\Carbon::parse($action->action_date)->format('Y-m-d')) }}"

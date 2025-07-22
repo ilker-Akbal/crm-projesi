@@ -5,19 +5,19 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header">
-        <h3 class="card-title">Edit Contact #{{ $contact->id }}</h3>
+        <h3 class="card-title">Kişi Düzenle #{{ $contact->id }}</h3>
       </div>
       <form action="{{ route('contacts.update',$contact) }}" method="POST">
         @csrf @method('PUT')
         <div class="card-body">
-          @include('partials.alerts')
+          
           
           <div class="form-group">
-            <label for="company_id">Company</label>
+            <label for="company_id">Firma</label>
             <select name="company_id" id="company_id" class="form-control">
-              <option value="">-- select --</option>
+              <option value="">-- seçiniz --</option>
               @foreach($companies as $c)
-                <option value="{{ $c->id }}" {{ old('company_id',$contact->company_id)==$c->id?'selected':'' }}>
+                <option value="{{ $c->id }}" {{ old('company_id',$contact->company_id)==$c->id ? 'selected' : '' }}>
                   {{ $c->company_name }}
                 </option>
               @endforeach
@@ -25,32 +25,32 @@
           </div>
           
           <div class="form-group">
-            <label for="name">Name *</label>
+            <label for="name">Ad *</label>
             <input type="text" name="name" id="name" class="form-control"
                    value="{{ old('name',$contact->name) }}" required>
           </div>
           
           <div class="form-group">
-            <label for="position">Position</label>
+            <label for="position">Pozisyon</label>
             <input type="text" name="position" id="position" class="form-control"
                    value="{{ old('position',$contact->position) }}">
           </div>
           
           <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">E-posta</label>
             <input type="email" name="email" id="email" class="form-control"
                    value="{{ old('email',$contact->email) }}">
           </div>
           
           <div class="form-group">
-            <label for="phone">Phone</label>
+            <label for="phone">Telefon</label>
             <input type="text" name="phone" id="phone" class="form-control"
                    value="{{ old('phone',$contact->phone) }}">
           </div>
         </div>
         <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('contacts.index') }}" class="btn btn-secondary mr-2">Cancel</a>
-          <button type="submit" class="btn btn-primary">Update</button>
+          <a href="{{ route('contacts.index') }}" class="btn btn-secondary mr-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Güncelle</button>
         </div>
       </form>
     </div>

@@ -5,7 +5,7 @@
 <div class="container">
   <h1>Yeni Firma Ekle</h1>
 
-  @include('partials.alerts')
+  
 
   <form action="{{ route('companies.store') }}" method="POST">
     @csrf

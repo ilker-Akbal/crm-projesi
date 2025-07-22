@@ -6,8 +6,8 @@
     <div class="card card-outline card-primary">
 
       <div class="card-header d-flex justify-content-between">
-        <h3 class="card-title">Accounts</h3>
-        <a href="{{ route('accounts.create') }}" class="btn btn-sm btn-primary">Add Account</a>
+        <h3 class="card-title">Hesaplar</h3>
+        <a href="{{ route('accounts.create') }}" class="btn btn-sm btn-primary">Hesap Ekle</a>
       </div>
 
       <div class="card-body p-0">
@@ -15,10 +15,9 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Customer</th>
-        
-              <th>Opening Date</th>
-              <th style="width:140px">Actions</th>
+              <th>Müşteri</th>
+              <th>Açılış Tarihi</th>
+              <th style="width:140px">İşlemler</th>
             </tr>
           </thead>
           <tbody>
@@ -26,20 +25,18 @@
               <tr>
                 <td>{{ $acc->id }}</td>
                 <td>{{ $acc->customer->customer_name }}</td>
-
-
                 <td>{{ \Carbon\Carbon::parse($acc->opening_date)->format('d.m.Y') }}</td>
                 <td>
-                  <a href="{{ route('accounts.show',  $acc) }}" class="btn btn-xs btn-info">View</a>
-                  <a href="{{ route('accounts.edit',  $acc) }}" class="btn btn-xs btn-warning">Edit</a>
+                  <a href="{{ route('accounts.show',  $acc) }}" class="btn btn-xs btn-info">Gör</a>
+                  <a href="{{ route('accounts.edit',  $acc) }}" class="btn btn-xs btn-warning">Düzen</a>
                   <form action="{{ route('accounts.destroy', $acc) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
-                    <button onclick="return confirm('Delete?')" class="btn btn-xs btn-danger">Del</button>
+                    <button onclick="return confirm('Silinsin mi?')" class="btn btn-xs btn-danger">Sil</button>
                   </form>
                 </td>
               </tr>
             @empty
-              <tr><td colspan="5" class="text-center">No accounts found.</td></tr>
+              <tr><td colspan="5" class="text-center">Kayıtlı hesap bulunamadı.</td></tr>
             @endforelse
           </tbody>
         </table>
