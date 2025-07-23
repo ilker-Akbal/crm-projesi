@@ -122,6 +122,16 @@
                 <i class="far fa-circle nav-icon"></i><p>Ürün Fiyatları</p>
               </a>
             </li>
+
+            {{-- ↓ Seri Numaraları menüsü ↓ --}}
+            <li class="nav-item">
+              <a href="{{ route('product_serials.index') }}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i><p>Seri Numaraları Görüntüle</p>
+              </a>
+            </li>
+           
+            {{-- ↑ Seri Numaraları menüsü ↑ --}}
+            
           </ul>
         </li>
 

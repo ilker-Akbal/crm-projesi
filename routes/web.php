@@ -20,7 +20,8 @@ use App\Http\Controllers\{
     ActionController,
     UserController,
     CustomerController,
-    ReminderController
+    ReminderController,
+    ProductSerialController
 };
 
 /*
@@ -59,7 +60,16 @@ Route::middleware('auth')->group(function () {
         'actions'         => ActionController::class,
         'reminders'       => ReminderController::class,
     ]);
+    Route::resource('product_stocks', ProductStockController::class)
+     ->only(['index','create','store']);
+     Route::resource('product_serials', ProductSerialController::class)
+     ->only(['index','create','store','destroy']);
+     // Ürün → Seri No girişi
+Route::get ('products/{product}/serials/create', [ProductController::class,'createSerials'])
+     ->name('products.serials.create');
 
+Route::post('products/{product}/serials',        [ProductController::class,'storeSerials'])
+     ->name('products.serials.store');
     // Support
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/',             [SupportController::class, 'index']  )->name('index');

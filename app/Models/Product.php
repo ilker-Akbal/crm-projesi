@@ -13,12 +13,16 @@ class Product extends Model
    protected $fillable = [
     'product_name',      // ✅
     'customer_id',
+
     'explanation',
     'created_by',
     'updated_by',
 ];
 
-
+public function serials()
+{
+    return $this->hasMany(ProductSerial::class);
+}
     public function customer()      { return $this->belongsTo(Customer::class); }
     public function stocks()        { return $this->hasMany(ProductStock::class); }
     public function prices()        { return $this->hasMany(ProductPrice::class); }

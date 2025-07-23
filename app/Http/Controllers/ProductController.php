@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\ProductPrice;
+use App\Models\ProductSerial;
 
 class ProductController extends Controller
 {
@@ -37,39 +38,47 @@ class ProductController extends Controller
      |  POST /products  →  Kaydet
      * ------------------------------------------------*/
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'product_name'   => 'required|string|max:255',
-            'explanation'    => 'nullable|string',
-            'stock_quantity' => 'required|integer|min:0',
-            'price'          => 'required|numeric|min:0',
+{
+    // 1) Validasyonu serial_number olmadan güncelle
+    $data = $request->validate([
+        'product_name'   => 'required|string|max:255',
+        'explanation'    => 'nullable|string',
+        'stock_quantity' => 'required|integer|min:1',
+        'blocked_stock'  => 'nullable|integer|min:0|max:'.$request->stock_quantity,
+        'reserved_stock' => 'nullable|integer|min:0|max:'.($request->stock_quantity - $request->blocked_stock),
+        'price'          => 'required|numeric|min:0',
+    ]);
+
+    // 2) Ürünü, stok ve fiyatı oluştur
+    DB::transaction(function () use ($data, &$product) {
+        $product = Product::create([
+            'product_name'  => $data['product_name'],
+            'customer_id'   => Auth::user()->customer_id,
+            'explanation'   => $data['explanation'] ?? null,
+            'created_by'    => Auth::id(),
         ]);
 
-        DB::transaction(function () use ($data) {
-            $product = Product::create([
-                'product_name' => $data['product_name'],
-                'customer_id'  => Auth::user()->customer_id,
-                'explanation'  => $data['explanation'] ?? null,
-                'created_by'   => Auth::id(),
-            ]);
+        ProductStock::create([
+            'product_id'     => $product->id,
+            'stock_quantity' => $data['stock_quantity'],
+            'blocked_stock'  => $data['blocked_stock']  ?? 0,
+            'reserved_stock' => $data['reserved_stock'] ?? 0,
+            'update_date'    => now(),
+            'updated_by'     => Auth::id(),
+        ]);
 
-            ProductStock::create([
-                'product_id'     => $product->id,
-                'stock_quantity' => $data['stock_quantity'],
-                'update_date'    => now(),
-                'updated_by'     => Auth::id(),
-            ]);
+        ProductPrice::create([
+            'product_id' => $product->id,
+            'price'      => $data['price'],
+            'updated_by' => Auth::id(),
+        ]);
+    });
 
-            ProductPrice::create([
-                'product_id' => $product->id,
-                'price'      => $data['price'],
-                'updated_by' => Auth::id(),
-            ]);
-        });
-
-        return redirect()->route('products.index')
-                         ->with('success', 'Product, stock and price created successfully!');
-    }
+    // 3) Seri numarası girişi sayfasına yönlendir
+    return redirect()
+           ->route('products.serials.create', $product)
+           ->with('info','Ürün oluşturuldu; lütfen seri no girin.');
+}
 
     /* -------------------------------------------------
      |  GET /products/{product}  →  Detay
@@ -104,11 +113,13 @@ class ProductController extends Controller
         'product_name'   => 'required|string|max:255',
         'explanation'    => 'nullable|string',
         'stock_quantity' => 'nullable|integer|min:0',
+        'blocked_stock'  => 'nullable|integer|min:0|max:'.$request->stock_quantity,
+        'reserved_stock' => 'nullable|integer|min:0|max:'.($request->stock_quantity - $request->blocked_stock),
         'price'          => 'nullable|numeric|min:0',
     ]);
 
     DB::transaction(function () use ($data, $product) {
-        // Ürünü güncelle
+        // → Ürün güncelleme: artık sadece name ve explanation
         $product->update([
             'product_name' => $data['product_name'],
             'explanation'  => $data['explanation'] ?? $product->explanation,
@@ -116,24 +127,17 @@ class ProductController extends Controller
         ]);
 
         // Stok varsa güncelle, yoksa oluştur
-        if (!is_null($data['stock_quantity'])) {
-            $stock = ProductStock::where('product_id', $product->id)->first();
+       if (!is_null($data['stock_quantity'])) {
+    $stock = ProductStock::firstOrNew(['product_id' => $product->id]);
 
-            if ($stock) {
-                $stock->update([
-                    'stock_quantity' => $data['stock_quantity'],
-                    'update_date'    => now(),
-                    'updated_by'     => Auth::id(),
-                ]);
-            } else {
-                ProductStock::create([
-                    'product_id'     => $product->id,
-                    'stock_quantity' => $data['stock_quantity'],
-                    'update_date'    => now(),
-                    'updated_by'     => Auth::id(),
-                ]);
-            }
-        }
+    $stock->fill([
+        'stock_quantity' => $data['stock_quantity'],
+        'blocked_stock'  => $data['blocked_stock']  ?? $stock->blocked_stock ?? 0, // ←
+        'reserved_stock' => $data['reserved_stock'] ?? $stock->reserved_stock ?? 0, // ←
+        'update_date'    => now(),
+        'updated_by'     => Auth::id(),
+    ])->save();
+}
 
         // Fiyat varsa güncelle, yoksa oluştur
         if (!is_null($data['price'])) {
@@ -155,9 +159,43 @@ class ProductController extends Controller
     });
 
     return redirect()->route('products.index')
-                     ->with('success', 'Product updated successfully.');
+                     ->with('success','Product updated successfully.');
 }
 
+public function createSerials(Product $product)
+{
+    $this->authorizeProduct($product);
+    $qty = $product->stocks()->latest('id')->value('stock_quantity') ?? 0;
+    return view('products.serials_create', compact('product','qty'));
+}
+
+// Seri numaralarını kaydeden metod
+public function storeSerials(Request $request, Product $product)
+{
+    $this->authorizeProduct($product);
+    $qty = $product->stocks()->latest('id')->value('stock_quantity') ?? 0;
+
+    $data = $request->validate([
+        'serials'   => "required|array|size:$qty",
+        'serials.*' => 'required|string|distinct|unique:product_serials,serial_number',
+    ],[
+        'serials.size' => "Lütfen tam $qty adet seri numarası girin."
+    ]);
+
+    DB::transaction(function() use($data,$product){
+        foreach($data['serials'] as $sn){
+            ProductSerial::create([
+                'product_id'    => $product->id,
+                'serial_number' => $sn,
+                'created_by'    => Auth::id(),
+            ]);
+        }
+    });
+
+    return redirect()
+           ->route('products.index')
+           ->with('success','Tüm seri numaraları kaydedildi.');
+}
 
     /* -------------------------------------------------
      |  DELETE /products/{product}  →  Sil
