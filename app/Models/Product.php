@@ -25,6 +25,22 @@ class Product extends Model
     public function orderLines()    { return $this->hasMany(OrderProduct::class, 'Order_id'); }
     public function offerLines()    { return $this->hasMany(OfferProduct::class); }
 
+
+    public function getLatestPriceAttribute()
+    {
+        return $this->prices()
+                    ->latest('updated_at')
+                    ->value('price') ?? 0;
+    }
+
+    /* --- Mevcut stok (son stok kaydı) --- */
+    public function getCurrentStockAttribute()
+{
+    // update_date eşit olduğunda sıra karışmasın diye id’ye bakıyoruz
+    return $this->stocks()
+                ->orderByDesc('id')        // ← sadece bu satır değişti
+                ->value('stock_quantity') ?? 0;
+}
     public function orders()
     {
         return $this->belongsToMany(Order::class, 'order_products')

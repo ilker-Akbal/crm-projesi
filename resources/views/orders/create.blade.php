@@ -29,7 +29,7 @@
               </div>
             </div>
 
-            {{-- Sipariş Tarihi --}}
+            {{-- Sipariş / Teslim Tarihleri --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="order_date">Sipariş Tarihi *</label>
@@ -38,8 +38,6 @@
                         value="{{ old('order_date', today()->toDateString()) }}" required>
               </div>
             </div>
-
-            {{-- Teslim Tarihi --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="delivery_date">Teslim Tarihi</label>
@@ -120,32 +118,39 @@
 <script>
 $(function () {
 
-  const products = @json($products);   // [{id:…,product_name:…,unit_price:…}, …]
+  const products = @json($products);   // [{id, product_name, unit_price, stock}, …]
   let rowIndex   = 0;
 
   function optionList() {
     return products.map(p =>
-      `<option value="${p.id}" data-price="${p.unit_price}">${p.product_name}</option>`
+      `<option value="${p.id}"
+               data-price="${p.unit_price}"
+               data-stock="${p.stock}">
+         ${p.product_name}
+       </option>`
     ).join('');
   }
 
-  /* Satır ekle */
+  /* ---------- Satır ekle ---------- */
   $('#add-row').on('click', () => {
     $('#order-items tbody').append(`
       <tr>
         <td>
-          <select name="items[${rowIndex}][product_id]" class="form-control product-select" required>
+          <select name="items[${rowIndex}][product_id]"
+                  class="form-control product-select" required>
             <option value="">-- seçiniz --</option>
             ${optionList()}
           </select>
         </td>
         <td>
-          <input type="number" name="items[${rowIndex}][amount]" class="form-control amount"
-                 min="1" value="1" required>
+          <input type="number" name="items[${rowIndex}][amount]"
+                 class="form-control amount" min="1" value="1" required>
+          <small class="text-muted stock-info"></small>
         </td>
         <td>
-          <input type="number" name="items[${rowIndex}][unit_price]" class="form-control unit-price"
-                 min="0" step="0.01" value="0" required>
+          <input type="text"  class="form-control-plaintext unit-price-view" value="0" readonly>
+          <input type="hidden" name="items[${rowIndex}][unit_price]"
+                 class="unit-price-hidden" value="0">
         </td>
         <td class="subtotal text-right">0.00</td>
         <td class="text-center">
@@ -154,22 +159,65 @@ $(function () {
       </tr>
     `);
     rowIndex++;
+    refreshDisabledOptions();            // ▼ mevcut seçimleri güncelle
   });
 
-  /* Satır sil */
+  /* ---------- Satır sil ---------- */
   $(document).on('click', '.remove-row', function () {
     $(this).closest('tr').remove();
     recalcTotals();
+    refreshDisabledOptions();            // ▼ seçenekleri tekrar aç/kapat
   });
 
-  /* Ara toplam / toplam hesabı */
-  $(document).on('input change', '.amount, .unit-price', recalcTotals);
+  /* ---------- Ürün seçildiğinde fiyat + stok ata & kopya kontrolü ---------- */
+  $(document).on('change', '.product-select', function () {
+    const currVal = this.value;
+    if (!currVal) {                      // boş seçime döndüler
+      clearRow($(this).closest('tr'));
+      refreshDisabledOptions();
+      return;
+    }
 
+    /* ▼ Aynı ürün başka satırda varsa engelle */
+    const duplicate = $('.product-select')
+                        .not(this)
+                        .filter((i,el)=> $(el).val() === currVal)
+                        .length;
+    if (duplicate) {
+      alert('Bu ürün zaten eklendi. Aynı ürünü tekrar seçemezsiniz.');
+      $(this).val('');
+      clearRow($(this).closest('tr'));
+      refreshDisabledOptions();
+      return;
+    }
+
+    /* fiyat + stok işlemleri (değişmedi) */
+    const opt   = this.selectedOptions[0];
+    const price = parseFloat(opt.dataset.price || 0);
+    const stock = parseInt(opt.dataset.stock || 0, 10);
+
+    const row = $(this).closest('tr');
+    row.find('.unit-price-view').val(price.toFixed(2));
+    row.find('.unit-price-hidden').val(price);
+    row.find('.amount').attr('max', stock).val(1);
+    row.find('.stock-info').text(`Stok: ${stock}`);
+    recalcTotals();
+    refreshDisabledOptions();            // ▼ diğer select’lerde disable et
+  });
+
+  /* ---------- Miktar değişiminde stok sınırı ---------- */
+  $(document).on('input', '.amount', function () {
+    const max = parseInt($(this).attr('max') || 0, 10);
+    if (max && +this.value > max) this.value = max;
+    recalcTotals();
+  });
+
+  /* ---------- Toplam hesap ---------- */
   function recalcTotals() {
     let total = 0;
     $('#order-items tbody tr').each(function () {
-      const qty   = parseFloat($(this).find('.amount').val())     || 0;
-      const price = parseFloat($(this).find('.unit-price').val()) || 0;
+      const qty   = parseFloat($(this).find('.amount').val())            || 0;
+      const price = parseFloat($(this).find('.unit-price-hidden').val()) || 0;
       const sub   = qty * price;
       $(this).find('.subtotal').text(sub.toFixed(2));
       total += sub;
@@ -178,6 +226,29 @@ $(function () {
     $('#total_amount').val(total.toFixed(2));
   }
 
+  /* ---------- Yardımcılar ---------- */
+  function clearRow(row) {                 // ürün boşaltıldığında satır değerlerini sıfırla
+    row.find('.unit-price-view').val('0.00');
+    row.find('.unit-price-hidden').val(0);
+    row.find('.amount').val(1).removeAttr('max');
+    row.find('.stock-info').text('');
+    recalcTotals();
+  }
+
+  /* ▼ Seçilmiş ürünleri diğer satırlarda disable et */
+  function refreshDisabledOptions() {
+    const selected = $('.product-select').map((i,el)=> $(el).val()).get();
+    $('.product-select').each(function () {
+      const current = $(this).val();
+      $(this).find('option').each(function () {
+        const val = $(this).val();
+        if (!val) return;                                       // "-- seçiniz --"
+        $(this).prop('disabled', selected.includes(val) && val !== current);
+      });
+    });
+  }
+
 });
 </script>
 @endpush
+
