@@ -40,8 +40,8 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
     'company_name'      => 'required|string|max:255',
-    'tax_number'        => 'required|digits:11|unique:companies,tax_number,' . $company->id,
-    'phone_number'      => 'nullable|digits:11|unique:companies,phone_number,' . $company->id,
+    'tax_number'        => 'required|digits:11|unique:companies,tax_number',
+    'phone_number'      => 'nullable|digits:11|unique:companies,phone_number',
     'email'             => 'nullable|email|max:255',
     'address'           => 'nullable|string|max:500',
     'registration_date' => 'nullable|date',
@@ -83,25 +83,21 @@ class CompanyController extends Controller
      * ------------------------------------------------*/
     public function update(Request $request, Company $company)
     {
-        $data = $request->validate([
-            'company_name'      => 'required|string|max:255',
-            'tax_number'        => 'nullable|string|max:100',
-            'address'           => 'nullable|string',
-            'phone_number'      => 'nullable|string|max:50',
-            'email'             => 'nullable|email|max:255',
-            'registration_date' => 'nullable|date',
-            'current_role'      => 'nullable|string|max:100',
-            // customer_id doğrulanmayacak
-        ]);
+    $validated = $request->validate([
+        'company_name'     => 'required|string|max:255',
+        'tax_number'       => 'required|digits:11|unique:companies,tax_number,' . $company->id,
+        'phone_number'     => 'required|digits:11|unique:companies,phone_number,' . $company->id,
+        'email'            => 'nullable|email',
+        'address'          => 'nullable|string',
+        'registration_date'=> 'nullable|date',
+        'current_role'     => 'required|in:customer,supplier,candidate',
+    ]);
 
-        $data['customer_id'] = Auth::user()->customer_id;
+    $company->update($validated);
 
-        $company->update($data);
-
-        return redirect()
-            ->route('companies.index')
-            ->with('success', 'Firma başarıyla güncellendi.');
-    }
+    return redirect()->route('companies.index')
+                     ->with('success', 'Firma başarıyla güncellendi.');
+}
 
     /* -------------------------------------------------
      |  Sil
