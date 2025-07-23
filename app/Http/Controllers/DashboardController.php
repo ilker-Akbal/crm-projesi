@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use App\Models\{
-    Customer, Offer, Order, Reminder,
+    Offer, Order, Reminder,
     SupportRequest, Product, OrderProduct
 };
 
@@ -14,24 +13,28 @@ class DashboardController extends Controller
     public function index()
     {
         /** @var \App\Models\User $user */
-        $user        = auth()->user();
-        $customerId  = $user->customer_id;   // giriş yapan kullanıcının firması
+        $user       = auth()->user();
+        $customerId = $user->customer_id;
 
         /* ---------------------- METRİKLER ---------------------- */
         $metrics = [
-            // İsterseniz 'customers' metriğini kaldırabilirsiniz (zaten 1 olur)
             'customers'      => 1,
+
             'openOffers'     => Offer::where('customer_id', $customerId)
-                                      ->where('status', 'hazırlanıyor')
-                                      ->count(),
+                                     ->where('status', 'hazırlanıyor')
+                                     ->count(),
+
             'openOrders'     => Order::where('customer_id', $customerId)
-                                      ->where('situation', 'hazırlanıyor')
-                                      ->count(),
+                                     ->where('situation', 'hazırlanıyor')
+                                     ->where('is_paid', 0)           // ← sadece ödenmemişleri say
+                                     ->count(),
+
             'todayReminders' => Reminder::where('customer_id', $customerId)
                                         ->whereDate('reminder_date', today())
                                         ->count(),
+
             'openSupports'   => SupportRequest::where('customer_id', $customerId)
-                                              ->where('situation', 'açık')
+                                              ->where('situation', 'pending')
                                               ->count(),
         ];
 

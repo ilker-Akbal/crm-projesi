@@ -1,10 +1,24 @@
+@php
+  use App\Models\SupportRequest;
+  use App\Models\Reminder;
+  use Illuminate\Support\Facades\Auth;
+
+  $pendingCount  = SupportRequest::where('customer_id', Auth::user()->customer_id)
+                                 ->where('situation', 'pending')
+                                 ->count();
+
+  $reminderCount = Reminder::where('customer_id', Auth::user()->customer_id)
+                           ->whereDate('reminder_date', today())
+                           ->count();
+@endphp
+
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Logo ve Başlık -->
-  <a href="{{ route('dashboard.index') }}" class="brand-link d-flex align-items-center" style="gap: 10px;">
-    <div style="background-color: white; border-radius: 50%; padding: 6px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="Logo" style="max-height: 28px; max-width: 28px;">
+  <a href="{{ route('dashboard.index') }}" class="brand-link d-flex align-items-center" style="gap:10px;">
+    <div style="background:#fff;border-radius:50%;padding:6px;width:45px;height:45px;display:flex;align-items:center;justify-content:center;">
+      <img src="{{ asset('images/ika_crm-Photoroom.jpg') }}" alt="Logo" style="max-height:28px;max-width:28px;">
     </div>
-    <span class="brand-text" style="font-weight: 600; font-size: 16px; color: #f1f1f1; letter-spacing: 0.5px; font-family: inherit;">
+    <span class="brand-text" style="font-weight:600;font-size:16px;color:#f1f1f1;letter-spacing:0.5px;font-family:inherit;">
       IKA CRM SİSTEMİ
     </span>
   </a>
@@ -30,26 +44,22 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('companies.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Şirket Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Şirket Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('companies.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Şirketleri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Şirketleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('contacts.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Kişileri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Kişileri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('contacts.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Kişi Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Kişi Ekle</p>
               </a>
             </li>
           </ul>
@@ -64,26 +74,22 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('orders.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Sipariş Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Sipariş Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('orders.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Siparişleri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Siparişleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('offers.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Teklifleri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Teklifleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('offers.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Teklif Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Teklif Ekle</p>
               </a>
             </li>
           </ul>
@@ -98,26 +104,22 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('products.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Ürün Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Ürün Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('products.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Ürünleri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Ürünleri Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('product_stocks.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Stok Durumu</p>
+                <i class="far fa-circle nav-icon"></i><p>Stok Durumu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('product_prices.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Ürün Fiyatları</p>
+                <i class="far fa-circle nav-icon"></i><p>Ürün Fiyatları</p>
               </a>
             </li>
           </ul>
@@ -132,20 +134,17 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('accounts.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hesapları Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Hesapları Görüntüle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('movements.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hareket Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Hareket Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('movements.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hareketleri Görüntüle</p>
+                <i class="far fa-circle nav-icon"></i><p>Hareketleri Görüntüle</p>
               </a>
             </li>
           </ul>
@@ -160,32 +159,27 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('reports.sales') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Satış Raporu</p>
+                <i class="far fa-circle nav-icon"></i><p>Satış Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.customers') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Müşteri Raporu</p>
+                <i class="far fa-circle nav-icon"></i><p>Müşteri Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.product_stock') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Stok Raporu</p>
+                <i class="far fa-circle nav-icon"></i><p>Stok Raporu</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.account_summary') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hesap Özeti</p>
+                <i class="far fa-circle nav-icon"></i><p>Hesap Özeti</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('reports.support') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Destek Talepleri</p>
+                <i class="far fa-circle nav-icon"></i><p>Destek Talepleri</p>
               </a>
             </li>
           </ul>
@@ -200,26 +194,28 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('support.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Destek Talebi Oluştur</p>
+                <i class="far fa-circle nav-icon"></i><p>Destek Talebi Oluştur</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Tüm Talepler</p>
+                <i class="far fa-circle nav-icon"></i><p>Tüm Talepler</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.pending') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Bekleyen Talepler</p>
+                <p>
+                  Bekleyen Talepler
+                  @if($pendingCount)
+                    <span class="badge badge-danger right">{{ $pendingCount }}</span>
+                  @endif
+                </p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('support.resolved') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Çözülen Talepler</p>
+                <i class="far fa-circle nav-icon"></i><p>Çözülen Talepler</p>
               </a>
             </li>
           </ul>
@@ -234,40 +230,45 @@
           <ul class="nav nav-treeview">
             <li class="nav-item">
               <a href="{{ route('actions.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Faaliyet Ekle</p>
+                <i class="far fa-circle nav-icon"></i><p>Faaliyet Ekle</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ route('actions.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Tüm Faaliyetler</p>
+                <i class="far fa-circle nav-icon"></i><p>Tüm Faaliyetler</p>
               </a>
             </li>
           </ul>
         </li>
 
         <!-- Reminders -->
-        <li class="nav-item has-treeview">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-bell"></i>
-            <p>Hatırlatmalar <i class="right fas fa-angle-left"></i></p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="{{ route('reminders.create') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hatırlatma Ekle</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ route('reminders.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Hatırlatmaları Görüntüle</p>
-              </a>
-            </li>
-          </ul>
-        </li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-bell"></i>
+    <p>Hatırlatmalar <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item">
+      <a href="{{ route('reminders.create') }}" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>Hatırlatma Ekle</p>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('reminders.index') }}" class="nav-link">
+        <!-- Eski ikona döndük -->
+        <i class="far fa-circle nav-icon"></i>
+        <p>
+          Hatırlatmaları Görüntüle
+          @if($reminderCount)
+            <span class="badge badge-danger right">{{ $reminderCount }}</span>
+          @endif
+        </p>
+      </a>
+    </li>
+  </ul>
+</li>
+
 
       </ul>
     </nav>

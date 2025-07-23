@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+  // Metric anahtarlarını insan okunur başlıklara çevirmek için
+  $metricLabels = [
+    'customers'      => 'Müşteriler',
+    'openOffers'     => 'Açık Teklifler',
+    'openOrders'     => 'Açık Siparişler',
+    'todayReminders' => 'Bugünkü Hatırlatmalar',
+    'openSupports'   => 'Bekleyen Destek Talepleri',
+  ];
+@endphp
+
 <style>
   /* 2x2 grid kaplayan tam ekran dashboard */
   .dashboard-grid {
@@ -8,7 +19,7 @@
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
     gap: 1rem;
-    height: calc(100vh - 2rem); /* navbar/footer yüksekliğine göre ayarlayın */
+    height: calc(100vh - 2rem);
     padding: 1rem;
   }
   .dashboard-card {
@@ -30,8 +41,7 @@
     padding: 1rem;
     overflow: auto;
   }
-
-  /* 1. Quadrant (Genel Durum) içindeki scroll’u kaldır ve grid’e çevir */
+  /* Genel Durum’daki grid ayarı */
   .dashboard-grid > .dashboard-card:nth-child(1) .dashboard-card-body {
     overflow: hidden;
     padding: 1rem;
@@ -40,16 +50,22 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 1rem;
-    height: 90%;
+    height: 100%;
   }
   .metric-card .card {
-    height: 70%;
+    height: 100%;
   }
   .metric-card .card-body {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+  /* List-group stili */
+  .list-group-item {
+    border: none;
+    border-radius: .25rem;
+    margin-bottom: .5rem;
   }
 </style>
 
@@ -58,12 +74,13 @@
   <div class="dashboard-card">
     <div class="dashboard-card-header">Genel Durum</div>
     <div class="dashboard-card-body metrics-container">
-      @foreach($metrics as $label => $value)
+      @foreach($metrics as $key => $value)
+        @if($key === 'customers') @continue @endif
         <div class="metric-card">
-          <div class="card">
+          <div class="card h-100">
             <div class="card-body text-center">
               <h2 class="fw-bold">{{ $value }}</h2>
-              <span class="text-muted">{{ ucfirst($label) }}</span>
+              <span class="text-muted">{{ $metricLabels[$key] }}</span>
             </div>
           </div>
         </div>
@@ -91,41 +108,20 @@
   <div class="dashboard-card">
     <div class="dashboard-card-header">Uyarılar</div>
     <div class="dashboard-card-body">
-      <div class="row h-100 g-2">
-        <!-- Yaklaşan Teslimatlar -->
-        <div class="col-6 d-flex flex-column">
-          <h6>Yaklaşan Teslimatlar</h6>
-          <div class="flex-grow-1 overflow-auto">
-            <table class="table table-sm mb-0">
-              <tbody>
-                @foreach($upcoming as $o)
-                  <tr>
-                    <td>#{{ $o->id }}</td>
-                    <td>{{ $o->customer->customer_name }}</td>
-                    <td>{{ $o->delivery_date->format('d.m.Y') }}</td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Düşük Stok -->
-        <div class="col-6 d-flex flex-column">
-          <h6>Düşük Stok</h6>
-          <div class="flex-grow-1 overflow-auto">
-            <table class="table table-sm mb-0">
-              <tbody>
-                @foreach($lowStock as $p)
-                  <tr>
-                    <td>{{ $p->product_name }}</td>
-                    <td>{{ $p->stocks->last()->stock_quantity ?? 0 }}</td>
-                  </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <h6 class="mb-2">Yaklaşan Teslimatlar</h6>
+      <ul class="list-group flex-grow-1 overflow-auto">
+        @forelse($upcoming as $o)
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>#{{ $o->id }}</strong>
+              <span class="ms-2">{{ $o->customer->customer_name }}</span>
+            </div>
+            <span class="badge badge-danger">{{ \Carbon\Carbon::parse($o->delivery_date)->format('d.m.Y') }}</span>
+          </li>
+        @empty
+          <li class="list-group-item text-center text-muted">Yaklaşan teslimat yok</li>
+        @endforelse
+      </ul>
     </div>
   </div>
 </div>
