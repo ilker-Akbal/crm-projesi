@@ -16,14 +16,14 @@ class ProductController extends Controller
      |  GET /products  →  Liste
      * ------------------------------------------------*/
     public function index()
-    {
-        $products = Product::where('customer_id', Auth::user()->customer_id)
-                           ->with(['customer', 'stocks', 'prices'])
-                           ->orderBy('product_name')
-                           ->get();
+{
+    $products = Product::where('customer_id', Auth::user()->customer_id)
+        ->with(['customer','stocks','prices','serials'])   // ← 'serials' eklendi
+        ->orderBy('product_name')
+        ->get();
 
-        return view('products.index', compact('products'));
-    }
+    return view('products.index', compact('products'));
+}
 
     /* -------------------------------------------------
      |  GET /products/create  →  Form
@@ -83,14 +83,14 @@ class ProductController extends Controller
     /* -------------------------------------------------
      |  GET /products/{product}  →  Detay
      * ------------------------------------------------*/
-    public function show(Product $product)
-    {
-        $this->authorizeProduct($product);
+   public function show(Product $product)
+{
+    $this->authorizeProduct($product);
 
-        $product->load('customer', 'stocks', 'prices');
+    $product->load('customer','stocks','prices','serials');  // ← 'serials' eklendi
 
-        return view('products.show', compact('product'));
-    }
+    return view('products.show', compact('product'));
+}
 
     /* -------------------------------------------------
      |  GET /products/{product}/edit  →  Form

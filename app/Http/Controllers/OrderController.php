@@ -270,5 +270,16 @@ private function moveStock(int $productId, int $delta): void
         'updated_by'     => Auth::id(),
     ]);
 }
+ public function show(Order $order)
+{
+    if ($order->customer_id !== Auth::user()->customer_id) {
+        abort(403, 'Bu siparişe erişim yetkiniz yok.');
+    }
+
+    // ‘orderLines’ yerine mevcut ilişki adı ‘orderProducts’ kullanılıyor
+    $order->load('customer', 'company', 'orderProducts.product');
+
+    return view('orders.show', compact('order'));
+}
 
 }

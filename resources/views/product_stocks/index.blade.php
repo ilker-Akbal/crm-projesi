@@ -2,7 +2,19 @@
 @section('content')
 <section class="content"><div class="container-fluid">
   <div class="card card-outline card-primary">
-    <div class="card-header"><h3 class="card-title">Ürün Stokları</h3></div>
+    <div class="card-header d-flex justify-content-between">
+      <h3 class="card-title">Ürün Stokları</h3>
+      <div class="card-tools">
+        <a href="{{ route('product_serials.index') }}"
+           class="btn btn-sm btn-primary mr-2">
+          Seri Numaraları
+        </a>
+        <a href="{{ route('product_serials.create') }}"
+           class="btn btn-sm btn-success">
+          Seri Numarası Ekle
+        </a>
+      </div>
+    </div>
     <div class="card-body p-0">
       <table class="table table-hover mb-0">
         <thead>

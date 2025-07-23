@@ -60,6 +60,9 @@ Route::middleware('auth')->group(function () {
         'actions'         => ActionController::class,
         'reminders'       => ReminderController::class,
     ]);
+    Route::resource('orders', OrderController::class)
+     ->only(['index','create','store','edit','update','destroy']);
+
     Route::resource('product_stocks', ProductStockController::class)
      ->only(['index','create','store']);
      Route::resource('product_serials', ProductSerialController::class)
@@ -71,6 +74,9 @@ Route::get ('products/{product}/serials/create', [ProductController::class,'crea
 Route::post('products/{product}/serials',        [ProductController::class,'storeSerials'])
      ->name('products.serials.store');
     // Support
+    Route::resource('product_stocks', ProductStockController::class)
+     ->only(['index','create','store','edit','update'])
+     ->middleware('auth');
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/',             [SupportController::class, 'index']  )->name('index');
         Route::get('create',        [SupportController::class, 'create'] )->name('create');
