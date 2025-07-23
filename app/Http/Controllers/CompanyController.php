@@ -39,15 +39,14 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'company_name'      => 'required|string|max:255',
-            'tax_number'        => 'nullable|string|max:100',
-            'address'           => 'nullable|string',
-            'phone_number'      => 'nullable|string|max:50',
-            'email'             => 'nullable|email|max:255',
-            'registration_date' => 'nullable|date',
-            'current_role'      => 'required|in:customer,supplier,candidate',
-            // customer_id formdan gelmeyecek
-        ]);
+    'company_name'      => 'required|string|max:255',
+    'tax_number'        => 'required|digits:11|unique:companies,tax_number,' . $company->id,
+    'phone_number'      => 'nullable|digits:11|unique:companies,phone_number,' . $company->id,
+    'email'             => 'nullable|email|max:255',
+    'address'           => 'nullable|string|max:500',
+    'registration_date' => 'nullable|date',
+    'current_role'      => 'required|in:customer,supplier,candidate',
+]);
 
         $data['customer_id'] = Auth::user()->customer_id;
 

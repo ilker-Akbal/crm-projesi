@@ -30,7 +30,8 @@
         <label for="tax_number">Vergi Numarası</label>
         <input
   type="text"
-  pattern="[0-9]*"
+  pattern="\d{1,11}"
+  maxlength="11"
   inputmode="numeric"
   class="form-control @error('tax_number') is-invalid @enderror"
   id="tax_number"
@@ -45,7 +46,8 @@
         <label for="phone_number">Telefon</label>
         <input
   type="text"
-  pattern="[0-9]*"
+  pattern="\d{1,11}"
+  maxlength="11"
   inputmode="numeric"
   class="form-control @error('phone_number') is-invalid @enderror"
   id="phone_number"

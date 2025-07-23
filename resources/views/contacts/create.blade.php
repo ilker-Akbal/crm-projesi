@@ -43,10 +43,22 @@
           </div>
           
           <div class="form-group">
-            <label for="phone">Telefon</label>
-            <input type="text" name="phone" id="phone" class="form-control"
-                   value="{{ old('phone') }}">
-          </div>
+  <label for="phone">Telefon</label>
+  <input
+    type="text"
+    name="phone"
+    id="phone"
+    class="form-control @error('phone') is-invalid @enderror"
+    value="{{ old('phone') }}"
+    maxlength="11"
+    pattern="\d{11}"
+    inputmode="numeric"
+    required
+  >
+  @error('phone')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
+</div>
         </div>
         <div class="card-footer d-flex justify-content-end">
           <a href="{{ route('contacts.index') }}" class="btn btn-secondary mr-2">İptal</a>

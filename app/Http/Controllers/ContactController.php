@@ -27,12 +27,12 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'company_id' => 'nullable|exists:companies,id',
-            'name'       => 'required|string|max:255',
-            'position'   => 'nullable|string|max:255',
-            'email'      => 'nullable|email|max:255',
-            'phone'      => 'nullable|string|max:50',
-        ]);
+    'company_id' => 'nullable|exists:companies,id',
+    'name'       => 'required|string|max:255',
+    'position'   => 'nullable|string|max:255',
+    'email'      => 'nullable|email|max:255',
+    'phone'      => 'required|digits:11|unique:contacts,phone',
+]);
 
         Contact::create($data);
 
