@@ -12,6 +12,13 @@
 
   {{-- Sağ kısım --}}
   <ul class="navbar-nav ml-auto">
+    {{-- Hızlı Destek Talebi --}}
+    <li class="nav-item">
+      <a class="nav-link" href="{{ route('support.create') }}" title="Hızlı Destek Talebi">
+        <i class="fas fa-headset" style="font-size:1.2rem; color:#17a2b8;"></i>
+      </a>
+    </li>
+
     {{-- Tam ekran --}}
     <li class="nav-item">
       <a class="nav-link" data-widget="fullscreen" href="#" role="button">
@@ -32,5 +39,3 @@
     @endauth
   </ul>
 </nav>
-
-{{-- Karanlık mod devre dışı: ekstra CSS‑JS yok --}}

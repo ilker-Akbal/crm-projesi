@@ -8,18 +8,21 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // Eğer isim farklıysa index adını kontrol edin:
-            $table->dropUnique(['serial_number']);
-            $table->dropColumn('serial_number');
+            // index silmek istemiyorsan bu satırı kaldır:
+            // $table->dropUnique(['serial_number']);
+
+            // kolonun silinmesini istemiyorsan dropColumn’u kaldır
+            // ve nullable(false)->change() ile güncelle
+            $table->string('serial_number', 255)->nullable(false)->change();
         });
     }
 
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->string('serial_number', 255)
-                  ->unique()
-                  ->nullable(); // İlk başta nullable bırakıyoruz, sonra yeniden göç edebilirsiniz
+            // rollback için eski haline döndür
+            $table->string('serial_number', 255)->nullable()->change();
+            $table->dropUnique(['serial_number']);
         });
     }
 };
