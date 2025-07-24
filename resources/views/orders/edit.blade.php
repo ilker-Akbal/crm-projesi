@@ -140,6 +140,11 @@ $(function () {
   const products = @json($products);           // [{id,product_name,unit_price,stock}, …]
   let   rowIndex = $('#items-container .item-row').length;
 
+  /* ----- Satış mı? (purchase'ta max sınırı gerekmez) ----- */
+  function isSale() {
+    return $('input[name="order_type"]:checked').val() === 'sale';
+  }
+
   /* ------------ Yardımcılar ------------ */
   function optionList() {
     return products.map(p =>
@@ -151,14 +156,13 @@ $(function () {
     ).join('');
   }
 
-  function clearRow(row) {                     // ▼ ürün iptal edildiğinde satırı sıfırlamak için
+  function clearRow(row) {
     row.find('.unit-price-view').val('0.00');
     row.find('.unit-price-hidden').val(0);
-    row.find('.amount').val(1).removeAttr('max');
+    row.find('.amount').val(1).removeAttr('max').removeAttr('data-stock');
     row.find('.stock-info').text('');
   }
 
-  /* ▼ seçili ürünleri diğer dropdownlarda disable et */
   function refreshDisabledOptions() {
     const selected = $('.product-select').map((i,el)=> $(el).val()).get();
     $('.product-select').each(function () {
@@ -171,7 +175,6 @@ $(function () {
     });
   }
 
-  /* ▼ toplam tutarı (isteğe bağlı) yeniden hesapla */
   function recalcTotals() {
     let total = 0;
     $('#items-container .item-row').each(function () {
@@ -179,8 +182,39 @@ $(function () {
       const price = parseFloat($(this).find('.unit-price-hidden').val()) || 0;
       total += qty * price;
     });
-    $('#total_amount').val(total.toFixed(2));      // formda gizli alan varsa
-    $('#order-total').text(total.toFixed(2));      // toplamı gösteriyorsanız
+    $('#total_amount').val(total.toFixed(2));
+    $('#order-total').text(total.toFixed(2));
+  }
+
+  /* stok limiti satışta max, alışta sınırsız */
+  function toggleStockLimit(row) {
+    const stock = parseInt(row.find('.amount').attr('data-stock') || 0, 10);
+    if (isSale() && stock) {
+      row.find('.amount').attr('max', stock);
+      if (+row.find('.amount').val() > stock) row.find('.amount').val(stock);
+    } else {
+      row.find('.amount').removeAttr('max');
+    }
+  }
+
+  /* mevcut veya yeni satırdaki seçili ürünü satıra uygula */
+  function populateRow(row) {
+    const select = row.find('.product-select');
+    const val    = select.val();
+    if (!val) return;                                     // boş satır
+
+    const opt   = select.find('option:selected')[0];
+    const price = parseFloat(opt.dataset.price || 0);
+    const stock = parseInt(opt.dataset.stock  || 0, 10);
+
+    row.find('.unit-price-view').val(price.toFixed(2));
+    row.find('.unit-price-hidden').val(price);
+    row.find('.amount')
+        .attr('data-stock', stock)
+        .val(row.find('.amount').val() || 1);             // mevcut miktar korunur
+    row.find('.stock-info').text(`Stok: ${stock}`);
+
+    toggleStockLimit(row);
   }
 
   /* ------------ Satır ekle ------------ */
@@ -211,65 +245,59 @@ $(function () {
         </div>
       </div>
     `);
+    const newRow = $('#items-container .item-row').last();
+    populateRow(newRow);           // stok & fiyat ata (seçim boşsa dokunmaz)
     rowIndex++;
-    refreshDisabledOptions();                       // ▼
+    refreshDisabledOptions();
   });
 
   /* ------------ Satır sil ------------ */
   $(document).on('click', '.remove-item', function () {
     $(this).closest('.item-row').remove();
-    refreshDisabledOptions();                       // ▼
-    recalcTotals();
-  });
-
-  /* ------------ Ürün seçildiğinde fiyat + stok ata ve kopya kontrolü ------------ */
-  $(document).on('change', '.product-select', function () {
-    const val = this.value;
-    const row = $(this).closest('.item-row');
-
-    if (!val) {                                    // – boş seçim
-      clearRow(row);                               // ▼
-      refreshDisabledOptions();
-      recalcTotals();
-      return;
-    }
-
-    /* ▼ Aynı ürün başka satırda var mı? */
-    const dup = $('.product-select').not(this).filter((i,el)=> $(el).val() === val).length;
-    if (dup) {
-      alert('Bu ürün zaten eklendi. Aynı ürünü tekrar seçemezsiniz.');
-      $(this).val('');
-      clearRow(row);                               // ▼
-      refreshDisabledOptions();
-      recalcTotals();
-      return;
-    }
-
-    /* fiyat + stok */
-    const opt   = this.selectedOptions[0];
-    const price = parseFloat(opt.dataset.price || 0);
-    const stock = parseInt(opt.dataset.stock  || 0, 10);
-
-    row.find('.unit-price-view').val(price.toFixed(2));
-    row.find('.unit-price-hidden').val(price);
-    row.find('.amount').attr('max', stock).val(1);
-    row.find('.stock-info').text(`Stok: ${stock}`);
-
     refreshDisabledOptions();
     recalcTotals();
   });
 
-  /* ------------ Miktar değişiminde stok sınırı & toplam ------------ */
-  $(document).on('input', '.amount', function () {
-    const max = parseInt($(this).attr('max') || 0, 10);
-    if (max && +this.value > max) this.value = max;
-    recalcTotals();                                // ▼
+  /* ------------ Ürün seçimi ------------ */
+  $(document).on('change', '.product-select', function () {
+    const row = $(this).closest('.item-row');
+
+    /* kopya kontrolü */
+    const val = this.value;
+    const dup = $('.product-select').not(this).filter((i,el)=> $(el).val() === val).length;
+    if (dup) {
+      alert('Bu ürün zaten eklendi. Aynı ürünü tekrar seçemezsiniz.');
+      $(this).val('');
+      clearRow(row);
+      refreshDisabledOptions();
+      recalcTotals();
+      return;
+    }
+
+    populateRow(row);
+    refreshDisabledOptions();
+    recalcTotals();
   });
 
-  /* ---------- Sayfa yüklenince mevcut seçimleri kilitle ---------- */
-  refreshDisabledOptions();                        // ▼
-  recalcTotals();                                  // ▼
+  /* ------------ Miktar değişimi ------------ */
+  $(document).on('input', '.amount', function () {
+    const row = $(this).closest('.item-row');
+    toggleStockLimit(row);
+    recalcTotals();
+  });
+
+  /* ---------- Sayfa ilk açılış ---------- */
+  function initExistingRows() {
+    $('#items-container .item-row').each(function () {
+      populateRow($(this));
+    });
+    refreshDisabledOptions();
+    recalcTotals();
+  }
+
+  initExistingRows();   // 🚀
 
 });
 </script>
+
 @endpush

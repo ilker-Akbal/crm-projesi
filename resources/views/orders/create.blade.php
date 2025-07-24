@@ -121,6 +121,18 @@ $(function () {
   const products = @json($products);   // [{id, product_name, unit_price, stock}, …]
   let rowIndex   = 0;
 
+  /* ---------- Sipariş türü yardımcıları ---------- */
+  function isSale() {
+    return $('input[name="order_type"]:checked').val() === 'sale';
+  }
+
+  $('input[name="order_type"]').on('change', () => {
+    $('#order-items tbody tr').each(function () {
+      toggleStockLimit($(this));       // tür değişince satırları baştan değerlendir
+    });
+  });
+
+  /* ---------- Ürün listesini hazırla ---------- */
   function optionList() {
     return products.map(p =>
       `<option value="${p.id}"
@@ -158,57 +170,63 @@ $(function () {
         </td>
       </tr>
     `);
+
+    const newRow = $('#order-items tbody tr').last();
+    toggleStockLimit(newRow);          // eklenen satır için ilk limit ayarı
     rowIndex++;
-    refreshDisabledOptions();            // ▼ mevcut seçimleri güncelle
+    refreshDisabledOptions();
   });
 
   /* ---------- Satır sil ---------- */
   $(document).on('click', '.remove-row', function () {
     $(this).closest('tr').remove();
     recalcTotals();
-    refreshDisabledOptions();            // ▼ seçenekleri tekrar aç/kapat
+    refreshDisabledOptions();
   });
 
-  /* ---------- Ürün seçildiğinde fiyat + stok ata & kopya kontrolü ---------- */
+  /* ---------- Ürün seçildiğinde fiyat + stok işlemleri ---------- */
   $(document).on('change', '.product-select', function () {
     const currVal = this.value;
-    if (!currVal) {                      // boş seçime döndüler
-      clearRow($(this).closest('tr'));
+    const row     = $(this).closest('tr');
+
+    if (!currVal) {                    // seçim boşaltıldı
+      clearRow(row);
       refreshDisabledOptions();
       return;
     }
 
-    /* ▼ Aynı ürün başka satırda varsa engelle */
+    /* Kopya kontrolü */
     const duplicate = $('.product-select')
                         .not(this)
-                        .filter((i,el)=> $(el).val() === currVal)
+                        .filter((i, el) => $(el).val() === currVal)
                         .length;
     if (duplicate) {
       alert('Bu ürün zaten eklendi. Aynı ürünü tekrar seçemezsiniz.');
       $(this).val('');
-      clearRow($(this).closest('tr'));
+      clearRow(row);
       refreshDisabledOptions();
       return;
     }
 
-    /* fiyat + stok işlemleri (değişmedi) */
+    /* Fiyat + stok bilgisi */
     const opt   = this.selectedOptions[0];
     const price = parseFloat(opt.dataset.price || 0);
     const stock = parseInt(opt.dataset.stock || 0, 10);
 
-    const row = $(this).closest('tr');
     row.find('.unit-price-view').val(price.toFixed(2));
     row.find('.unit-price-hidden').val(price);
-    row.find('.amount').attr('max', stock).val(1);
+    row.find('.amount').val(1).attr('data-stock', stock);
     row.find('.stock-info').text(`Stok: ${stock}`);
+
+    toggleStockLimit(row);
     recalcTotals();
-    refreshDisabledOptions();            // ▼ diğer select’lerde disable et
+    refreshDisabledOptions();
   });
 
-  /* ---------- Miktar değişiminde stok sınırı ---------- */
+  /* ---------- Miktar değişiminde ---------- */
   $(document).on('input', '.amount', function () {
-    const max = parseInt($(this).attr('max') || 0, 10);
-    if (max && +this.value > max) this.value = max;
+    const row = $(this).closest('tr');
+    toggleStockLimit(row);             // stok sınırı hâlâ geçerli mi?
     recalcTotals();
   });
 
@@ -227,22 +245,35 @@ $(function () {
   }
 
   /* ---------- Yardımcılar ---------- */
-  function clearRow(row) {                 // ürün boşaltıldığında satır değerlerini sıfırla
+  function clearRow(row) {
     row.find('.unit-price-view').val('0.00');
     row.find('.unit-price-hidden').val(0);
-    row.find('.amount').val(1).removeAttr('max');
+    row.find('.amount').val(1).removeAttr('max').removeAttr('data-stock');
     row.find('.stock-info').text('');
     recalcTotals();
   }
 
-  /* ▼ Seçilmiş ürünleri diğer satırlarda disable et */
+  /* Satışta max, satın-almada sınırsız */
+  function toggleStockLimit(row) {
+    const stock = parseInt(row.find('.amount').attr('data-stock') || 0, 10);
+    if (isSale() && stock) {
+      row.find('.amount').attr('max', stock);
+      if (+row.find('.amount').val() > stock) {
+        row.find('.amount').val(stock);
+      }
+    } else {
+      row.find('.amount').removeAttr('max');
+    }
+  }
+
+  /* Seçilmiş ürünleri diğer satırlarda disable et */
   function refreshDisabledOptions() {
-    const selected = $('.product-select').map((i,el)=> $(el).val()).get();
+    const selected = $('.product-select').map((i, el) => $(el).val()).get();
     $('.product-select').each(function () {
       const current = $(this).val();
       $(this).find('option').each(function () {
         const val = $(this).val();
-        if (!val) return;                                       // "-- seçiniz --"
+        if (!val) return;
         $(this).prop('disabled', selected.includes(val) && val !== current);
       });
     });
@@ -250,5 +281,6 @@ $(function () {
 
 });
 </script>
+
 @endpush
 

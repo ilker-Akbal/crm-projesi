@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\ProductPrice;
 use App\Models\ProductSerial;
+use App\Models\Order;   //  ← EKLEYİN
 
 class ProductController extends Controller
 {
@@ -158,23 +159,76 @@ class ProductController extends Controller
         }
     });
 
-    return redirect()->route('products.index')
-                     ->with('success','Product updated successfully.');
+   if(isset($data['stock_quantity'])) {
+    return redirect()->route('products.serials.create', $product)
+                     ->with('info','Stok güncellendi; lütfen yeni seri numaralarını girin.');
+}
+return redirect()->route('products.index')
+                 ->with('success','Ürün güncellendi.');
 }
 
-public function createSerials(Product $product)
+public function createSerials(Request $request, Product $product)
 {
     $this->authorizeProduct($product);
-    $qty = $product->stocks()->latest('id')->value('stock_quantity') ?? 0;
-    return view('products.serials_create', compact('product','qty'));
+
+    /* ?order=... opsiyonel */
+    $orderId = $request->query('order');
+
+    /* Ürün sadece stok girişi için açılmışsa */
+    if (!$orderId) {
+        $qty = $product->stocks()->latest('id')->value('stock_quantity')     // son stok
+              - $product->serials()->count();                                // mevcut seri
+        abort_if($qty <= 0, 404);  // eklenecek seri yoksa
+        return view('products.serials_create', [
+            'product' => $product,
+            'order'   => null,
+            'qty'     => $qty,
+        ]);
+    }
+
+    /* --- Sipariş senaryosu (eski davranış) --- */
+    $order = Order::with('products')->findOrFail($orderId);
+    $pivot = $order->products()->whereKey($product->id)->firstOrFail()->pivot;
+    $qty   = $pivot->amount;
+
+    return view('products.serials_create', [
+        'product' => $product,
+        'order'   => $order,
+        'qty'     => $qty,
+    ]);
 }
 
 // Seri numaralarını kaydeden metod
+/* -------------------------------------------------
+ |  POST /products/{product}/serials_create
+ * ------------------------------------------------*/
 public function storeSerials(Request $request, Product $product)
 {
     $this->authorizeProduct($product);
-    $qty = $product->stocks()->latest('id')->value('stock_quantity') ?? 0;
 
+    $orderId = $request->input('order_id');   // null olabilir
+    $qty     = 0;
+
+    /* ---------- 1) Sipariş akışı ---------- */
+    if ($orderId) {
+        $order = Order::with('products')->findOrFail($orderId);
+
+        // ürün o siparişte mi?
+        $pivot = $order->products()
+                       ->whereKey($product->id)
+                       ->firstOrFail()
+                       ->pivot;
+
+        $qty = $pivot->amount;
+
+    /* ---------- 2) Ürün / stok akışı ---------- */
+    } else {
+        // Henüz seri numarası atanmamış stok adedi
+        $qty = $product->stocks()->latest('id')->value('stock_quantity')
+             - $product->serials()->count();
+    }
+
+    /* ---------- Validasyon ---------- */
     $data = $request->validate([
         'serials'   => "required|array|size:$qty",
         'serials.*' => 'required|string|distinct|unique:product_serials,serial_number',
@@ -182,20 +236,27 @@ public function storeSerials(Request $request, Product $product)
         'serials.size' => "Lütfen tam $qty adet seri numarası girin."
     ]);
 
-    DB::transaction(function() use($data,$product){
-        foreach($data['serials'] as $sn){
+    /* ---------- Kayıt ---------- */
+    DB::transaction(function () use ($data, $product, $orderId) {
+        foreach ($data['serials'] as $sn) {
             ProductSerial::create([
-                'product_id'    => $product->id,
-                'serial_number' => $sn,
-                'created_by'    => Auth::id(),
+                'order_id'   => $orderId,      // null gönderilebilir
+                'product_id' => $product->id,
+                'serial_number'  => $sn,
+                'created_by' => Auth::id(),
             ]);
         }
     });
 
-    return redirect()
-           ->route('products.index')
-           ->with('success','Tüm seri numaraları kaydedildi.');
+    /* ---------- Yönlendirme ---------- */
+    return $orderId
+        ? redirect()->route('orders.show', $orderId)
+                     ->with('success', 'Seri numaraları kaydedildi.')
+        : redirect()->route('products.show', $product)
+                     ->with('success', 'Seri numaraları kaydedildi.');
 }
+
+
 
     /* -------------------------------------------------
      |  DELETE /products/{product}  →  Sil

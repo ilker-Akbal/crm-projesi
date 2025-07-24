@@ -46,7 +46,7 @@ class Order extends Model
                     ->withPivot(['amount', 'unit_price'])
                     ->withTimestamps();
     }
-
+public function serials() { return $this->hasMany(ProductSerial::class); }
     /* Ödeme hareketi (OrderObserver oluşturuyor) */
     public function paymentMovement()
     {

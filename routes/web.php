@@ -21,7 +21,8 @@ use App\Http\Controllers\{
     UserController,
     CustomerController,
     ReminderController,
-    ProductSerialController
+    ProductSerialController,
+    OrderSerialController
 };
 
 /*
@@ -68,11 +69,17 @@ Route::middleware('auth')->group(function () {
      Route::resource('product_serials', ProductSerialController::class)
      ->only(['index','create','store','destroy']);
      // Ürün → Seri No girişi
-Route::get ('products/{product}/serials/create', [ProductController::class,'createSerials'])
-     ->name('products.serials.create');
+Route::get('products/{product}/serials_create',          // ⬅︎ path düzeldi
+    [ProductController::class,'createSerials']
+)->name('products.serials.create');
 
-Route::post('products/{product}/serials',        [ProductController::class,'storeSerials'])
-     ->name('products.serials.store');
+Route::post('products/{product}/serials_create',         // ⬅︎ path düzeldi
+    [ProductController::class,'storeSerials']
+)->name('products.serials.store');
+     Route::get('/orders/{order}/serials_create', [OrderSerialController::class, 'create'])
+     ->name('orders.serials.create');
+Route::post('/orders/{order}/serials',        [OrderSerialController::class, 'store'])
+     ->name('orders.serials.store');
     // Support
     Route::resource('product_stocks', ProductStockController::class)
      ->only(['index','create','store','edit','update'])

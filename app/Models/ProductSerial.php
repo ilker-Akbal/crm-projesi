@@ -9,9 +9,13 @@ class ProductSerial extends Model
       'product_id','serial_number','status',
       'created_by','updated_by'
     ];
+public function serials() { return $this->hasMany(ProductSerial::class); }
+
+/* app/Models/Order.php */
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
+    
 }

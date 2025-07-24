@@ -4,8 +4,7 @@
   <div class="card card-outline card-primary mb-3">
     <div class="card-header d-flex justify-content-between">
       <h3 class="card-title">Seri Numaraları</h3>
-      <a href="{{ route('product_serials.create') }}"
-         class="btn btn-sm btn-primary">Yeni Ekle</a>
+
     </div>
   </div>
   <div class="card card-outline card-primary">

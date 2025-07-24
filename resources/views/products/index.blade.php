@@ -15,7 +15,7 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Ad</th>
+              <th>Ürün Adı</th>
               <th>Müşteri</th>
               <th>Stok</th>
               <th>Son&nbsp;Fiyat</th>

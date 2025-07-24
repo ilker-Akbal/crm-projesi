@@ -22,15 +22,7 @@
             <label for="explanation">Açıklama</label>
             <textarea name="explanation" id="explanation" rows="3" class="form-control">{{ old('explanation', $product->explanation) }}</textarea>
           </div>
-          <div class="form-group">
-  <label for="serial_number">Seri No *</label>
-  <input type="text"
-         name="serial_number"
-         id="serial_number"
-         class="form-control"
-         value="{{ old('serial_number', $product->serial_number) }}"
-         required>
-</div>
+         
 
           <div class="form-group">
             <label for="price">Fiyat (değişiklik yoksa boş bırakın)</label>
