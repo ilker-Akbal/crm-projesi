@@ -18,7 +18,7 @@
           <table class="table table-hover mb-0" id="supportTable">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Müşteri</th>
                 <th>Başlık</th>
                 <th>Durum</th>
@@ -28,7 +28,7 @@
             <tbody>
               @forelse($requests as $r)
                 <tr>
-                  <td>{{ $r->id }}</td>
+                  
                   <td>{{ $r->customer->customer_name }}</td>
                   <td>{{ $r->title }}</td>
                   <td>{{ $r->situation }}</td>

@@ -32,7 +32,7 @@
           <table class="table table-hover mb-0" id="stockTable">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Ürün</th>
                 <th>Stok Miktarı</th>
                 <th>Güncelleme Tarihi</th>
@@ -41,7 +41,7 @@
             <tbody>
               @forelse($stocks as $s)
                 <tr class="{{ $s->stock_quantity < 10 ? 'table-danger' : '' }}">
-                  <td>{{ $s->id }}</td>
+                  
                   <td>{{ $s->product->product_name }}</td>
                   <td>{{ $s->stock_quantity }}</td>
                   <td>{{ $s->update_date }}</td>

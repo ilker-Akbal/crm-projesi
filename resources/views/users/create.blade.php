@@ -19,13 +19,15 @@
           <div class="form-group">
             <label for="username">Kullanıcı Adı *</label>
             <input  
-              type="text"
-              name="username"
-              id="username"
-              class="form-control @error('username') is-invalid @enderror"
-              value="{{ old('username') }}"
-              required
-            >
+  type="text"
+  name="username"
+  id="username"
+  pattern="[a-zA-Z]+"
+  title="Kullanıcı adı sadece harflerden oluşmalıdır."
+  class="form-control @error('username') is-invalid @enderror"
+  value="{{ old('username') }}"
+  required
+>
             @error('username')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror

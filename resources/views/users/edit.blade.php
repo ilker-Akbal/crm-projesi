@@ -22,13 +22,15 @@
           <div class="form-group mb-3">
             <label for="username" class="fw-semibold">Kullanıcı Adı <span class="text-danger">*</span></label>
             <input 
-              type="text"
-              id="username"
-              name="username"
-              class="form-control @error('username') is-invalid @enderror"
-              value="{{ old('username', $user->username) }}"
-              required
-            >
+  type="text"
+  id="username"
+  name="username"
+  pattern="[a-zA-ZçÇğĞıİöÖşŞüÜ]+"
+  title="Kullanıcı adı sadece harflerden oluşmalıdır"
+  class="form-control @error('username') is-invalid @enderror"
+  value="{{ old('username', $user->username) }}"
+  required
+>
             @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 

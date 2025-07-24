@@ -41,7 +41,7 @@
         <table class="table table-hover mb-0 align-middle text-nowrap">
           <thead class="table-light">
             <tr>
-              <th>ID</th>
+              
               <th>Hesap</th>
               <th>Tarih</th>
               <th class="text-end">Borç</th>
@@ -60,7 +60,7 @@
                 $running+= $delta;
               @endphp
               <tr>
-                <td>{{ $m->id }}</td>
+                
                 <td>{{ $m->currentCard->customer->customer_name }} ({{ $m->current_id }})</td>
                 <td>{{ \Carbon\Carbon::parse($m->departure_date)->format('d.m.Y') }}</td>
 

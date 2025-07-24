@@ -20,11 +20,13 @@
         <div class="form-group">
             <label for="customer_name">Adı *</label>
             <input type="text"
-                   name="customer_name"
-                   id="customer_name"
-                   class="form-control @error('customer_name') is-invalid @enderror"
-                   value="{{ old('customer_name') }}"
-                   required>
+       name="customer_name"
+       id="customer_name"
+       pattern="[a-zA-ZçÇğĞıİöÖşŞüÜ\s]+"
+       title="Müşteri adı sadece harf ve boşluk içerebilir"
+       class="form-control @error('customer_name') is-invalid @enderror"
+       value="{{ old('customer_name') }}"
+       required>
             @error('customer_name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -49,10 +51,13 @@
         <div class="form-group">
             <label for="phone">Telefon</label>
             <input type="text"
-                   name="phone"
-                   id="phone"
-                   class="form-control @error('phone') is-invalid @enderror"
-                   value="{{ old('phone') }}">
+       name="phone"
+       id="phone"
+       pattern="\d{11}"
+       maxlength="11"
+       title="Telefon numarası 11 haneli olmalıdır"
+       class="form-control @error('phone') is-invalid @enderror"
+       value="{{ old('phone') }}">
             @error('phone')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -87,8 +92,14 @@
         <div class="form-row">
           <div class="col-md-6 mb-3">
             <label for="username">Kullanıcı Adı *</label>
-            <input type="text" name="username" id="username" class="form-control"
-                   value="{{ old('username') }}" required>
+            <input type="text" 
+       name="username" 
+       id="username" 
+       pattern="[a-zA-Z]+"
+       title="Kullanıcı adı sadece harflerden oluşmalıdır"
+       class="form-control @error('username') is-invalid @enderror"
+       value="{{ old('username') }}" 
+       required>
           </div>
 
           <div class="col-md-6 mb-3">

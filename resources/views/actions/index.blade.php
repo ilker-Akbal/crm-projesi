@@ -16,7 +16,7 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Müşteri</th>
                 <th>Kullanıcı</th>
                 <th>Tür</th>
@@ -27,7 +27,7 @@
             <tbody>
               @forelse ($actions as $a)
                 <tr>
-                  <td>{{ $a->id }}</td>
+                  
                   <td>{{ $a->customer->customer_name }}</td>
                   <td>{{ $a->user->username }}</td>
                   <td>{{ $a->action_type }}</td>

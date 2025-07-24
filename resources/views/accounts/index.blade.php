@@ -14,7 +14,7 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
+              
               <th>Müşteri</th>
               <th>Açılış Tarihi</th>
               <th style="width:140px">İşlemler</th>
@@ -23,7 +23,7 @@
           <tbody>
             @forelse($accounts as $acc)
               <tr>
-                <td>{{ $acc->id }}</td>
+                
                 <td>{{ $acc->customer->customer_name }}</td>
                 <td>{{ \Carbon\Carbon::parse($acc->opening_date)->format('d.m.Y') }}</td>
                 <td>

@@ -17,7 +17,7 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
+              
               <th>Kullanıcı Adı</th>
               <th>Rol</th>
               <th>Aktif</th>
@@ -27,7 +27,7 @@
           <tbody>
             @forelse ($users as $u)
               <tr>
-                <td>{{ $u->id }}</td>
+                
                 <td>{{ $u->username }}</td>
                 <td>{{ ucfirst($u->role) }}</td>
                 <td>

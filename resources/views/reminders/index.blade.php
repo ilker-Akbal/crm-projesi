@@ -14,7 +14,7 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Başlık</th>
                 <th>Tarih</th>
                 <th>Müşteri</th>
@@ -26,7 +26,7 @@
             <tbody>
               @forelse($reminders as $r)
                 <tr>
-                  <td>{{ $r->id }}</td>
+                  
                   <td>{{ $r->title }}</td>
                   <td>{{ $r->reminder_date }}</td>
                   <td>{{ $r->customer->customer_name }}</td>

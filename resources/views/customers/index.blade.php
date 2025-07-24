@@ -12,7 +12,7 @@
     <table class="table table-bordered">
         <thead class="thead-light">
             <tr>
-                <th scope="col">ID</th>
+                
                 <th scope="col">Ad</th>
                 <th scope="col">Tür</th>
                 <th scope="col">E-posta</th>
@@ -22,7 +22,7 @@
         <tbody>
             @forelse($customers as $customer)
                 <tr>
-                    <th scope="row">{{ $customer->id }}</th>
+                    
                     <td>{{ $customer->customer_name }}</td>
                     <td>{{ ucfirst($customer->customer_type) }}</td>
                     <td>{{ $customer->email }}</td>

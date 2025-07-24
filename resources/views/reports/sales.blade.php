@@ -30,7 +30,7 @@
           <table class="table table-hover mb-0" id="salesTable">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Müşteri</th>
                 <th>Sipariş Tarihi</th>
                 <th>Toplam Tutar</th>
@@ -39,7 +39,7 @@
             <tbody>
               @forelse($sales as $s)
                 <tr>
-                  <td>{{ $s->id }}</td>
+                  
                   <td>{{ $s->customer->customer_name }}</td>
                   <td>{{ $s->order_date }}</td>
                   <td>{{ number_format($s->total_amount, 2) }}</td>

@@ -30,7 +30,7 @@
           <table class="table table-hover mb-0" id="accountTable">
             <thead>
               <tr>
-                <th>Hesap ID</th>
+                
                 <th>Müşteri</th>
                 <th>Bakiye</th>
                 <th>Açılış Tarihi</th>
@@ -39,7 +39,7 @@
             <tbody>
               @forelse($accounts as $a)
                 <tr>
-                  <td>{{ $a->id }}</td>
+                  
                   <td>{{ $a->customer->customer_name }}</td>
                   <td>{{ number_format($a->balance, 2) }}</td>
                   <td>{{ $a->opening_date }}</td>

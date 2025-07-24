@@ -10,7 +10,7 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Müşteri</th>
                 <th>Başlık</th>
                 <th>Kayıt Tarihi</th>
@@ -20,7 +20,7 @@
             <tbody>
               @forelse($supports as $s)
                 <tr>
-                  <td>{{ $s->id }}</td>
+                  
                   <td>{{ $s->customer->customer_name }}</td>
                   <td>{{ $s->title }}</td>
                   <td>{{ $s->registration_date }}</td>

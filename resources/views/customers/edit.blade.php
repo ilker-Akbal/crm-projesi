@@ -13,9 +13,14 @@
         @csrf @method('PUT')
         <div class="mb-3">
           <label for="customer_name" class="form-label">Ad *</label>
-          <input type="text" name="customer_name" id="customer_name"
-                 class="form-control @error('customer_name') is-invalid @enderror"
-                 value="{{ old('customer_name', $customer->customer_name) }}" required>
+          <input type="text" 
+       name="customer_name" 
+       id="customer_name"
+       pattern="[a-zA-ZçÇğĞıİöÖşŞüÜ\s]+"
+       title="Müşteri adı sadece harf ve boşluk içerebilir"
+       class="form-control @error('customer_name') is-invalid @enderror"
+       value="{{ old('customer_name', $customer->customer_name) }}" 
+       required>
           @error('customer_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
@@ -36,9 +41,14 @@
         <div class="row">
           <div class="col-md-6 mb-3">
             <label for="phone" class="form-label">Telefon</label>
-            <input type="text" name="phone" id="phone"
-                   class="form-control @error('phone') is-invalid @enderror"
-                   value="{{ old('phone', $customer->phone) }}">
+            <input type="text" 
+       name="phone" 
+       id="phone"
+       pattern="\d{11}"
+       maxlength="11"
+       title="Telefon numarası 11 haneli olmalıdır"
+       class="form-control @error('phone') is-invalid @enderror"
+       value="{{ old('phone', $customer->phone) }}">
             @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
           <div class="col-md-6 mb-3">

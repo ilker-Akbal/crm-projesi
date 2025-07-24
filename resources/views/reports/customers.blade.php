@@ -34,7 +34,7 @@
           <table class="table table-hover mb-0" id="customerTable">
             <thead>
               <tr>
-                <th>ID</th>
+                
                 <th>Ad</th>
                 <th>Tür</th>
                 <th>Telefon</th>
@@ -44,7 +44,7 @@
             <tbody>
               @forelse($customers as $c)
                 <tr>
-                  <td>{{ $c->id }}</td>
+                  
                   <td>{{ $c->customer_name }}</td>
                   <td>{{ $c->customer_type }}</td>
                   <td>{{ $c->phone }}</td>
