@@ -8,17 +8,30 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header">
-        <h3 class="card-title">Sipariş Düzenle #{{ $order->id }}</h3>
+        <h3 class="card-title">
+          Sipariş Düzenle #{{ $order->id }}
+          @if($order->company?->company_name)
+            – {{ $order->company->company_name }}
+          @endif
+        </h3>
       </div>
 
       <form action="{{ route('orders.update', $order) }}" method="POST">
         @csrf @method('PUT')
 
         <div class="card-body">
-
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
-          {{-- ---------------- Sipariş Türü ---------------- --}}
+          {{-- Firma Adı (okunur) --}}
+          @if($order->company?->company_name)
+          <div class="form-group">
+            <label>Firma</label>
+            <input type="text" class="form-control" 
+                   value="{{ $order->company->company_name }}" readonly>
+          </div>
+          @endif
+
+          {{-- Sipariş Türü --}}
           <div class="form-group">
             <label>Sipariş Türü *</label><br>
             <label class="mr-3">
@@ -34,26 +47,26 @@
             @error('order_type') <div class="text-danger small">{{ $message }}</div> @enderror
           </div>
 
-          {{-- ---------------- Tarihler ---------------- --}}
+          {{-- Tarihler --}}
           <div class="form-group">
             <label for="order_date">Sipariş Tarihi</label>
-            <input  type="date" id="order_date" name="order_date"
-                    class="form-control @error('order_date') is-invalid @enderror"
-                    value="{{ old('order_date', $order->order_date?->format('Y-m-d')) }}" required>
+            <input type="date" id="order_date" name="order_date"
+                   class="form-control @error('order_date') is-invalid @enderror"
+                   value="{{ old('order_date', $order->order_date?->format('Y-m-d')) }}" required>
             @error('order_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="form-group">
             <label for="delivery_date">Teslim Tarihi</label>
-            <input  type="date" id="delivery_date" name="delivery_date"
-                    class="form-control @error('delivery_date') is-invalid @enderror"
-                    value="{{ old('delivery_date', optional($order->delivery_date)->format('Y-m-d')) }}">
+            <input type="date" id="delivery_date" name="delivery_date"
+                   class="form-control @error('delivery_date') is-invalid @enderror"
+                   value="{{ old('delivery_date', optional($order->delivery_date)->format('Y-m-d')) }}">
             @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <hr>
 
-          {{-- ---------------- Kalemler ---------------- --}}
+          {{-- Sipariş Kalemleri (ürün satırları) --}}
           <h5>Sipariş Kalemleri</h5>
           <div id="items-container">
             @php
@@ -66,37 +79,37 @@
 
             @forelse($oldItems as $i => $item)
               <div class="row mb-2 item-row">
-                {{-- ÜRÜN --}}
+                {{-- Ürün --}}
                 <div class="col-md-5">
                   <select name="items[{{ $i }}][product_id]"
                           class="form-control product-select">
                     <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
-                      <option value="{{ $prod['id'] }}"                         {{-- ← güncel --}}
-                              data-price="{{ $prod['unit_price'] }}"             {{-- ← --}}
-                              data-stock="{{ $prod['stock'] }}"                 {{-- ← --}}
+                      <option value="{{ $prod['id'] }}"
+                              data-price="{{ $prod['unit_price'] }}"
+                              data-stock="{{ $prod['stock'] }}"
                               {{ $item['product_id'] == $prod['id'] ? 'selected' : '' }}>
-                        {{ $prod['product_name'] }}                              {{-- ← --}}
+                        {{ $prod['product_name'] }}
                       </option>
                     @endforeach
                   </select>
                 </div>
 
-                {{-- ADET --}}
+                {{-- Adet --}}
                 <div class="col-md-3">
-                  <input  type="number" class="form-control amount" min="1"
-                          name="items[{{ $i }}][amount]"
-                          value="{{ $item['amount'] }}">
+                  <input type="number" class="form-control amount" min="1"
+                         name="items[{{ $i }}][amount]"
+                         value="{{ $item['amount'] }}">
                   <small class="text-muted stock-info"></small>
                 </div>
 
-                {{-- FİYAT (readonly) --}}
+                {{-- Fiyat (readonly) --}}
                 <div class="col-md-3">
-                  <input  type="text"  class="form-control-plaintext unit-price-view"
-                          value="{{ number_format($item['unit_price'],2) }}" readonly>
-                  <input  type="hidden" name="items[{{ $i }}][unit_price]"
-                          class="unit-price-hidden"
-                          value="{{ $item['unit_price'] }}">
+                  <input type="text" class="form-control-plaintext unit-price-view"
+                         value="{{ number_format($item['unit_price'],2) }}" readonly>
+                  <input type="hidden" name="items[{{ $i }}][unit_price]"
+                         class="unit-price-hidden"
+                         value="{{ $item['unit_price'] }}">
                 </div>
 
                 {{-- Sil butonu --}}
@@ -105,7 +118,7 @@
                 </div>
               </div>
             @empty
-              {{-- kalem yok --}}
+              {{-- hiç ürün yok --}}
             @endforelse
           </div>
 
@@ -113,7 +126,7 @@
             + Kalem Ekle
           </button>
 
-          {{-- Ödeme --}}
+          {{-- Ödeme Durumu --}}
           <div class="form-group mt-3">
             <label>
               <input type="checkbox" name="is_paid" value="1"
@@ -137,20 +150,16 @@
 <script>
 $(function () {
 
-  const products = @json($products);           // [{id,product_name,unit_price,stock}, …]
-  let   rowIndex = $('#items-container .item-row').length;
+  const products = @json($products);
+  let rowIndex = $('#items-container .item-row').length;
 
-  /* ----- Satış mı? (purchase'ta max sınırı gerekmez) ----- */
   function isSale() {
     return $('input[name="order_type"]:checked').val() === 'sale';
   }
 
-  /* ------------ Yardımcılar ------------ */
   function optionList() {
     return products.map(p =>
-      `<option value="${p.id}"
-               data-price="${p.unit_price}"
-               data-stock="${p.stock}">
+      `<option value="${p.id}" data-price="${p.unit_price}" data-stock="${p.stock}">
          ${p.product_name}
        </option>`
     ).join('');
@@ -178,7 +187,7 @@ $(function () {
   function recalcTotals() {
     let total = 0;
     $('#items-container .item-row').each(function () {
-      const qty   = parseFloat($(this).find('.amount').val())            || 0;
+      const qty = parseFloat($(this).find('.amount').val()) || 0;
       const price = parseFloat($(this).find('.unit-price-hidden').val()) || 0;
       total += qty * price;
     });
@@ -186,7 +195,6 @@ $(function () {
     $('#order-total').text(total.toFixed(2));
   }
 
-  /* stok limiti satışta max, alışta sınırsız */
   function toggleStockLimit(row) {
     const stock = parseInt(row.find('.amount').attr('data-stock') || 0, 10);
     if (isSale() && stock) {
@@ -197,72 +205,60 @@ $(function () {
     }
   }
 
-  /* mevcut veya yeni satırdaki seçili ürünü satıra uygula */
   function populateRow(row) {
     const select = row.find('.product-select');
-    const val    = select.val();
-    if (!val) return;                                     // boş satır
+    const val = select.val();
+    if (!val) return;
 
-    const opt   = select.find('option:selected')[0];
+    const opt = select.find('option:selected')[0];
     const price = parseFloat(opt.dataset.price || 0);
-    const stock = parseInt(opt.dataset.stock  || 0, 10);
+    const stock = parseInt(opt.dataset.stock || 0, 10);
 
     row.find('.unit-price-view').val(price.toFixed(2));
     row.find('.unit-price-hidden').val(price);
     row.find('.amount')
         .attr('data-stock', stock)
-        .val(row.find('.amount').val() || 1);             // mevcut miktar korunur
+        .val(row.find('.amount').val() || 1);
     row.find('.stock-info').text(`Stok: ${stock}`);
 
     toggleStockLimit(row);
   }
 
-  /* ------------ Satır ekle ------------ */
   $('#add-item').on('click', () => {
     $('#items-container').append(`
       <div class="row mb-2 item-row">
         <div class="col-md-5">
-          <select name="items[${rowIndex}][product_id]"
-                  class="form-control product-select">
+          <select name="items[${rowIndex}][product_id]" class="form-control product-select">
             <option value="">-- Ürün Seçiniz --</option>${optionList()}
           </select>
         </div>
-
         <div class="col-md-3">
-          <input  type="number" name="items[${rowIndex}][amount]"
-                  class="form-control amount" min="1" value="1">
+          <input type="number" name="items[${rowIndex}][amount]" class="form-control amount" min="1" value="1">
           <small class="text-muted stock-info"></small>
         </div>
-
         <div class="col-md-3">
-          <input  type="text"  class="form-control-plaintext unit-price-view" readonly value="0.00">
-          <input  type="hidden" name="items[${rowIndex}][unit_price]"
-                  class="unit-price-hidden" value="0">
+          <input type="text" class="form-control-plaintext unit-price-view" readonly value="0.00">
+          <input type="hidden" name="items[${rowIndex}][unit_price]" class="unit-price-hidden" value="0">
         </div>
-
         <div class="col-md-1">
           <button type="button" class="btn btn-danger remove-item">&times;</button>
         </div>
       </div>
     `);
     const newRow = $('#items-container .item-row').last();
-    populateRow(newRow);           // stok & fiyat ata (seçim boşsa dokunmaz)
+    populateRow(newRow);
     rowIndex++;
     refreshDisabledOptions();
   });
 
-  /* ------------ Satır sil ------------ */
   $(document).on('click', '.remove-item', function () {
     $(this).closest('.item-row').remove();
     refreshDisabledOptions();
     recalcTotals();
   });
 
-  /* ------------ Ürün seçimi ------------ */
   $(document).on('change', '.product-select', function () {
     const row = $(this).closest('.item-row');
-
-    /* kopya kontrolü */
     const val = this.value;
     const dup = $('.product-select').not(this).filter((i,el)=> $(el).val() === val).length;
     if (dup) {
@@ -273,20 +269,17 @@ $(function () {
       recalcTotals();
       return;
     }
-
     populateRow(row);
     refreshDisabledOptions();
     recalcTotals();
   });
 
-  /* ------------ Miktar değişimi ------------ */
   $(document).on('input', '.amount', function () {
     const row = $(this).closest('.item-row');
     toggleStockLimit(row);
     recalcTotals();
   });
 
-  /* ---------- Sayfa ilk açılış ---------- */
   function initExistingRows() {
     $('#items-container .item-row').each(function () {
       populateRow($(this));
@@ -295,9 +288,7 @@ $(function () {
     recalcTotals();
   }
 
-  initExistingRows();   // 🚀
-
+  initExistingRows();
 });
 </script>
-
 @endpush

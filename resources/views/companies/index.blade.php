@@ -12,12 +12,11 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Adı</th>
-              <th>Vergi No</th>
+              <th>Firma Adı</th>
+              <th>Vergi Numarası</th>
               <th>Telefon</th>
               <th>E-posta</th>
-              <th>Müşteri</th>
+              <th>Müşteri Adı</th>
               <th>Rol</th>
               <th>Kayıt Tarihi</th>
               <th>İşlemler</th>
@@ -26,14 +25,22 @@
           <tbody>
           @forelse($companies as $c)
             <tr>
-              <td>{{ $c->id }}</td>
               <td>{{ $c->company_name }}</td>
               <td>{{ $c->tax_number }}</td>
               <td>{{ $c->phone_number }}</td>
               <td>{{ $c->email }}</td>
-              <td>{{ $c->customer?->customer_name }}</td>
-              <td>{{ $c->current_role }}</td>
-              <td>{{ $c->registration_date }}</td>
+              <td>{{ $c->customer?->customer_name ?? 'Müşteri Yok' }}</td>
+              <td>
+                @switch($c->current_role)
+                  @case('admin') Yönetici @break
+                  @case('user') Kullanıcı @break
+                  @case('customer') Müşteri @break
+                  @default Belirtilmemiş
+                @endswitch
+              </td>
+              <td>
+                {{ \Carbon\Carbon::parse($c->registration_date)->format('d.m.Y') }}
+              </td>
               <td>
                 <a href="{{ route('companies.show',$c) }}" class="btn btn-sm btn-info">Gör</a>
                 <a href="{{ route('companies.edit',$c) }}" class="btn btn-sm btn-warning">Düzenle</a>
@@ -44,7 +51,7 @@
               </td>
             </tr>
           @empty
-            <tr><td colspan="9" class="text-center">Kayıtlı firma bulunamadı.</td></tr>
+            <tr><td colspan="8" class="text-center">Kayıtlı firma bulunamadı.</td></tr>
           @endforelse
           </tbody>
         </table>

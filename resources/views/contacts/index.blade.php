@@ -12,7 +12,6 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Ad</th>
               <th>Pozisyon</th>
               <th>E-posta</th>
@@ -25,7 +24,6 @@
           <tbody>
             @forelse($contacts as $ct)
             <tr>
-              <td>{{ $ct->id }}</td>
               <td>{{ $ct->name }}</td>
               <td>{{ $ct->position }}</td>
               <td>{{ $ct->email }}</td>

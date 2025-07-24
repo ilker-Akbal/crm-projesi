@@ -14,7 +14,6 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Ürün Adı</th>
               <th>Müşteri</th>
               <th>Stok</th>
@@ -26,7 +25,6 @@
           <tbody>
             @forelse ($products as $prod)
               <tr>
-                <td>{{ $prod->id }}</td>
                 <td>{{ $prod->product_name }}</td>
                 {{-- müşteri boşsa tire göster --}}
                 <td>{{ $prod->customer->customer_name ?? '—' }}</td>

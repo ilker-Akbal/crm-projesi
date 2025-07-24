@@ -1,9 +1,9 @@
 <?php
-// app/Http/Controllers/ContactController.php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Contact;
 use App\Models\Company;
 
@@ -27,18 +27,27 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-    'company_id' => 'nullable|exists:companies,id',
-    'name'       => 'required|string|max:255',
-    'position'   => 'nullable|string|max:255',
-    'email'      => 'nullable|email|max:255',
-    'phone'      => 'required|digits:11|unique:contacts,phone',
-]);
+            'company_id' => 'nullable|exists:companies,id',
+            'name'       => [
+                'required', 'string', 'max:255',
+                Rule::unique('contacts')->where(fn($q) =>
+                    $q->where('company_id', $request->company_id)
+                ),
+            ],
+            'position'   => 'nullable|string|max:255',
+            'email'      => 'nullable|email|max:255|unique:contacts,email',
+            'phone'      => 'required|digits:11|unique:contacts,phone',
+        ], [
+            'name.unique'  => 'Bu isim zaten bu firmada kayıtlı.',
+            'phone.unique' => 'Bu telefon numarası başka bir kişiye ait.',
+            'email.unique' => 'Bu e-posta başka bir kişiye ait.',
+        ]);
 
         Contact::create($data);
 
         return redirect()
             ->route('contacts.index')
-            ->with('success', 'Contact created successfully.');
+            ->with('success', 'Kişi başarıyla eklendi.');
     }
 
     // Düzenle
@@ -53,26 +62,41 @@ class ContactController extends Controller
     {
         $data = $request->validate([
             'company_id' => 'nullable|exists:companies,id',
-            'name'       => 'required|string|max:255',
+            'name'       => [
+                'required', 'string', 'max:255',
+                Rule::unique('contacts')->ignore($contact->id)->where(fn($q) =>
+                    $q->where('company_id', $request->company_id)
+                ),
+            ],
             'position'   => 'nullable|string|max:255',
-            'email'      => 'nullable|email|max:255',
-            'phone'      => 'nullable|string|max:50',
+            'email'      => [
+                'nullable', 'email', 'max:255',
+                Rule::unique('contacts', 'email')->ignore($contact->id),
+            ],
+            'phone'      => [
+                'required', 'digits:11',
+                Rule::unique('contacts', 'phone')->ignore($contact->id),
+            ],
+        ], [
+            'name.unique'  => 'Bu isim zaten bu firmada kayıtlı.',
+            'phone.unique' => 'Bu telefon numarası başka bir kişiye ait.',
+            'email.unique' => 'Bu e-posta başka bir kişiye ait.',
         ]);
 
         $contact->update($data);
 
         return redirect()
             ->route('contacts.index')
-            ->with('success', 'Contact updated successfully.');
+            ->with('success', 'Kişi bilgileri güncellendi.');
     }
-     public function show(Contact $contact)
-    {
-        // İlişkili company bilgisini yükle
-        $contact->load('company');
 
-        // resources/views/contacts/show.blade.php dosyasına $contact'ı gönder
+    // Göster
+    public function show(Contact $contact)
+    {
+        $contact->load('company');
         return view('contacts.show', compact('contact'));
     }
+
     // Sil
     public function destroy(Contact $contact)
     {
@@ -80,6 +104,6 @@ class ContactController extends Controller
 
         return redirect()
             ->route('contacts.index')
-            ->with('success', 'Contact deleted successfully.');
+            ->with('success', 'Kişi başarıyla silindi.');
     }
 }

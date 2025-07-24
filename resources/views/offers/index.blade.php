@@ -12,7 +12,6 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Müşteri</th>
               <th>Sipariş #</th>
               <th>Teklif Tarihi</th>
@@ -25,7 +24,6 @@
           <tbody>
             @forelse($offers as $o)
             <tr>
-              <td>{{ $o->id }}</td>
               <td>{{ $o->customer->customer_name }}</td>
               <td>{{ $o->order_id? '#'.$o->order_id : '-' }}</td>
               <td>{{ $o->offer_date }}</td>

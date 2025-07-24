@@ -12,8 +12,8 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Müşteri</th>
+              <th>Firma</th> {{-- Yeni sütun --}}
               <th>Sipariş Tarihi</th>
               <th>Teslim Tarihi</th>
               <th>Ödeme Durumu</th>
@@ -24,8 +24,8 @@
           <tbody>
             @forelse($orders as $o)
             <tr>
-              <td>{{ $o->id }}</td>
               <td>{{ $o->customer->customer_name }}</td>
+              <td>{{ $o->company->company_name ?? '-' }}</td>
               <td>{{ $o->order_date }}</td>
               <td>{{ $o->delivery_date }}</td>
               <td>
@@ -44,7 +44,7 @@
               </td>
             </tr>
             @empty
-            <tr><td colspan="7" class="text-center">Herhangi bir sipariş bulunamadı.</td></tr>
+            <tr><td colspan="8" class="text-center">Herhangi bir sipariş bulunamadı.</td></tr>
             @endforelse
           </tbody>
         </table>
