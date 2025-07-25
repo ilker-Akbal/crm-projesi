@@ -66,7 +66,7 @@
               <option value="Pazarlama Uzmanı" {{ old('position')=='Pazarlama Uzmanı' ? 'selected' : '' }}>Pazarlama Uzmanı</option>
               <option value="Müşteri Temsilcisi" {{ old('position')=='Müşteri Temsilcisi' ? 'selected' : '' }}>Müşteri Temsilcisi</option>
 
-              {{-- Teknik Departmanlar (HAUS örnekleri) --}}
+              {{-- Teknik Departmanlar --}}
               <option value="Bilgi İşlem Uzmanı" {{ old('position')=='Bilgi İşlem Uzmanı' ? 'selected' : '' }}>Bilgi İşlem Uzmanı</option>
               <option value="IT Destek" {{ old('position')=='IT Destek' ? 'selected' : '' }}>IT Destek</option>
               <option value="Yazılım Geliştirici" {{ old('position')=='Yazılım Geliştirici' ? 'selected' : '' }}>Yazılım Geliştirici</option>
