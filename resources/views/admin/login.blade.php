@@ -105,6 +105,20 @@
 
   .form-group {
     margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  /* Şifre göster/gizle butonu */
+  .password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 38px;
+    background: none;
+    border: none;
+    color: var(--text-dark);
+    opacity: 0.6;
+    cursor: pointer;
+    z-index: 2;
   }
 
   /* Responsive ayarlar */
@@ -160,6 +174,9 @@
           placeholder="••••••••"
           required
         >
+        <button type="button" class="password-toggle" id="togglePassword">
+          <i class="far fa-eye"></i>
+        </button>
         @error('password')
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -172,8 +189,32 @@
   </div>
 </div>
 
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 <!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  // Password toggle functionality
+  document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  });
+
+  // Hata mesajı kontrolü
+  @if($errors->has('password'))
+    document.getElementById('password').focus();
+  @endif
+</script>
 @endsection
