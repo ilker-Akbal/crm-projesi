@@ -126,20 +126,22 @@
         </div>
 
         {{-- Mevcut Rol --}}
-        <select
-          id="current_role"
-          name="current_role"
-          class="form-control @error('current_role') is-invalid @enderror"
-          required
-        >
-          <option value="" disabled {{ old('current_role', $company->current_role) ? '' : 'selected' }}>-- Rol seçiniz --</option>
-          <option value="customer"  {{ old('current_role', $company->current_role) == 'customer'  ? 'selected' : '' }}>Müşteri</option>
-          <option value="supplier"  {{ old('current_role', $company->current_role) == 'supplier'  ? 'selected' : '' }}>Tedarikçi</option>
-          <option value="candidate" {{ old('current_role', $company->current_role) == 'candidate' ? 'selected' : '' }}>Aday</option>
-        </select>
-        @error('current_role')
-          <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
+        <div class="form-group mb-3">
+  <label for="current_role">Rol *</label>
+  <select
+    id="current_role"
+    name="current_role"
+    class="form-control @error('current_role') is-invalid @enderror"
+    required
+  >
+    <option value="" disabled {{ old('current_role', $company->current_role) ? '' : 'selected' }}>-- Rol seçiniz --</option>
+    <option value="customer"  {{ old('current_role', $company->current_role) == 'customer'  ? 'selected' : '' }}>Müşteri</option>
+    <option value="supplier"  {{ old('current_role', $company->current_role) == 'supplier'  ? 'selected' : '' }}>Tedarikçi</option>
+    <option value="candidate" {{ old('current_role', $company->current_role) == 'candidate' ? 'selected' : '' }}>Aday</option>
+  </select>
+  @error('current_role')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
 
         <input type="hidden" name="customer_id" value="{{ old('customer_id', $company->customer_id) }}">
 

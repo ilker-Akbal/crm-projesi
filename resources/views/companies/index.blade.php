@@ -32,11 +32,11 @@
               <td>{{ $c->customer?->customer_name ?? 'Müşteri Yok' }}</td>
               <td>
                 @switch($c->current_role)
-                  @case('admin') Yönetici @break
-                  @case('user') Kullanıcı @break
-                  @case('customer') Müşteri @break
-                  @default Belirtilmemiş
-                @endswitch
+  @case('customer') Müşteri @break
+  @case('supplier') Tedarikçi @break
+  @case('candidate') Aday @break
+  @default Belirtilmemiş
+@endswitch
               </td>
               <td>
                 {{ \Carbon\Carbon::parse($c->registration_date)->format('d.m.Y') }}
