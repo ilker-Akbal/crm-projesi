@@ -19,7 +19,7 @@
       <table class="table table-hover mb-0">
         <thead>
           <tr>
-            <th>ID</th><th>Ürün</th>
+            <th>Ürün</th>
             <th>Toplam</th><th>Bloke</th>
             <th>Rezerve</th><th>Kullanılabilir</th>
             <th>Güncelleme</th>
@@ -28,7 +28,7 @@
         <tbody>
           @forelse($productStocks as $s)
           <tr>
-            <td>{{ $s->id }}</td>
+            
             <td>{{ $s->product->product_name }}</td>
             <td>{{ $s->stock_quantity }}</td>
             <td>{{ $s->blocked_stock }}</td>

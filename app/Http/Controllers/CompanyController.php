@@ -43,7 +43,19 @@ class CompanyController extends Controller
             'address'           => 'nullable|string|max:500',
             'registration_date' => 'nullable|date',
             'current_role'      => 'required|in:customer,supplier,candidate',
-        ]);
+        ], [
+        'company_name.required' => 'Firma adı zorunludur.',
+        'company_name.unique' => 'Bu isimde bir firma zaten mevcut.',
+        'tax_number.required' => 'Vergi numarası zorunludur.',
+        'tax_number.digits' => 'Vergi numarası 11 haneli olmalıdır.',
+        'tax_number.unique' => 'Bu vergi numarasıyla kayıtlı başka bir firma var.',
+        'phone_number.digits' => 'Telefon numarası 11 haneli olmalıdır.',
+        'phone_number.unique' => 'Bu telefon numarasıyla kayıtlı başka bir firma var.',
+        'email.email' => 'Geçerli bir e-posta adresi giriniz.',
+        'registration_date.date' => 'Geçerli bir tarih giriniz.',
+        'current_role.required' => 'Lütfen firmanın rolünü seçiniz.',
+        'current_role.in' => 'Seçilen rol geçersiz.',
+    ]);
 
         $data['customer_id'] = Auth::user()->customer_id;
 
@@ -86,7 +98,20 @@ class CompanyController extends Controller
             'address'           => 'nullable|string',
             'registration_date' => 'nullable|date',
             'current_role'      => 'required|in:customer,supplier,candidate',
-        ]);
+       ], [
+        'company_name.required' => 'Firma adı zorunludur.',
+        'company_name.unique' => 'Bu isimde bir firma zaten mevcut.',
+        'tax_number.required' => 'Vergi numarası zorunludur.',
+        'tax_number.digits' => 'Vergi numarası 11 haneli olmalıdır.',
+        'tax_number.unique' => 'Bu vergi numarasıyla kayıtlı başka bir firma var.',
+        'phone_number.required' => 'Telefon numarası zorunludur.',
+        'phone_number.digits' => 'Telefon numarası 11 haneli olmalıdır.',
+        'phone_number.unique' => 'Bu telefon numarasıyla kayıtlı başka bir firma var.',
+        'email.email' => 'Geçerli bir e-posta adresi giriniz.',
+        'registration_date.date' => 'Geçerli bir tarih giriniz.',
+        'current_role.required' => 'Lütfen firmanın rolünü seçiniz.',
+        'current_role.in' => 'Seçilen rol geçersiz.',
+    ]);
 
         $company->update($validated);
 

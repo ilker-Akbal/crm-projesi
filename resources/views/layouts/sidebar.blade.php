@@ -172,11 +172,7 @@
                 <i class="far fa-circle nav-icon"></i><p>Satış Raporu</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="{{ route('reports.customers') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i><p>Müşteri Raporu</p>
-              </a>
-            </li>
+            
             <li class="nav-item">
               <a href="{{ route('reports.product_stock') }}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i><p>Stok Raporu</p>

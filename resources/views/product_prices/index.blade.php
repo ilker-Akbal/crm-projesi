@@ -11,7 +11,7 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
+              
               <th>Ürün</th>
               <th>Fiyat</th>
               <th>Güncelleme Tarihi</th>
@@ -20,7 +20,7 @@
           <tbody>
             @forelse($productPrices as $price)
             <tr>
-              <td>{{ $price->id }}</td>
+              
               <td>{{ $price->product->product_name }}</td>
               <td>{{ number_format($price->price,2) }}</td>
               <td>{{ $price->updated_at }}</td>

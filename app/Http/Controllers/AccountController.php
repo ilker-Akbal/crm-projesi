@@ -39,7 +39,13 @@ class AccountController extends Controller
         $data = $request->validate([
             'balance'      => 'required|numeric|min:0',
             'opening_date' => 'required|date',
-        ]);
+        ], [
+        'balance.required'      => 'Bakiye alanı zorunludur.',
+        'balance.numeric'       => 'Bakiye sayısal bir değer olmalıdır.',
+        'balance.min'           => 'Bakiye sıfırdan küçük olamaz.',
+        'opening_date.required' => 'Açılış tarihi zorunludur.',
+        'opening_date.date'     => 'Geçerli bir tarih formatı giriniz.',
+    ]);
 
         Account::create($data + [
             'customer_id' => Auth::user()->customer_id,

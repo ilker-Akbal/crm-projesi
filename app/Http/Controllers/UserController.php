@@ -36,6 +36,14 @@ class UserController extends Controller
     'customer_id' => 'required|exists:customers,id',          // ➋
     'active'      => 'nullable|boolean',
     'password'    => 'nullable|string|min:8',
+], [
+    'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
+    'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
+    'role.required'        => 'Rol seçilmelidir.',
+    'role.in'              => 'Geçersiz bir rol seçildi.',
+    'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
+    'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
+    'password.min'         => 'Parola en az 8 karakter olmalıdır.',
 ]);
 
 $data['active']   = $request->has('active');
@@ -70,6 +78,14 @@ User::create($data);
     'customer_id' => 'required|exists:customers,id',          // ➋
     'active'      => 'nullable|boolean',
     'password'    => 'nullable|string|min:8',
+], [
+    'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
+    'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
+    'role.required'        => 'Rol seçilmelidir.',
+    'role.in'              => 'Geçersiz bir rol seçildi.',
+    'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
+    'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
+    'password.min'         => 'Parola en az 8 karakter olmalıdır.',
 ]);
 
 $data['active']   = $request->has('active');

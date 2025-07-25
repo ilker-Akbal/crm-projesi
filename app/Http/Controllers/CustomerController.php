@@ -49,7 +49,16 @@ class CustomerController extends Controller
             'password'      => 'required|string|min:8|confirmed',
             'active'        => 'boolean',
             'role'          => 'required|in:admin,manager,user',
-        ]);
+        ], [
+    'customer_name.required' => 'Müşteri adı zorunludur.',
+    'customer_type.required' => 'Müşteri türü seçilmelidir.',
+    'username.required'      => 'Kullanıcı adı zorunludur.',
+    'username.unique'        => 'Bu kullanıcı adı zaten alınmış.',
+    'password.required'      => 'Şifre girilmelidir.',
+    'password.min'           => 'Şifre en az 8 karakter olmalıdır.',
+    'password.confirmed'     => 'Şifreler uyuşmuyor.',
+    'role.required'          => 'Rol seçilmelidir.',
+]);
 
         DB::transaction(function () use ($data, $request) {
 
@@ -115,7 +124,22 @@ class CustomerController extends Controller
             'phone'         => 'nullable|string|max:50',
             'email'         => 'nullable|email|max:255',
             'address'       => 'nullable|string',
-        ]);
+        ], [
+        'customer_name.required' => 'Müşteri adı zorunludur.',
+        'customer_name.string'   => 'Müşteri adı metin olmalıdır.',
+        'customer_name.max'      => 'Müşteri adı en fazla 255 karakter olabilir.',
+
+        'customer_type.required' => 'Müşteri türü zorunludur.',
+        'customer_type.in'       => 'Geçerli bir müşteri türü seçiniz.',
+
+        'phone.string'           => 'Telefon metin formatında olmalıdır.',
+        'phone.max'              => 'Telefon numarası en fazla 50 karakter olabilir.',
+
+        'email.email'            => 'Geçerli bir e-posta adresi giriniz.',
+        'email.max'              => 'E-posta en fazla 255 karakter olabilir.',
+
+        'address.string'         => 'Adres metin formatında olmalıdır.',
+    ]);
 
         $customer->update($data + ['updated_by' => Auth::id() ?? 1]);
 

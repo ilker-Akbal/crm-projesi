@@ -17,15 +17,17 @@
 
         <div class="card-body">
           <div class="form-group">
-            <label for="title">Başlık *</label>
-            <input name="title"
-                   id="title"
-                   class="form-control @error('title') is-invalid @enderror"
-                   value="{{ old('title') }}"
-                   required>
-            @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
+  <label for="title">Konu Başlığı *</label>
+  <select name="title"
+          id="title"
+          class="form-control @error('title') is-invalid @enderror"
+          required>
+    <option value="" disabled {{ old('title') ? '' : 'selected' }}>-- Konu seçiniz --</option>
+    <option value="Teknik Destek" {{ old('title') == 'Teknik Destek' ? 'selected' : '' }}>Teknik Destek</option>
+    <option value="Faturalama ve Ödeme" {{ old('title') == 'Faturalama ve Ödeme' ? 'selected' : '' }}>Faturalama ve Ödeme</option>
+  </select>
+  @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
           <div class="form-group">
             <label for="explanation">Açıklama</label>
             <textarea name="explanation"
