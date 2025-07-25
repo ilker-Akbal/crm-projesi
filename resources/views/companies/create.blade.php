@@ -5,8 +5,6 @@
 <div class="container">
   <h1>Yeni Firma Ekle</h1>
 
-  
-
   <form action="{{ route('companies.store') }}" method="POST">
     @csrf
 
@@ -29,15 +27,15 @@
       <div class="form-group col-md-6">
         <label for="tax_number">Vergi Numarası</label>
         <input
-  type="text"
-  pattern="\d{1,11}"
-  maxlength="11"
-  inputmode="numeric"
-  class="form-control @error('tax_number') is-invalid @enderror"
-  id="tax_number"
-  name="tax_number"
-  value="{{ old('tax_number') }}"
->
+          type="text"
+          pattern="\d{1,11}"
+          maxlength="11"
+          inputmode="numeric"
+          class="form-control @error('tax_number') is-invalid @enderror"
+          id="tax_number"
+          name="tax_number"
+          value="{{ old('tax_number') }}"
+        >
         @error('tax_number')
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -45,15 +43,15 @@
       <div class="form-group col-md-6">
         <label for="phone_number">Telefon</label>
         <input
-  type="text"
-  pattern="\d{1,11}"
-  maxlength="11"
-  inputmode="numeric"
-  class="form-control @error('phone_number') is-invalid @enderror"
-  id="phone_number"
-  name="phone_number"
-  value="{{ old('phone_number') }}"
->
+          type="text"
+          pattern="\d{1,11}"
+          maxlength="11"
+          inputmode="numeric"
+          class="form-control @error('phone_number') is-invalid @enderror"
+          id="phone_number"
+          name="phone_number"
+          value="{{ old('phone_number') }}"
+        >
         @error('phone_number')
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -102,6 +100,19 @@
         @enderror
       </div>
       <div class="form-group col-md-4">
+        <label for="foundation_date">Kuruluş Tarihi</label>
+        <input
+          type="date"
+          class="form-control @error('foundation_date') is-invalid @enderror"
+          id="foundation_date"
+          name="foundation_date"
+          value="{{ old('foundation_date') }}"
+        >
+        @error('foundation_date')
+          <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+      </div>
+      <div class="form-group col-md-4">
         <label for="current_role">Cari Rol *</label>
         <select
           id="current_role"
@@ -118,8 +129,7 @@
           <div class="invalid-feedback">{{ $message }}</div>
         @enderror
       </div>
-      <input type="hidden" name="customer_id" 
-         value="{{ auth()->user()->customer_id }}">
+      <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
     </div>
 
     <button type="submit" class="btn btn-primary">Kaydet</button>

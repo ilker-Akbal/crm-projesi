@@ -11,7 +11,11 @@
     <li class="list-group-item"><strong>Adres:</strong> {{ $company->address }}</li>
     <li class="list-group-item">
       <strong>Kayıt Tarihi:</strong> 
-      {{ \Carbon\Carbon::parse($company->registration_date)->format('d.m.Y') }}
+      {{ $company->registration_date ? \Carbon\Carbon::parse($company->registration_date)->format('d.m.Y') : '-' }}
+    </li>
+    <li class="list-group-item">
+      <strong>Kuruluş Tarihi:</strong>
+      {{ $company->foundation_date ? \Carbon\Carbon::parse($company->foundation_date)->format('d.m.Y') : '-' }}
     </li>
     <li class="list-group-item">
       <strong>Cari Rol:</strong> 
@@ -22,7 +26,9 @@
         @default Belirtilmemiş
       @endswitch
     </li>
-    <li class="list-group-item"><strong>Müşteri:</strong> {{ $company->customer?->customer_name ?? 'Müşteri Yok' }}</li>
+    <li class="list-group-item">
+      <strong>Müşteri:</strong> {{ $company->customer?->customer_name ?? 'Müşteri Yok' }}
+    </li>
   </ul>
   <a href="{{ route('companies.index') }}" class="btn btn-secondary mt-3">Listeye Dön</a>
 </div>

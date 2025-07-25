@@ -12,6 +12,42 @@
 
   {{-- Sağ kısım --}}
   <ul class="navbar-nav ml-auto">
+    {{-- Yıldönümü Hatırlatmaları (Kırmızı Takvim + Siyah Yazılı Badge) --}}
+    @php
+      use App\Models\Company;
+      use Carbon\Carbon;
+
+      $anniversaryCount = Company::where('customer_id', auth()->user()->customer_id ?? null)
+        ->whereNotNull('foundation_date')
+        ->get()
+        ->filter(fn($company) => Carbon::parse($company->foundation_date)->format('m-d') === now()->format('m-d'))
+        ->count();
+    @endphp
+
+    <li class="nav-item">
+      <a class="nav-link position-relative d-flex align-items-center gap-1" 
+         href="{{ route('reminders.index') }}" 
+         title="Bugün Kutlamalar Var">
+        {{-- Takvim ikonu kırmızı --}}
+        <i class="fas fa-calendar-day" style="font-size:1.4rem; color:##82CDFF; margin-left:4px;"></i>
+
+        {{-- Eğer yıldönümü varsa, siyah yazılı badge --}}
+        @if($anniversaryCount > 0)
+          <span class="badge navbar-badge" style="
+              background-color: #facc15;
+              color: #000;
+              font-weight: bold;
+              font-size: 0.7rem;
+              top: 0;
+              right: 0;
+              border-radius: 8px;
+          ">
+            {{ $anniversaryCount }}
+          </span>
+        @endif
+      </a>
+    </li>
+
     {{-- Hızlı Destek Talebi --}}
     <li class="nav-item">
       <a class="nav-link" href="{{ route('support.create') }}" title="Hızlı Destek Talebi">

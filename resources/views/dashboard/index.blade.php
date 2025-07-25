@@ -104,27 +104,34 @@
     </div>
   </div>
 
-  <!-- 4. Bölüm: Uyarılar -->
+    <!-- 4. Bölüm: Uyarılar -->
   <div class="dashboard-card">
-    <div class="dashboard-card-header">Uyarılar</div>
-    <div class="dashboard-card-body">
-      <h6 class="mb-2">Yaklaşan Teslimatlar</h6>
-      <ul class="list-group flex-grow-1 overflow-auto">
-        @forelse($upcoming as $o)
+  <div class="dashboard-card-header">Yaklaşan Teslimatlar</div>
+  <div class="dashboard-card-body">
+    @if($upcoming->isEmpty())
+      <p class="text-muted text-center">Yaklaşan teslimat yok</p>
+    @else
+      <ul class="list-group">
+        @foreach($upcoming as $o)
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>
-              <strong>#{{ $o->id }}</strong>
+              <a href="{{ route('orders.show', $o) }}" class="fw-bold text-decoration-none">
+                Sipariş #{{ $o->id }}
+              </a>
               <span class="ms-2">{{ $o->customer->customer_name }}</span>
             </div>
-            <span class="badge badge-danger">{{ \Carbon\Carbon::parse($o->delivery_date)->format('d.m.Y') }}</span>
+            {{-- Tarih rozetini mavi yaptık --}}
+            <span class="badge bg-primary">
+              {{ \Carbon\Carbon::parse($o->delivery_date)->format('d.m.Y') }}
+            </span>
           </li>
-        @empty
-          <li class="list-group-item text-center text-muted">Yaklaşan teslimat yok</li>
-        @endforelse
+        @endforeach
       </ul>
-    </div>
+    @endif
   </div>
 </div>
+
+
 @endsection
 
 @push('scripts')

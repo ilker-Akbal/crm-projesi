@@ -3,7 +3,6 @@
 @section('content')
 <section class="content">
   <div class="container-fluid">
-   
     <div class="card card-outline card-warning">
       <div class="card-header"><h3 class="card-title">Hatırlatıcı Düzenle</h3></div>
       <form action="{{ route('reminders.update', $reminder) }}" method="POST">
@@ -18,26 +17,6 @@
             <label for="reminder_date">Hatırlatma Tarihi *</label>
             <input type="date" name="reminder_date" id="reminder_date"
                    class="form-control" value="{{ old('reminder_date', $reminder->reminder_date) }}" required>
-          </div>
-          <div class="form-group">
-            <label for="customer_id">Müşteri *</label>
-            <select name="customer_id" id="customer_id" class="form-control" required>
-              @foreach($customers as $c)
-                <option value="{{ $c->id }}" {{ old('customer_id', $reminder->customer_id)==$c->id ? 'selected' : '' }}>
-                  {{ $c->customer_name }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="user_id">Kullanıcı *</label>
-            <select name="user_id" id="user_id" class="form-control" required>
-              @foreach($users as $u)
-                <option value="{{ $u->id }}" {{ old('user_id', $reminder->user_id)==$u->id ? 'selected' : '' }}>
-                  {{ $u->username }}
-                </option>
-              @endforeach
-            </select>
           </div>
           <div class="form-group">
             <label for="explanation">Açıklama</label>

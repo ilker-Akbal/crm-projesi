@@ -8,11 +8,13 @@ use Illuminate\Support\Str;
 use App\Models\Reminder;
 use App\Models\Customer;
 use App\Models\User;
+use App\Models\Company;  // Şirketler için eklendi
+use Carbon\Carbon;       // Tarih işlemleri için eklendi
 
 class ReminderController extends Controller
 {
     /* -------------------------------------------------
-     |  GET /reminders → Liste
+     |  GET /reminders → Liste (Dinamik yıldönümü ekli)
      * ------------------------------------------------*/
     public function index()
     {
@@ -21,20 +23,39 @@ class ReminderController extends Controller
                              ->latest('reminder_date')
                              ->get();
 
+        // Şirketlerin yıldönümlerini dinamik olarak listeye ekle (veritabanına kaydetmeden)
+        $companies = Company::where('customer_id', Auth::user()->customer_id)
+                            ->whereNotNull('foundation_date')
+                            ->get();
+
+        foreach ($companies as $company) {
+            $foundation = Carbon::parse($company->foundation_date);
+
+            // Eğer bugünün ay-gün bilgisi kuruluş tarihiyle eşleşirse
+            if ($foundation->format('m-d') === now()->format('m-d')) {
+                $years = now()->year - $foundation->year;
+
+                // Dinamik olarak hatırlatıcı ekle
+                $reminders->push(new Reminder([
+                    'title'         => "{$company->company_name} - {$years}. Yıl Dönümü Kutlaması",
+                    'reminder_date' => now()->toDateString(),
+                    'explanation'   => "{$company->company_name} şirketinin {$years}. yıl dönümü kutlanıyor.",
+                    'customer_id'   => $company->customer_id,
+                    'user_id'       => Auth::id(),
+                ]));
+            }
+        }
+
         return view('reminders.index', compact('reminders'));
     }
 
     /* -------------------------------------------------
-     |  GET /reminders/create → Form
+     |  GET /reminders/create → Yeni hatırlatıcı formu
      * ------------------------------------------------*/
     public function create()
     {
-        // Başka müşteri seçilmesin
         $customers = Customer::whereKey(Auth::user()->customer_id)->get();
-
-        // Kullanıcı listesi – tüm aktif kullanıcılar veya dilerseniz
-        // aynı müşteri içindeki kullanıcılar filtrelenebilir
-        $users = User::orderBy('username')->get();
+        $users     = User::orderBy('username')->get();
 
         return view('reminders.create', compact('customers', 'users'));
     }
@@ -56,7 +77,7 @@ class ReminderController extends Controller
         ]);
 
         return redirect()->route('reminders.index')
-                         ->with('success', 'Reminder created successfully.');
+                         ->with('success', 'Hatırlatıcı başarıyla eklendi.');
     }
 
     /* -------------------------------------------------
@@ -72,7 +93,7 @@ class ReminderController extends Controller
     }
 
     /* -------------------------------------------------
-     |  GET /reminders/{reminder}/edit → Form
+     |  GET /reminders/{reminder}/edit → Düzenle formu
      * ------------------------------------------------*/
     public function edit(Reminder $reminder)
     {
@@ -100,7 +121,7 @@ class ReminderController extends Controller
         $reminder->update($data);
 
         return redirect()->route('reminders.index')
-                         ->with('success', 'Reminder updated successfully.');
+                         ->with('success', 'Hatırlatıcı başarıyla güncellendi.');
     }
 
     /* -------------------------------------------------
@@ -113,11 +134,11 @@ class ReminderController extends Controller
         $reminder->delete();
 
         return redirect()->route('reminders.index')
-                         ->with('success', 'Reminder deleted successfully.');
+                         ->with('success', 'Hatırlatıcı başarıyla silindi.');
     }
 
     /* -------------------------------------------------
-     |  Yardımcı: hatırlatma sahibi mi?
+     |  Yardımcı: hatırlatma sahibini kontrol et
      * ------------------------------------------------*/
     private function authorizeReminder(Reminder $reminder): void
     {

@@ -1,12 +1,8 @@
-{{-- resources/views/companies/edit.blade.php --}}
 @extends('layouts.app')
-
 @section('title', 'Firma Düzenle')
 
 @section('content')
 <div class="container mt-4">
- 
-
   <div class="card card-outline card-primary">
     <div class="card-header">
       <h3 class="card-title">Firma Düzenle #{{ $company->id }}</h3>
@@ -33,23 +29,23 @@
         </div>
 
         {{-- Vergi Numarası --}}
-       <div class="form-group mb-3">
-  <label for="tax_number">Vergi Numarası</label>
-  <input
-    type="text"
-    class="form-control @error('tax_number') is-invalid @enderror"
-    id="tax_number"
-    name="tax_number"
-    value="{{ old('tax_number', $company->tax_number) }}"
-    maxlength="11"
-    pattern="\d{11}"
-    inputmode="numeric"
-    required
-  >
-  @error('tax_number')
-    <div class="invalid-feedback">{{ $message }}</div>
-  @enderror
-</div>
+        <div class="form-group mb-3">
+          <label for="tax_number">Vergi Numarası</label>
+          <input
+            type="text"
+            class="form-control @error('tax_number') is-invalid @enderror"
+            id="tax_number"
+            name="tax_number"
+            value="{{ old('tax_number', $company->tax_number) }}"
+            maxlength="11"
+            pattern="\d{11}"
+            inputmode="numeric"
+            required
+          >
+          @error('tax_number')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
 
         {{-- Adres --}}
         <div class="form-group mb-3">
@@ -67,24 +63,22 @@
 
         {{-- Telefon --}}
         <div class="form-group mb-3">
-  <label for="phone_number">Telefon</label>
-  <input
-    type="text"
-    pattern="[0-9]*"
-    inputmode="numeric"
-    class="form-control @error('phone_number') is-invalid @enderror"
-    id="phone_number"
-    name="phone_number"
-    value="{{ old('phone_number', $company->phone_number) }}"
-    maxlength="11"
-    pattern="\d{11}"
-    inputmode="numeric"
-    required
-  >
-  @error('phone_number')
-    <div class="invalid-feedback">{{ $message }}</div>
-  @enderror
-</div>
+          <label for="phone_number">Telefon</label>
+          <input
+            type="text"
+            class="form-control @error('phone_number') is-invalid @enderror"
+            id="phone_number"
+            name="phone_number"
+            value="{{ old('phone_number', $company->phone_number) }}"
+            maxlength="11"
+            pattern="\d{11}"
+            inputmode="numeric"
+            required
+          >
+          @error('phone_number')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
 
         {{-- E-Posta --}}
         <div class="form-group mb-3">
@@ -109,38 +103,47 @@
             class="form-control @error('registration_date') is-invalid @enderror"
             id="registration_date"
             name="registration_date"
-             value="{{ old('registration_date', \Carbon\Carbon::parse($company->registration_date)->format('Y-m-d')) }}"
+            value="{{ old('registration_date', $company->registration_date ? \Carbon\Carbon::parse($company->registration_date)->format('Y-m-d') : '') }}"
           >
           @error('registration_date')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
         </div>
 
-        {{-- Mevcut Rol --}}
-        <select
-  id="current_role"
-  name="current_role"
-  class="form-control @error('current_role') is-invalid @enderror"
-  required
->
-  <option value="" disabled {{ old('current_role', $company->current_role) ? '' : 'selected' }}>-- Rol seçiniz --</option>
-  <option value="customer"  {{ old('current_role', $company->current_role) == 'customer'  ? 'selected' : '' }}>Müşteri</option>
-  <option value="supplier"  {{ old('current_role', $company->current_role) == 'supplier'  ? 'selected' : '' }}>Tedarikçi</option>
-  <option value="candidate" {{ old('current_role', $company->current_role) == 'candidate' ? 'selected' : '' }}>Aday</option>
-</select>
-@error('current_role')
-  <div class="invalid-feedback">{{ $message }}</div>
-@enderror
+        {{-- Kuruluş Tarihi --}}
+        <div class="form-group mb-3">
+          <label for="foundation_date">Kuruluş Tarihi</label>
+          <input
+            type="date"
+            class="form-control @error('foundation_date') is-invalid @enderror"
+            id="foundation_date"
+            name="foundation_date"
+            value="{{ old('foundation_date', $company->foundation_date ? \Carbon\Carbon::parse($company->foundation_date)->format('Y-m-d') : '') }}"
+          >
+          @error('foundation_date')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
         </div>
 
-        {{-- Eğer şirketin bir customer_id’si varsa, gizli input veya select --}}
-        <input
-          type="hidden"
-          name="customer_id"
-          value="{{ old('customer_id', $company->customer_id) }}"
+        {{-- Mevcut Rol --}}
+        <select
+          id="current_role"
+          name="current_role"
+          class="form-control @error('current_role') is-invalid @enderror"
+          required
         >
+          <option value="" disabled {{ old('current_role', $company->current_role) ? '' : 'selected' }}>-- Rol seçiniz --</option>
+          <option value="customer"  {{ old('current_role', $company->current_role) == 'customer'  ? 'selected' : '' }}>Müşteri</option>
+          <option value="supplier"  {{ old('current_role', $company->current_role) == 'supplier'  ? 'selected' : '' }}>Tedarikçi</option>
+          <option value="candidate" {{ old('current_role', $company->current_role) == 'candidate' ? 'selected' : '' }}>Aday</option>
+        </select>
+        @error('current_role')
+          <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
 
-        <div class="d-flex justify-content-end">
+        <input type="hidden" name="customer_id" value="{{ old('customer_id', $company->customer_id) }}">
+
+        <div class="d-flex justify-content-end mt-3">
           <a href="{{ route('companies.index') }}" class="btn btn-secondary me-2">İptal</a>
           <button type="submit" class="btn btn-primary">Güncelle</button>
         </div>
