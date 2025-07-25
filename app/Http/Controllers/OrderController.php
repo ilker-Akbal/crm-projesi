@@ -11,7 +11,7 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Customer;
 use App\Models\Company;
-
+use App\Models\ProductSerial;
 class OrderController extends Controller
 {
     /* -------- GET /orders ---------- */
@@ -72,33 +72,33 @@ public function store(Request $request)
             'is_paid'       => $isPaid,
             'paid_at'       => $isPaid ? now() : null,
         ]);
+foreach ($items as $i) {
+    $order->products()->attach(
+        $i['product_id'],
+        ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
+    );
 
-        foreach ($items as $i) {
-            $order->products()->attach(
-                $i['product_id'],
-                ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
-            );
-            $delta = $data['order_type'] === Order::SALE ? -$i['amount'] :  $i['amount'];
-            $this->moveStock($i['product_id'], $delta);
-        }
+    if ($data['order_type'] === Order::SALE) {        // ---- SALE
+        $this->reserveStock($i['product_id'], $i['amount']);
+        $this->markSerialsReserved($i['product_id'],  // +++ YENİ
+                                   $i['amount'],
+                                   $order->id);
+    } else {                                          // ---- PURCHASE
+        $this->moveStock($i['product_id'],  $i['amount']);
+    }
+}
     });
 
-    $order->refresh();                                       // en güncel hâl
+    $order->refresh();
 
-    /* Satın-alma + Ödeme ✓  →  ilk ürün için seri girişi */
-    if ($order->order_type === Order::PURCHASE && $order->is_paid) {
-        $firstProduct = $order->products()->first();
-        return redirect()
-            ->route('products.serials.create', [
-                'product' => $firstProduct->id,
-                'order'   => $order->id      // ?order=..
-            ])
-            ->with('success', 'Sipariş eklendi – seri numaralarını girin.');
+    if ($order->order_type === Order::SALE && $order->is_paid) {
+        $this->finalizeSale($order);
     }
 
     return redirect()->route('orders.index')
                      ->with('success', 'Sipariş başarıyla eklendi!');
 }
+
 
     /* -------- GET /orders/{order}/edit ---------- */
     public function edit(Order $order)
@@ -141,24 +141,23 @@ public function store(Request $request)
 /* -------- PUT /orders/{order} ---------- */
 public function update(Request $request, Order $order)
 {
-    /* 1. Eski satır miktar haritası */
     $oldQtyMap = $order->products->pluck('pivot.amount', 'id')->toArray();
 
-    /* 2. Doğrulama + yeni satırlar */
     $data   = $this->validateOrder($request, $order);
     $items  = $this->prepareItems($data['items'], $data['order_type'], $oldQtyMap);
-    $wasPaid = $order->is_paid;        // eski ödeme durumu
+    $wasPaid = $order->is_paid;
 
-    /* 3. Transaction */
     DB::transaction(function () use ($request, $data, $items, $order, $oldQtyMap) {
 
-        /* 3a eski stok geri al */
-        foreach ($oldQtyMap as $pid => $qty) {
-            $delta = $order->order_type === Order::SALE ?  $qty : -$qty;
-            $this->moveStock($pid, $delta);
-        }
+        /* eski rezervasyon / stok geri al */
+       foreach ($oldQtyMap as $pid => $qty) {
+    if ($order->order_type === Order::SALE) {
+        $this->freeReservedStock($pid, $qty, $order->id);   // *** 3. parametre eklendi
+    } else {
+        $this->moveStock($pid, -$qty);
+    }
+}
 
-        /* 3b siparişi güncelle */
         $total  = $items->sum(fn($r) => $r['amount'] * $r['unit_price']);
         $isPaid = $request->boolean('is_paid');
 
@@ -173,57 +172,83 @@ public function update(Request $request, Order $order)
             'paid_at'       => $isPaid ? now() : null,
         ]);
 
-        /* 3c yeni satırlar + stok */
         $order->products()->sync([]);
         foreach ($items as $i) {
-            $order->products()->attach(
-                $i['product_id'],
-                ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
-            );
-            $delta = $data['order_type'] === Order::SALE ? -$i['amount'] :  $i['amount'];
-            $this->moveStock($i['product_id'], $delta);
-        }
+    $order->products()->attach(
+        $i['product_id'],
+        ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
+    );
+
+    if ($data['order_type'] === Order::SALE) {
+        $this->reserveStock($i['product_id'], $i['amount']);
+        $this->markSerialsReserved($i['product_id'],          // +++ YENİ
+                                   $i['amount'],
+                                   $order->id);
+    } else {
+        $this->moveStock($i['product_id'],  $i['amount']);
+    }
+}
     });
 
-    /* 4. En güncel hâli al */
     $order->refresh();
 
-    /* 5. Yönlendirme: ödeme ilk kez onaylandıysa & purchase ise */
-    $nowPaidAndPurchase =
-        !$wasPaid && $order->is_paid && $order->order_type === Order::PURCHASE;
-
-    if ($nowPaidAndPurchase) {
-        $firstProduct = $order->products()->first(); // siparişteki ilk ürün
-        return redirect()
-            ->route('products.serials.create', [
-                'product' => $firstProduct->id,      // URL param -> {product}
-                'order'   => $order->id              // query  -> ?order=34
-            ])
-            ->with('success', 'Ödeme onaylandı – seri numaralarını girin.');
+    if (!$wasPaid && $order->is_paid && $order->order_type === Order::SALE) {
+        $this->finalizeSale($order);
     }
 
-    /* 6. Varsayılan dönüş */
     return redirect()->route('orders.index')
                      ->with('success', 'Sipariş güncellendi!');
 }
 
+/* === Seri: AVAILABLE → RESERVED ============================ */
+private function markSerialsReserved(int $productId, int $qty, int $orderId): void
+{
+    ProductSerial::where('product_id', $productId)
+        ->where('status', ProductSerial::AVAILABLE)
+        ->limit($qty)
+        ->update([
+            'status'   => ProductSerial::RESERVED,
+            'order_id' => $orderId,
+        ]);
+}
+
+/* === Seri: RESERVED → AVAILABLE (iptal) ==================== */
+private function unreserveSerials(int $productId, int $qty, int $orderId): void
+{
+    ProductSerial::where('product_id', $productId)
+        ->where('status', ProductSerial::RESERVED)
+        ->where('order_id', $orderId)
+        ->limit($qty)
+        ->update([
+            'status'   => ProductSerial::AVAILABLE,
+            'order_id' => null,
+        ]);
+}
+
+
+
     /* -------- DELETE /orders/{order} ---------- */
     public function destroy(Order $order)
-    {
-        DB::transaction(function () use ($order) {
-            foreach ($order->products as $line) {
-                $delta = $order->order_type === 'sale'
-                       ?  $line->pivot->amount     // satış iptali → stok geri
-                       : -$line->pivot->amount;    // alış iptali  → stok düş
-                $this->moveStock($line->id, $delta);                                 // ⭐
-            }
-            $order->products()->detach();
-            $order->delete();
-        });
+{
+    DB::transaction(function () use ($order) {
+        foreach ($order->products as $line) {
+            $qty = $line->pivot->amount;
+if ($order->order_type === Order::SALE) {
+    $order->is_paid
+        ? $this->moveStock($line->id, $qty)               // satış geri al
+        : $this->freeReservedStock($line->id, $qty, $order->id); // rezerv iptal
+} else {
+    $this->moveStock($line->id, -$qty);                   // purchase iptal
+}
+        }
+        $order->products()->detach();
+        $order->delete();
+    });
 
-        return redirect()->route('orders.index')
-                    ->with('success', 'Sipariş silindi.');
-    }
+    return redirect()->route('orders.index')
+                     ->with('success', 'Sipariş silindi.');
+}
+
 
     /* ======== Yardımcılar ======== */
 
@@ -292,6 +317,52 @@ private function moveStock(int $productId, int $delta): void
         'updated_by'     => Auth::id(),
     ]);
 }
+
+/* === Stok rezervasyonu (yalnız sale) ========================= */
+private function reserveStock(int $productId, int $qty): void
+{
+    if ($qty <= 0) return;
+
+    $stock = ProductStock::latest('id')->firstWhere('product_id', $productId);
+    throw_if(!$stock || $stock->available_stock < $qty,
+        ValidationException::withMessages(['stok' => 'Yetersiz stok (rezervasyon yapılamadı)'])
+    );
+
+    $stock->increment('reserved_stock', $qty);
+}
+
+/* === Satış ödeme onayı → gerçek stok düşümü ================== */
+private function finalizeSale(Order $order): void
+{
+    foreach ($order->products as $p) {
+        $qty   = $p->pivot->amount;
+        $stock = ProductStock::latest('id')->firstWhere('product_id', $p->id);
+
+        // toplam + rezerve birlikte düş
+        $stock->decrement('reserved_stock', $qty);
+        $stock->decrement('stock_quantity', $qty);
+
+        // seri numaralarını “sold” yap
+        ProductSerial::where('order_id', $order->id)
+                     ->where('product_id', $p->id)
+                     ->update(['status' => ProductSerial::SOLD]);
+    }
+}
+
+/* === Rezervasyonu iptal et (sipariş silme / güncelleme) ===== */
+private function freeReservedStock(int $productId, int $qty, int $orderId): void
+{
+    if ($qty <= 0) return;
+
+    ProductStock::latest('id')
+        ->firstWhere('product_id', $productId)
+        ->decrement('reserved_stock', $qty);
+
+    // seri numaralarını serbest bırak
+    $this->unreserveSerials($productId, $qty, $orderId);
+}
+
+
  public function show(Order $order)
 {
     if ($order->customer_id !== Auth::user()->customer_id) {

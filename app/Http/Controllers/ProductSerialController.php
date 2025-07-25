@@ -61,15 +61,14 @@ class ProductSerialController extends Controller
         // Dinamik tek tek ekleme
         if (!empty($data['serials']) && is_array($data['serials'])) {
             foreach ($data['serials'] as $sn) {
-                $sn = trim($sn);
-                if ($sn) {
-                    ProductSerial::create([
-                        'product_id'    => $data['product_id'],
-                        'serial_number' => $sn,
-                        'created_by'    => Auth::id(),
-                    ]);
-                }
-            }
+    ProductSerial::create([
+        'product_id'    => $data['product_id'],
+        'serial_number' => $sn,
+        'status'        => ProductSerial::FREE,   // <-- EKLENDİ
+        'created_by'    => Auth::id(),
+    ]);
+}
+
         }
 
         return redirect()->route('product_serials.index')

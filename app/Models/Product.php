@@ -26,7 +26,10 @@ public function serials()
     public function customer()      { return $this->belongsTo(Customer::class); }
     public function stocks()        { return $this->hasMany(ProductStock::class); }
     public function prices()        { return $this->hasMany(ProductPrice::class); }
-    public function orderLines()    { return $this->hasMany(OrderProduct::class, 'Order_id'); }
+       public function orderLines()
+    {
+        return $this->hasMany(OrderProduct::class, 'product_id');
+    }
     public function offerLines()    { return $this->hasMany(OfferProduct::class); }
 
 
