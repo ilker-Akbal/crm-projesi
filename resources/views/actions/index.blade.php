@@ -14,8 +14,7 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>Müşteri</th>
-                <th>Kullanıcı</th>
+                <th>Kişi</th>
                 <th>Tür</th>
                 <th>Tarih</th>
                 <th>Durum</th>
@@ -26,9 +25,16 @@
             <tbody>
               @forelse($actions as $a)
                 <tr>
-                  <td>{{ $a->customer->customer_name }}</td>
-                  <td>{{ $a->user->username }}</td>
-                  <td>{{ $a->action_type }}</td>
+                  <td>{{ $a->contact->name ?? '-' }}</td>
+                  <td>
+                    @switch($a->action_type)
+                      @case('meeting') Toplantı @break
+                      @case('call')    Telefon  @break
+                      @case('email')   E-posta  @break
+                      @case('visit')   Ziyaret  @break
+                      @default         Diğer
+                    @endswitch
+                  </td>
                   <td>{{ \Carbon\Carbon::parse($a->action_date)->format('d.m.Y') }}</td>
                   <td>
                     @switch($a->status)
@@ -50,7 +56,7 @@
                   </td>
                 </tr>
               @empty
-                <tr><td colspan="7" class="text-center">Kayıtlı işlem bulunamadı.</td></tr>
+                <tr><td colspan="6" class="text-center">Kayıtlı işlem bulunamadı.</td></tr>
               @endforelse
             </tbody>
           </table>

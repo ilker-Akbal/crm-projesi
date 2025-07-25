@@ -1,12 +1,9 @@
 <?php
-// app/Models/Action.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Customer;
-use App\Models\User;
 
 class Action extends Model
 {
@@ -14,9 +11,12 @@ class Action extends Model
 
     protected $fillable = [
         'customer_id',
-        'user_id',
+        'contact_id',
+        'user_id',          //  ≡ eklendi
         'action_type',
         'action_date',
+        'status',
+        'description',
         'updated_by',
     ];
 
@@ -24,13 +24,19 @@ class Action extends Model
         'action_date' => 'date',
     ];
 
+    /* İlişkiler ------------------------------------------------------------- */
+    public function contact()
+    {
+        return $this->belongsTo(\App\Models\Contact::class);
+    }
+
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(\App\Models\Customer::class);
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class);
     }
 }
