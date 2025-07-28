@@ -14,7 +14,16 @@
 
       <form action="{{ route('products.serials.store', $product) }}" method="POST">
         @csrf
-
+             {{-- ① Hata mesajları --}}
+  @if ($errors->any())
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
         {{-- Tek isim kullanalım: expected_qty --}}
         input type="hidden" name="order_id"     value="{{ $order->id ?? '' }}">
   <input type="hidden" name="expected_qty" value="{{ $added }}">  {{-- <<< burada $added --}}

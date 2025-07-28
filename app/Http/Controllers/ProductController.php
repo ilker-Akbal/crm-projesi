@@ -210,77 +210,95 @@ public function update(Request $request, Product $product)
 
 public function createSerials(Request $request, Product $product)
 {
+    // 0) Yetki: sadece kendi müşterinizin ürünü
     $this->authorizeProduct($product);
 
-    $orderId  = $request->query('order');
-    $added    = (int) $request->query('added');
+    // 1) Parametreleri oku
+    $orderId = $request->query('order');          // siparişten mi geldik?
+    $added   = (int) $request->query('added', 0);  // stok güncellemede eklenen miktar
 
-    // ▼ YENİ ÜRÜN senaryosu: added 0 olacak
-    if (! $orderId && $added === 0) {
-        $qty = optional($product->stocks()->latest('id')->first())
-               ->stock_quantity ?? 0;
-        abort_if($qty <= 0, 404, 'Bu ürün için eklenecek seri yok.');
+    // 2) Sipariş rezervasyonu senaryosu
+    if ($orderId) {
+        // siparişi, pivot üzerinden miktarıyla birlikte yükle
+        $order = Order::with('products')->findOrFail($orderId);
+        $pivot = $order->products()
+                       ->where('product_id', $product->id)
+                       ->firstOrFail()
+                       ->pivot;
+        // daha önce girilmiş seri sayısı
+        $existing = ProductSerial::where('order_id', $orderId)
+                                 ->where('product_id', $product->id)
+                                 ->count();
+        // kalan girilmesi gereken adedi hesapla
+        $remaining = $pivot->amount - $existing;
+        abort_if($remaining <= 0,
+            404,
+            'Bu ürün için gerekli seri numaralarının tamamı zaten girilmiş.'
+        );
+
         return view('products.serials_create', [
             'product' => $product,
-            'order'   => null,
-            'qty'     => $qty,
-            'added'   => 0,    // <<< burada artık $qty değil 0
+            'order'   => $order,
+            'qty'     => $remaining,
+            'added'   => $remaining, // form’da expected_qty olarak da kullanabilirsiniz
         ]);
     }
 
-    // ▼ Stok güncelleme veya sipariş senaryosuna devam…
-    if (! $orderId) {
-        // stok güncelleme formundan geliyorsak
-        $qty = $added;
+    // 3) Yeni ürün oluşturma senaryosu (ilk kez stok giriyoruz)
+    if ($added === 0) {
+        // ilk stok miktarı
+        $initial = optional($product->stocks()->latest('id')->first())
+                   ->stock_quantity ?? 0;
+        abort_if($initial <= 0,
+            404,
+            'Bu ürün için girilecek seri numarası bulunmuyor.'
+        );
+
         return view('products.serials_create', [
             'product' => $product,
             'order'   => null,
-            'qty'     => $qty,
-            'added'   => $qty, // stok güncellemede doğru artış miktarı
+            'qty'     => $initial,
+            'added'   => 0,
         ]);
     }
 
-    // ► sipariş rezervasyonu senaryosu
-    $order = Order::with('products')->findOrFail($orderId);
-    $pivot = $order->products()->whereKey($product->id)->firstOrFail()->pivot;
+    // 4) Stok güncelleme senaryosu (mevcut ürüne yeni qty ekliyoruz)
     return view('products.serials_create', [
         'product' => $product,
-        'order'   => $order,
-        'qty'     => $pivot->amount,
-        'added'   => 0,
+        'order'   => null,
+        'qty'     => $added,
+        'added'   => $added,
     ]);
 }
 
 public function storeSerials(Request $request, Product $product)
 {
-    // Yetki
     $this->authorizeProduct($product);
 
-    // 1) Parametreler
-    $orderId     = $request->input('order_id');          // siparişten gelense dolu
+    $orderId     = $request->input('order_id');
     $expectedQty = $request->filled('expected_qty')
                  ? (int) $request->input('expected_qty')
-                 : null;                                 // güncelleme değilse null
+                 : null;
 
-    // 2) Hangi senaryo? (createSerials'teki mantıkla birebir)
     if ($orderId) {
-        // satış rezervasyonu senaryosu
-        $pivot = Order::findOrFail($orderId)
-                      ->products()
-                      ->findOrFail($product->id)
-                      ->pivot;
-        $qty = $pivot->amount;
-    } elseif ($expectedQty !== null && $expectedQty > 0) {
-        // stok güncelleme senaryosu
+        // satın-alma rezervasyonunda kalan miktarı tekrar hesapla
+        $pivot    = Order::findOrFail($orderId)
+                         ->products()
+                         ->findOrFail($product->id)
+                         ->pivot;
+        $existing = ProductSerial::where('order_id', $orderId)
+                                 ->where('product_id', $product->id)
+                                 ->count();
+        $qty = $pivot->amount - $existing;
+    }
+    elseif ($expectedQty !== null && $expectedQty > 0) {
         $qty = $expectedQty;
-    } else {
-        // yeni ürün–ilk stok senaryosu
-        $qty = $product->stocks()
-                       ->latest('id')
-                       ->value('stock_quantity') ?? 0;
+    }
+    else {
+        // yeni ürün senaryosu
+        $qty = $product->stocks()->latest('id')->value('stock_quantity') ?? 0;
     }
 
-    // 3) Validation
     $data = $request->validate([
         'serials'   => "required|array|size:$qty",
         'serials.*' => 'required|string|distinct|unique:product_serials,serial_number',
@@ -288,7 +306,6 @@ public function storeSerials(Request $request, Product $product)
         'serials.size' => "Lütfen tam $qty adet seri numarası girin."
     ]);
 
-    // 4) Kayıt + sadece stok güncelleme senaryosunda moveStock
     DB::transaction(function () use ($data, $product, $orderId, $expectedQty, $qty) {
         foreach ($data['serials'] as $sn) {
             ProductSerial::create([
@@ -302,14 +319,13 @@ public function storeSerials(Request $request, Product $product)
             ]);
         }
 
-        // **SADECE** stok güncelleme senaryosunda stoğu artır
+        // sadece stok güncelleme senaryosunda stoğu artır
         if (is_null($orderId) && $expectedQty !== null && $expectedQty > 0) {
             resolve(\App\Http\Controllers\OrderController::class)
                 ->moveStock($product->id, $expectedQty);
         }
     });
 
-    // 5) Yönlendirme
     if ($orderId) {
         return redirect()
             ->route('orders.show', $orderId)

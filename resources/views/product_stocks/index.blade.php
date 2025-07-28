@@ -1,5 +1,3 @@
-
-
 @extends('layouts.app')
 
 @section('content')
@@ -11,7 +9,7 @@
       <div class="card-header d-flex justify-content-between">
         <h3 class="card-title mb-0">Ürün Stokları</h3>
         <div class="card-tools">
-          <a href="{{ route('product_serials.index') }}" class="btn btn-sm btn-primary mr-2">
+          <a href="{{ route('product_serials.index') }}" class="btn btn-sm btn-primary">
             Seri Numaraları
           </a>
         </div>
@@ -33,13 +31,13 @@
             </select>
           </div>
           <div class="col-md-3">
-            <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control" placeholder="Başlangıç">
+            <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control">
           </div>
           <div class="col-md-3">
-            <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control" placeholder="Bitiş">
+            <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
           </div>
-          <div class="col-md-3">
-            <button type="submit" class="btn btn-primary">Filtrele</button>
+          <div class="col-md-3 d-flex">
+            <button type="submit" class="btn btn-primary me-2">Filtrele</button>
             <a href="{{ route('product_stocks.index') }}" class="btn btn-secondary">Temizle</a>
           </div>
         </form>
@@ -49,7 +47,10 @@
     {{-- Tablo --}}
     <div class="card card-outline card-primary">
       <div class="card-body p-0">
-        @php $stocksArr = $productStocks->values(); @endphp
+        @php
+          // Tarihe göre artan sırada işlemleri alalım
+          $movements = $productStocks->sortBy('update_date')->values();
+        @endphp
         <table class="table table-hover mb-0">
           <thead class="text-center">
             <tr>
@@ -59,32 +60,32 @@
               <th class="text-end">Rezerve</th>
               <th>Kullanılabilir</th>
               <th>Güncelleme</th>
-              <th>Hareket Türü</th>
+              <th>Hareket</th>
               <th class="text-end">Miktar</th>
             </tr>
           </thead>
           <tbody>
-            @forelse($stocksArr as $s)
+            @forelse($movements as $idx => $m)
               @php
-                $prev = $stocksArr->get($loop->index + 1);
-                $prevQty = $prev?->stock_quantity ?? 0;
-                $diff = $s->stock_quantity - $prevQty;
-                $type = $diff >= 0 ? 'Giriş' : 'Çıkış';
-                $qty  = abs($diff);
-                $avail = $s->available_stock;
-                $badge = $avail == 0   ? 'danger'
-                       : ($avail < 10  ? 'warning'
-                       :  'success');
+                // Bir önceki kayda bakıp farkı alıyoruz
+                $prevQty = $movements[$idx - 1]->stock_quantity ?? 0;
+                $delta   = $m->stock_quantity - $prevQty;
+                $type    = $delta >= 0 ? 'Giriş' : 'Çıkış';
+                $qty     = abs($delta);
+                $avail   = $m->available_stock;
+                $badge   = $avail == 0   ? 'danger'
+                         : ($avail < 10  ? 'warning'
+                         :  'success');
               @endphp
               <tr class="text-center">
-                <td class="text-start">{{ $s->product->product_name }}</td>
-                <td class="text-end">{{ $s->stock_quantity }}</td>
-                <td class="text-end">{{ $s->blocked_stock }}</td>
-                <td class="text-end">{{ $s->reserved_stock }}</td>
+                <td class="text-start">{{ $m->product->product_name }}</td>
+                <td class="text-end">{{ $m->stock_quantity }}</td>
+                <td class="text-end">{{ $m->blocked_stock }}</td>
+                <td class="text-end">{{ $m->reserved_stock }}</td>
                 <td>
                   <span class="badge badge-{{ $badge }}">{{ $avail }}</span>
                 </td>
-                <td>{{ $s->update_date->format('d.m.Y') }}</td>
+                <td>{{ $m->update_date->format('d.m.Y') }}</td>
                 <td>{{ $type }}</td>
                 <td class="text-end">{{ $qty }}</td>
               </tr>

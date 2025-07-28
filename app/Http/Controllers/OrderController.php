@@ -322,15 +322,24 @@ public function moveStock(int $productId, int $delta): void
         return;
     }
 
-    /* son miktarı oku – id’ye göre en yeni kayıt */
-    $lastQty = ProductStock::where('product_id', $productId)
-                           ->orderByDesc('id')
-                           ->value('stock_quantity') ?? 0;
+    // 1) Al önceki satırı, hem miktarı hem reserve/blokeyi al
+    $last = ProductStock::where('product_id', $productId)
+               ->orderByDesc('id')
+               ->first();
 
-    /* her hareket için YENİ satır yaz (geçmişi koru) */
+    $prevQty      = $last?->stock_quantity  ?? 0;
+    $prevBlocked  = $last?->blocked_stock   ?? 0;
+    $prevReserved = $last?->reserved_stock  ?? 0;
+
+    // 2) Yeni toplam
+    $newQty = $prevQty + $delta;
+
+    // 3) Yeni satırı kopya değerlerle yaz
     ProductStock::create([
         'product_id'     => $productId,
-        'stock_quantity' => $lastQty + $delta,
+        'stock_quantity' => $newQty,
+        'blocked_stock'  => $prevBlocked,
+        'reserved_stock' => $prevReserved,
         'update_date'    => now(),
         'updated_by'     => Auth::id(),
     ]);
