@@ -23,23 +23,23 @@ class Customer extends Model
     /* ---------- Audit ---------- */
     protected static function booted()
     {
-        // Oluşturma
+        // Oluşturma esnasında
         static::creating(function ($c) {
-            $c->created_by = Auth::id() ?? 1;
-            $c->updated_by = Auth::id() ?? 1;
+            $c->created_by = Auth::id();   // nullable, oturum yoksa null
+            $c->updated_by = Auth::id();
         });
 
-        // Güncelleme
+        // Güncelleme esnasında
         static::updating(function ($c) {
-            $c->updated_by = Auth::id() ?? 1;
+            $c->updated_by = Auth::id();
         });
     }
 
     /* ---------- İlişkiler ---------- */
     public function orders()          { return $this->hasMany(Order::class); }
     public function offers()          { return $this->hasMany(Offer::class); }
-    public function currentCards()    { return $this->hasMany(CurrentCard::class); } // eski toplu erişim
-    public function account()         { return $this->hasOne(CurrentCard::class); }  // TEK HESAP
+    public function currentCards()    { return $this->hasMany(CurrentCard::class); }
+    public function account()         { return $this->hasOne(CurrentCard::class); }
     public function actions()         { return $this->hasMany(Action::class); }
     public function reminders()       { return $this->hasMany(Reminder::class); }
     public function supportRequests() { return $this->hasMany(SupportRequest::class); }

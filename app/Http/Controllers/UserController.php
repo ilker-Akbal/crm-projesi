@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    // Roller: uygulama çapında sabit liste
+    // Uygulama çapında sabit roller
     protected $roles = ['admin', 'manager', 'user'];
 
     /** GET /users */
@@ -21,34 +21,36 @@ class UserController extends Controller
 
     /** GET /users/create */
     public function create()
-{
-    $roles     = $this->roles;
-    $customers = Customer::orderBy('customer_name')->get();   // ➊
-    return view('users.create', compact('roles','customers'));
-}
+    {
+        $roles     = $this->roles;
+        $customers = Customer::orderBy('customer_name')->get();
+        return view('users.create', compact('roles', 'customers'));
+    }
 
     /** POST /users */
     public function store(Request $request)
     {
         $data = $request->validate([
-    'username'    => 'required|string|max:255|unique:users,username',
-    'role'        => 'required|in:' . implode(',', $this->roles),
-    'customer_id' => 'required|exists:customers,id',          // ➋
-    'active'      => 'nullable|boolean',
-    'password'    => 'nullable|string|min:8',
-], [
-    'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
-    'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
-    'role.required'        => 'Rol seçilmelidir.',
-    'role.in'              => 'Geçersiz bir rol seçildi.',
-    'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
-    'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
-    'password.min'         => 'Parola en az 8 karakter olmalıdır.',
-]);
+            'username'    => 'required|string|max:255|unique:users,username',
+            'role'        => 'required|in:' . implode(',', $this->roles),
+            'customer_id' => 'required|exists:customers,id',
+            'active'      => 'nullable|boolean',
+            'password'    => 'nullable|string|min:8',
+        ], [
+            'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
+            'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
+            'role.required'        => 'Rol seçilmelidir.',
+            'role.in'              => 'Geçersiz bir rol seçildi.',
+            'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
+            'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
+            'password.min'         => 'Parola en az 8 karakter olmalıdır.',
+        ]);
 
-$data['active']   = $request->has('active');
-$data['password'] = $data['password'] ? bcrypt($data['password']) : null;
-User::create($data);
+        $data['active']   = $request->has('active');
+        $data['password'] = $data['password'] ? bcrypt($data['password']) : null;
+
+        // created_by ve updated_by model booted() ile otomatik setleniyor
+        User::create($data);
 
         return redirect()
             ->route('admin.users.index')
@@ -63,36 +65,40 @@ User::create($data);
 
     /** GET /users/{user}/edit */
     public function edit(User $user)
-{
-    $roles     = $this->roles;
-    $customers = Customer::orderBy('customer_name')->get();   // ➊
-    return view('users.edit', compact('user','roles','customers'));
-}
+    {
+        $roles     = $this->roles;
+        $customers = Customer::orderBy('customer_name')->get();
+        return view('users.edit', compact('user', 'roles', 'customers'));
+    }
 
     /** PUT /users/{user} */
     public function update(Request $request, User $user)
     {
-       $data = $request->validate([
-    'username'    => 'required|string|max:255|unique:users,username,' . $user->id,
-    'role'        => 'required|in:' . implode(',', $this->roles),
-    'customer_id' => 'required|exists:customers,id',          // ➋
-    'active'      => 'nullable|boolean',
-    'password'    => 'nullable|string|min:8',
-], [
-    'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
-    'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
-    'role.required'        => 'Rol seçilmelidir.',
-    'role.in'              => 'Geçersiz bir rol seçildi.',
-    'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
-    'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
-    'password.min'         => 'Parola en az 8 karakter olmalıdır.',
-]);
+        $data = $request->validate([
+            'username'    => 'required|string|max:255|unique:users,username,' . $user->id,
+            'role'        => 'required|in:' . implode(',', $this->roles),
+            'customer_id' => 'required|exists:customers,id',
+            'active'      => 'nullable|boolean',
+            'password'    => 'nullable|string|min:8',
+        ], [
+            'username.required'    => 'Kullanıcı adı girilmesi zorunludur.',
+            'username.unique'      => 'Bu kullanıcı adı zaten kullanımda.',
+            'role.required'        => 'Rol seçilmelidir.',
+            'role.in'              => 'Geçersiz bir rol seçildi.',
+            'customer_id.required' => 'Bağlı müşteri seçilmelidir.',
+            'customer_id.exists'   => 'Seçilen müşteri sistemde bulunamadı.',
+            'password.min'         => 'Parola en az 8 karakter olmalıdır.',
+        ]);
 
-$data['active']   = $request->has('active');
-if ($data['password']) $data['password'] = bcrypt($data['password']);
-else unset($data['password']);
+        $data['active'] = $request->has('active');
+        if ($data['password']) {
+            $data['password'] = bcrypt($data['password']);
+        } else {
+            unset($data['password']);
+        }
 
-$user->update($data);
+        // updated_by, model booted() ile otomatik güncelleniyor
+        $user->update($data);
 
         return redirect()
             ->route('admin.users.index')
@@ -101,28 +107,25 @@ $user->update($data);
 
     /** DELETE /users/{user} */
     public function destroy(User $user)
-{
-    \DB::transaction(function() use ($user) {
-        // varsayılan devretme kullanıcısı (ör: ilk kullanıcı)
-        $fallback = User::first()?->id ?? null;
+    {
+        DB::transaction(function () use ($user) {
+            // Fallback olarak ilk kullanıcı ID'si
+            $fallback = User::first()?->id ?? null;
 
-        // created_by/updated_by olan tüm müşteri kayıtlarını devret
-        \App\Models\Customer::where('created_by', $user->id)
-            ->update(['created_by' => $fallback]);
+            // Müşterilerde created_by/updated_by alanlarını güncelle
+            \App\Models\Customer::where('created_by', $user->id)
+                ->update(['created_by' => $fallback]);
+            \App\Models\Customer::where('updated_by', $user->id)
+                ->update(['updated_by' => $fallback]);
 
-        \App\Models\Customer::where('updated_by', $user->id)
-            ->update(['updated_by' => $fallback]);
+            // Kullanıcıyı sil
+            $user->delete();
+        });
 
-        // (Eğer başka modellerde de benzer alanlar varsa, onları da ekleyin)
-
-        // Son olarak kullanıcıyı sil
-        $user->delete();
-    });
-
-    return redirect()
-        ->route('admin.users.index')
-        ->with('success','User deleted successfully.');
-}
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'User deleted successfully.');
+    }
 
     /** GET /users/roles */
     public function roles()
