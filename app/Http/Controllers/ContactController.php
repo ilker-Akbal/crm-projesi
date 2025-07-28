@@ -25,30 +25,23 @@ class ContactController extends Controller
 
     // Kaydet
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'company_id' => 'nullable|exists:companies,id',
-            'name'       => [
-                'required', 'string', 'max:255',
-                Rule::unique('contacts')->where(fn($q) =>
-                    $q->where('company_id', $request->company_id)
-                ),
-            ],
-            'position'   => 'nullable|string|max:255',
-            'email'      => 'nullable|email|max:255|unique:contacts,email',
-            'phone'      => 'required|digits:11|unique:contacts,phone',
-        ], [
-            'name.unique'  => 'Bu isim zaten bu firmada kayıtlı.',
-            'phone.unique' => 'Bu telefon numarası başka bir kişiye ait.',
-            'email.unique' => 'Bu e-posta başka bir kişiye ait.',
-        ]);
+{
+    $request->validate([
+        'name' => ['required', 'regex:/^[A-Za-zÇçĞğİıÖöŞşÜü\s]+$/u', 'min:2'],
+        'phone' => ['required', 'digits:11'],
+        'email' => ['nullable', 'email'],
+        'company_id' => ['nullable', 'exists:companies,id'],
+        'position' => ['nullable', 'string'],
+    ], [
+        'name.regex' => 'Ad sadece harf ve boşluk içerebilir.',
+        'phone.digits' => 'Telefon numarası 11 haneli olmalıdır.',
+    ]);
 
-        Contact::create($data);
+    // Kişiyi oluştur
+    Contact::create($request->all());
 
-        return redirect()
-            ->route('contacts.index')
-            ->with('success', 'Kişi başarıyla eklendi.');
-    }
+    return redirect()->route('contacts.index')->with('success', 'Kişi başarıyla eklendi.');
+}
 
     // Düzenle
     public function edit(Contact $contact)
@@ -59,36 +52,22 @@ class ContactController extends Controller
 
     // Güncelle
     public function update(Request $request, Contact $contact)
-    {
-        $data = $request->validate([
-            'company_id' => 'nullable|exists:companies,id',
-            'name'       => [
-                'required', 'string', 'max:255',
-                Rule::unique('contacts')->ignore($contact->id)->where(fn($q) =>
-                    $q->where('company_id', $request->company_id)
-                ),
-            ],
-            'position'   => 'nullable|string|max:255',
-            'email'      => [
-                'nullable', 'email', 'max:255',
-                Rule::unique('contacts', 'email')->ignore($contact->id),
-            ],
-            'phone'      => [
-                'required', 'digits:11',
-                Rule::unique('contacts', 'phone')->ignore($contact->id),
-            ],
-        ], [
-            'name.unique'  => 'Bu isim zaten bu firmada kayıtlı.',
-            'phone.unique' => 'Bu telefon numarası başka bir kişiye ait.',
-            'email.unique' => 'Bu e-posta başka bir kişiye ait.',
-        ]);
+{
+    $request->validate([
+        'name' => ['required', 'regex:/^[A-Za-zÇçĞğİıÖöŞşÜü\s]+$/u', 'min:2'],
+        'phone' => ['required', 'digits:11'],
+        'email' => ['nullable', 'email'],
+        'company_id' => ['nullable', 'exists:companies,id'],
+        'position' => ['nullable', 'string'],
+    ], [
+        'name.regex' => 'Ad sadece harf ve boşluk içerebilir.',
+        'phone.digits' => 'Telefon numarası 11 haneli olmalıdır.',
+    ]);
 
-        $contact->update($data);
+    $contact->update($request->all());
 
-        return redirect()
-            ->route('contacts.index')
-            ->with('success', 'Kişi bilgileri güncellendi.');
-    }
+    return redirect()->route('contacts.index')->with('success', 'Kişi başarıyla güncellendi.');
+}
 
     // Göster
     public function show(Contact $contact)

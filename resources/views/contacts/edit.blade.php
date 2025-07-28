@@ -7,9 +7,22 @@
       <div class="card-header">
         <h3 class="card-title">Kişi Düzenle #{{ $contact->id }}</h3>
       </div>
-      <form action="{{ route('contacts.update',$contact) }}" method="POST">
-        @csrf @method('PUT')
+      <form action="{{ route('contacts.update', $contact) }}" method="POST">
+        @csrf
+        @method('PUT')
         <div class="card-body">
+
+          {{-- Hata Mesajları --}}
+          @if($errors->any())
+            <div class="alert alert-danger">
+              <strong>Formda hatalar var:</strong>
+              <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
 
           {{-- Firma Seçimi --}}
           <div class="form-group">
@@ -17,7 +30,7 @@
             <select name="company_id" id="company_id" class="form-control">
               <option value="">-- seçiniz --</option>
               @foreach($companies as $c)
-                <option value="{{ $c->id }}" {{ old('company_id',$contact->company_id)==$c->id ? 'selected' : '' }}>
+                <option value="{{ $c->id }}" {{ old('company_id', $contact->company_id) == $c->id ? 'selected' : '' }}>
                   {{ $c->company_name }}
                 </option>
               @endforeach
@@ -27,63 +40,70 @@
           {{-- Ad --}}
           <div class="form-group">
             <label for="name">Ad *</label>
-            <input type="text" name="name" id="name" class="form-control"
-                   value="{{ old('name',$contact->name) }}" required>
+            <input type="text"
+                   name="name"
+                   id="name"
+                   class="form-control @error('name') is-invalid @enderror"
+                   value="{{ old('name', $contact->name) }}"
+                   pattern="[A-Za-zÇçĞğİıÖöŞşÜü\s]{2,}"
+                   title="Ad kısmına sadece harf ve boşluk girilebilir"
+                   required>
+            @error('name')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
           </div>
 
-          {{-- Pozisyon (dropdown) --}}
+          {{-- Pozisyon --}}
           <div class="form-group">
             <label for="position">Pozisyon</label>
             <select name="position" id="position" class="form-control">
               <option value="">-- seçiniz --</option>
-
-              {{-- Yönetim ve Ofis --}}
-              <option value="Genel Müdür" {{ old('position',$contact->position)=='Genel Müdür' ? 'selected' : '' }}>Genel Müdür</option>
-              <option value="Müdür" {{ old('position',$contact->position)=='Müdür' ? 'selected' : '' }}>Müdür</option>
-              <option value="Yönetici" {{ old('position',$contact->position)=='Yönetici' ? 'selected' : '' }}>Yönetici</option>
-              <option value="Proje Yöneticisi" {{ old('position',$contact->position)=='Proje Yöneticisi' ? 'selected' : '' }}>Proje Yöneticisi</option>
-              <option value="Sekreter" {{ old('position',$contact->position)=='Sekreter' ? 'selected' : '' }}>Sekreter</option>
-
-              {{-- Muhasebe & İnsan Kaynakları --}}
-              <option value="Muhasebeci" {{ old('position',$contact->position)=='Muhasebeci' ? 'selected' : '' }}>Muhasebeci</option>
-              <option value="İnsan Kaynakları Uzmanı" {{ old('position',$contact->position)=='İnsan Kaynakları Uzmanı' ? 'selected' : '' }}>İnsan Kaynakları Uzmanı</option>
-              <option value="Finans Uzmanı" {{ old('position',$contact->position)=='Finans Uzmanı' ? 'selected' : '' }}>Finans Uzmanı</option>
-
-              {{-- Satış & Pazarlama --}}
-              <option value="Satış Uzmanı" {{ old('position',$contact->position)=='Satış Uzmanı' ? 'selected' : '' }}>Satış Uzmanı</option>
-              <option value="Pazarlama Uzmanı" {{ old('position',$contact->position)=='Pazarlama Uzmanı' ? 'selected' : '' }}>Pazarlama Uzmanı</option>
-              <option value="Müşteri Temsilcisi" {{ old('position',$contact->position)=='Müşteri Temsilcisi' ? 'selected' : '' }}>Müşteri Temsilcisi</option>
-
-              {{-- Teknik Departmanlar (HAUS örnekleri) --}}
-              <option value="Bilgi İşlem Uzmanı" {{ old('position',$contact->position)=='Bilgi İşlem Uzmanı' ? 'selected' : '' }}>Bilgi İşlem Uzmanı</option>
-              <option value="IT Destek" {{ old('position',$contact->position)=='IT Destek' ? 'selected' : '' }}>IT Destek</option>
-              <option value="Yazılım Geliştirici" {{ old('position',$contact->position)=='Yazılım Geliştirici' ? 'selected' : '' }}>Yazılım Geliştirici</option>
-              <option value="Üretim Mühendisi" {{ old('position',$contact->position)=='Üretim Mühendisi' ? 'selected' : '' }}>Üretim Mühendisi</option>
-              <option value="Makine Operatörü" {{ old('position',$contact->position)=='Makine Operatörü' ? 'selected' : '' }}>Makine Operatörü</option>
-              <option value="Bakım Teknisyeni" {{ old('position',$contact->position)=='Bakım Teknisyeni' ? 'selected' : '' }}>Bakım Teknisyeni</option>
-              <option value="Kalite Kontrol Uzmanı" {{ old('position',$contact->position)=='Kalite Kontrol Uzmanı' ? 'selected' : '' }}>Kalite Kontrol Uzmanı</option>
-              <option value="Ar-Ge Mühendisi" {{ old('position',$contact->position)=='Ar-Ge Mühendisi' ? 'selected' : '' }}>Ar-Ge Mühendisi</option>
-              <option value="Lojistik Sorumlusu" {{ old('position',$contact->position)=='Lojistik Sorumlusu' ? 'selected' : '' }}>Lojistik Sorumlusu</option>
-              <option value="Depo Sorumlusu" {{ old('position',$contact->position)=='Depo Sorumlusu' ? 'selected' : '' }}>Depo Sorumlusu</option>
-
-              {{-- Diğer --}}
-              <option value="Stajyer" {{ old('position',$contact->position)=='Stajyer' ? 'selected' : '' }}>Stajyer</option>
-              <option value="Diğer" {{ old('position',$contact->position)=='Diğer' ? 'selected' : '' }}>Diğer</option>
+              @php
+                $positions = [
+                  'Genel Müdür', 'Müdür', 'Yönetici', 'Proje Yöneticisi', 'Sekreter',
+                  'Muhasebeci', 'İnsan Kaynakları Uzmanı', 'Finans Uzmanı',
+                  'Satış Uzmanı', 'Pazarlama Uzmanı', 'Müşteri Temsilcisi',
+                  'Bilgi İşlem Uzmanı', 'IT Destek', 'Yazılım Geliştirici',
+                  'Üretim Mühendisi', 'Makine Operatörü', 'Bakım Teknisyeni',
+                  'Kalite Kontrol Uzmanı', 'Ar-Ge Mühendisi',
+                  'Lojistik Sorumlusu', 'Depo Sorumlusu',
+                  'Stajyer', 'Diğer'
+                ];
+              @endphp
+              @foreach($positions as $p)
+                <option value="{{ $p }}" {{ old('position', $contact->position) == $p ? 'selected' : '' }}>{{ $p }}</option>
+              @endforeach
             </select>
           </div>
 
           {{-- E-posta --}}
           <div class="form-group">
             <label for="email">E-posta</label>
-            <input type="email" name="email" id="email" class="form-control"
-                   value="{{ old('email',$contact->email) }}">
+            <input type="email"
+                   name="email"
+                   id="email"
+                   class="form-control @error('email') is-invalid @enderror"
+                   value="{{ old('email', $contact->email) }}">
+            @error('email')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
           </div>
 
           {{-- Telefon --}}
           <div class="form-group">
             <label for="phone">Telefon</label>
-            <input type="text" name="phone" id="phone" class="form-control"
-                   value="{{ old('phone',$contact->phone) }}">
+            <input type="text"
+                   name="phone"
+                   id="phone"
+                   class="form-control @error('phone') is-invalid @enderror"
+                   value="{{ old('phone', $contact->phone) }}"
+                   maxlength="11"
+                   pattern="\d{11}"
+                   inputmode="numeric"
+                   required>
+            @error('phone')
+              <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
           </div>
 
         </div>
@@ -95,4 +115,30 @@
     </div>
   </div>
 </section>
+
+<script>
+  // Ad kısmı – sadece harf ve boşluk
+  document.getElementById('name').addEventListener('keypress', function (e) {
+    const allowed = /^[A-Za-zÇçĞğİıÖöŞşÜü\s]+$/;
+    if (!allowed.test(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  document.getElementById('name').addEventListener('input', function (e) {
+    this.value = this.value.replace(/[^A-Za-zÇçĞğİıÖöŞşÜü\s]/g, '');
+  });
+
+  // Telefon kısmı – sadece rakam ve 11 hane sınırı
+  document.getElementById('phone').addEventListener('keypress', function (e) {
+    if (!/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  document.getElementById('phone').addEventListener('input', function (e) {
+    this.value = this.value.replace(/\D/g, '').slice(0, 11);
+  });
+</script>
+
 @endsection
