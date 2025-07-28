@@ -19,12 +19,17 @@
     </li>
     <li class="list-group-item">
       <strong>Cari Rol:</strong> 
-      @switch($company->current_role)
-        @case('admin') Yönetici @break
-        @case('user') Kullanıcı @break
-        @case('customer') Müşteri @break
-        @default Belirtilmemiş
-      @endswitch
+      @if($company->current_role)
+        @switch($company->current_role)
+          @case('admin') Yönetici @break
+          @case('candidate') Aday @break
+          @case('customer') Müşteri @break
+          @case('supplier') Tedarikçi @break
+          @default {{ ucfirst($company->current_role) }}
+        @endswitch
+      @else
+        Belirtilmemiş
+      @endif
     </li>
     <li class="list-group-item">
       <strong>Müşteri:</strong> {{ $company->customer?->customer_name ?? 'Müşteri Yok' }}
