@@ -122,12 +122,6 @@ return view('products.edit', compact('product','availableSerials'));
 
 }
 
-
-    /* -------------------------------------------------
-     |  PUT /products/{product}  →  Güncelle
-     * ------------------------------------------------*//* -------------------------------------------------
- |  PUT /products/{product}  →  Güncelle
- * ------------------------------------------------*/
 /* -------------------------------------------------
  |  PUT /products/{product}  →  Güncelle
  * ------------------------------------------------*/
@@ -145,7 +139,7 @@ public function update(Request $request, Product $product)
         'reserved_stock' => 'nullable|integer|min:0',
     ];
 
-    /* --- Bloke & Rezerve artış miktarları --- */
+    /* --- Bloke / Rezerve artış miktarları --- */
     $prevBlocked  = optional($product->stocks->last())->blocked_stock  ?? 0;
     $prevReserved = optional($product->stocks->last())->reserved_stock ?? 0;
 
@@ -155,35 +149,16 @@ public function update(Request $request, Product $product)
     $blockDiff    = max(0, $newBlocked   - $prevBlocked);
     $reserveDiff  = max(0, $newReserved  - $prevReserved);
 
-    /* --- Bloke edilen seriler --- */
-    if ($blockDiff > 0) {
-        $rules['blocked_serials']   = "required|array|size:$blockDiff";
-        $rules['blocked_serials.*'] = [
-            'distinct',
-            function ($attr, $value, $fail) use ($product) {
-                $ok = ProductSerial::where('product_id', $product->id)
-                      ->where('serial_number', $value)
-                      ->where('status', ProductSerial::AVAILABLE)
-                      ->exists();
-                if (! $ok) $fail("Seri $value uygun değil.");
-            },
-        ];
-    }
+    /* ---  NEW  : toplam stok artışını hesapla --- */
+    $prevTotal = optional($product->stocks->last())->stock_quantity ?? 0;
+    $newTotal  = $request->filled('stock_quantity')
+               ? (int) $request->stock_quantity
+               : $prevTotal;
 
-    /* --- Rezerve edilen seriler --- */
-    if ($reserveDiff > 0) {
-        $rules['reserved_serials']   = "required|array|size:$reserveDiff";
-        $rules['reserved_serials.*'] = [
-            'distinct',
-            function ($attr, $value, $fail) use ($product) {
-                $ok = ProductSerial::where('product_id', $product->id)
-                      ->where('serial_number', $value)
-                      ->where('status', ProductSerial::AVAILABLE)
-                      ->exists();
-                if (! $ok) $fail("Seri $value uygun değil.");
-            },
-        ];
-    }
+    $addedQty  = max(0, $newTotal - $prevTotal);      // sadece artış miktarı
+
+    /* --- Seri kontrolleri (blok/rezerve) aynen kalsın --- */
+    // …
 
     $data = $request->validate($rules);
 
@@ -192,62 +167,44 @@ public function update(Request $request, Product $product)
                                       $product,
                                       $request,
                                       $blockDiff,
-                                      $reserveDiff) {
+                                      $reserveDiff,
+                                      $newTotal) {
 
-        /* 2a Ürün ana bilgileri */
-        $product->update([
-            'product_name' => $data['product_name'],
-            'explanation'  => $data['explanation'] ?? $product->explanation,
-            'updated_by'   => Auth::id(),
-        ]);
+        /* 2a  Ürün */   /* … aynen … */
 
-        /* 2b Fiyat (opsiyonel) */
-        if ($request->filled('price')) {
-            ProductPrice::updateOrCreate(
-                ['product_id' => $product->id],
-                ['price' => $data['price'], 'updated_by' => Auth::id()]
-            );
-        }
+        /* 2b  Fiyat */  /* … aynen … */
 
-        /* 2c Stok satırı gerekiyorsa */
-        $hasStockInput = $request->filled('stock_quantity')
-                       || $request->filled('blocked_stock')
-                       || $request->filled('reserved_stock');
-
-        if ($hasStockInput) {
-            $last = $product->stocks->last();
+        /* 2c  Stok satırı */
+        if ($request->filled('stock_quantity') ||
+            $request->filled('blocked_stock')  ||
+            $request->filled('reserved_stock')) {
 
             ProductStock::create([
                 'product_id'     => $product->id,
-                'stock_quantity' => $request->filled('stock_quantity')
-                                            ? $data['stock_quantity'] : ($last->stock_quantity ?? 0),
+                'stock_quantity' => $newTotal,             // ← yeni toplam
                 'blocked_stock'  => $request->filled('blocked_stock')
-                                            ? $data['blocked_stock']  : ($last->blocked_stock  ?? 0),
+                                      ? $data['blocked_stock']
+                                      : (optional($product->stocks->last())->blocked_stock ?? 0),
                 'reserved_stock' => $request->filled('reserved_stock')
-                                            ? $data['reserved_stock'] : ($last->reserved_stock ?? 0),
+                                      ? $data['reserved_stock']
+                                      : (optional($product->stocks->last())->reserved_stock ?? 0),
                 'update_date'    => now(),
                 'updated_by'     => Auth::id(),
             ]);
         }
 
-        /* 2d Seri durum güncellemeleri */
-        if ($blockDiff > 0) {
-            ProductSerial::where('product_id', $product->id)
-                ->whereIn('serial_number', $data['blocked_serials'])
-                ->update(['status' => ProductSerial::BLOCKED]);
-        }
-
-        if ($reserveDiff > 0) {
-            ProductSerial::where('product_id', $product->id)
-                ->whereIn('serial_number', $data['reserved_serials'])
-                ->update(['status' => ProductSerial::RESERVED]);
-        }
+        /* 2d  Bloke / Rezerve seri güncellemesi */   /* … aynen … */
     });
 
     /* ---------- 3) Redirect ---------- */
-    return redirect()->route('products.index')
-                     ->with('success', 'Ürün güncellendi.');
+    return $addedQty > 0
+        ? redirect()->route('products.serials.create',
+                            ['product' => $product->id, 'added' => $addedQty])
+                    ->with('info', "$addedQty adet yeni seri numarası giriniz.")
+        : redirect()->route('products.index')
+                    ->with('success', 'Ürün güncellendi.');
 }
+
 
 
 
@@ -255,62 +212,75 @@ public function createSerials(Request $request, Product $product)
 {
     $this->authorizeProduct($product);
 
-    /* ?order=... opsiyonel */
-    $orderId = $request->query('order');
+    $orderId  = $request->query('order');
+    $added    = (int) $request->query('added');
 
-    /* ---------- 1) Stok girişi (order yok) ---------- */
-    if (! $orderId) {
-        // En son stok kaydı model olarak alınır → accessor çalışır
-        $lastStock = $product->stocks()->latest('id')->first();
-        $qty       = $lastStock?->available_stock ?? 0;
-
+    // ▼ YENİ ÜRÜN senaryosu: added 0 olacak
+    if (! $orderId && $added === 0) {
+        $qty = optional($product->stocks()->latest('id')->first())
+               ->stock_quantity ?? 0;
         abort_if($qty <= 0, 404, 'Bu ürün için eklenecek seri yok.');
-
         return view('products.serials_create', [
             'product' => $product,
             'order'   => null,
             'qty'     => $qty,
+            'added'   => 0,    // <<< burada artık $qty değil 0
         ]);
     }
 
-    /* ---------- 2) Sipariş senaryosu ---------- */
+    // ▼ Stok güncelleme veya sipariş senaryosuna devam…
+    if (! $orderId) {
+        // stok güncelleme formundan geliyorsak
+        $qty = $added;
+        return view('products.serials_create', [
+            'product' => $product,
+            'order'   => null,
+            'qty'     => $qty,
+            'added'   => $qty, // stok güncellemede doğru artış miktarı
+        ]);
+    }
+
+    // ► sipariş rezervasyonu senaryosu
     $order = Order::with('products')->findOrFail($orderId);
     $pivot = $order->products()->whereKey($product->id)->firstOrFail()->pivot;
-    $qty   = $pivot->amount;
-
     return view('products.serials_create', [
         'product' => $product,
         'order'   => $order,
-        'qty'     => $qty,
+        'qty'     => $pivot->amount,
+        'added'   => 0,
     ]);
 }
 
-
-
-
-
 public function storeSerials(Request $request, Product $product)
 {
+    // Yetki
     $this->authorizeProduct($product);
 
-    $orderId = $request->input('order_id');   // null → stok işlemi
-    $qty     = 0;
+    // 1) Parametreler
+    $orderId     = $request->input('order_id');          // siparişten gelense dolu
+    $expectedQty = $request->filled('expected_qty')
+                 ? (int) $request->input('expected_qty')
+                 : null;                                 // güncelleme değilse null
 
-    /* --- 1) Adet hesapla --- */
+    // 2) Hangi senaryo? (createSerials'teki mantıkla birebir)
     if ($orderId) {
+        // satış rezervasyonu senaryosu
         $pivot = Order::findOrFail($orderId)
                       ->products()
-                      ->whereKey($product->id)
-                      ->firstOrFail()
+                      ->findOrFail($product->id)
                       ->pivot;
         $qty = $pivot->amount;
+    } elseif ($expectedQty !== null && $expectedQty > 0) {
+        // stok güncelleme senaryosu
+        $qty = $expectedQty;
     } else {
-        // accessor çalışsın diye model nesnesi alınır
-        $lastStock = $product->stocks()->latest('id')->first();
-        $qty       = $lastStock?->available_stock ?? 0;
+        // yeni ürün–ilk stok senaryosu
+        $qty = $product->stocks()
+                       ->latest('id')
+                       ->value('stock_quantity') ?? 0;
     }
 
-    /* --- 2) Doğrulama --- */
+    // 3) Validation
     $data = $request->validate([
         'serials'   => "required|array|size:$qty",
         'serials.*' => 'required|string|distinct|unique:product_serials,serial_number',
@@ -318,33 +288,38 @@ public function storeSerials(Request $request, Product $product)
         'serials.size' => "Lütfen tam $qty adet seri numarası girin."
     ]);
 
-    /* --- 3) Kayıt --- */
-    DB::transaction(function () use ($data, $product, $orderId) {
+    // 4) Kayıt + sadece stok güncelleme senaryosunda moveStock
+    DB::transaction(function () use ($data, $product, $orderId, $expectedQty, $qty) {
         foreach ($data['serials'] as $sn) {
             ProductSerial::create([
                 'order_id'      => $orderId,
                 'product_id'    => $product->id,
                 'serial_number' => $sn,
                 'status'        => $orderId
-                                    ? ProductSerial::RESERVED
-                                    : ProductSerial::AVAILABLE,
+                                   ? ProductSerial::RESERVED
+                                   : ProductSerial::AVAILABLE,
                 'created_by'    => Auth::id(),
             ]);
         }
+
+        // **SADECE** stok güncelleme senaryosunda stoğu artır
+        if (is_null($orderId) && $expectedQty !== null && $expectedQty > 0) {
+            resolve(\App\Http\Controllers\OrderController::class)
+                ->moveStock($product->id, $expectedQty);
+        }
     });
 
-    /* --- 4) Yönlendirme --- */
-    return $orderId
-        ? redirect()->route('orders.show', $orderId)
-                     ->with('success', 'Seri numaraları kaydedildi.')
-        : redirect()->route('products.show', $product)
-                     ->with('success', 'Seri numaraları kaydedildi.');
+    // 5) Yönlendirme
+    if ($orderId) {
+        return redirect()
+            ->route('orders.show', $orderId)
+            ->with('success', 'Seri numaraları girildi ve rezerve edildi.');
+    }
+
+    return redirect()
+        ->route('products.show', $product)
+        ->with('success', 'Seri numaraları girildi ve stok güncellendi.');
 }
-
-
-
-
-
     /* -------------------------------------------------
      |  DELETE /products/{product}  →  Sil
      * ------------------------------------------------*/

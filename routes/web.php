@@ -80,9 +80,11 @@ Route::middleware('auth')->group(function () {
         [ProductController::class,'storeSerials']
     )->name('products.serials.store');
 
-    Route::get('/orders/{order}/serials_create', [OrderSerialController::class, 'create'])
+    Route::get('/orders/{order}/serials_create', 
+    [OrderSerialController::class, 'create'])
         ->name('orders.serials.create');
-    Route::post('/orders/{order}/serials', [OrderSerialController::class, 'store'])
+    Route::post('/orders/{order}/serials', 
+    [OrderSerialController::class, 'store'])
         ->name('orders.serials.store');
 
     // Support

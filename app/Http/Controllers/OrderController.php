@@ -50,17 +50,37 @@ class OrderController extends Controller
 
     /* -------- POST /orders ---------- */
 /* -------- POST /orders ---------- */
+/* -------- POST /orders ---------- */
+protected function redirectAfterSave(Order $order, bool $justPaid = false)
+    {
+        $isPurchase = $order->order_type === Order::PURCHASE;
+        $shouldEnterSerials = $isPurchase
+           && ($justPaid || $order->is_paid && !$justPaid);
+
+        if ($shouldEnterSerials) {
+            $first = $order->products()->first();
+            return redirect()
+                ->route('products.serials.create', [
+                    'product' => $first->id,
+                    'order'   => $order->id,
+                ])
+                ->with('success', $justPaid
+                    ? 'Ödeme onaylandı – seri numaralarını girin.'
+                    : 'Sipariş eklendi – seri numaralarını girin.');
+        }
+
+        return redirect()->route('orders.index')
+                         ->with('success', $justPaid
+                             ? 'Sipariş güncellendi!'
+                             : 'Sipariş başarıyla eklendi!');
+    }
 public function store(Request $request)
 {
-    $data  = $this->validateOrder($request);
-    $items = $this->prepareItems($data['items'], $data['order_type']);
+    $data   = $this->validateOrder($request);
+    $items  = $this->prepareItems($data['items'], $data['order_type']);
+    $isPaid = $request->boolean('is_paid');
 
-    $order = null;
-
-    DB::transaction(function () use ($request, $data, $items, &$order) {
-        $total  = $items->sum(fn($r) => $r['amount'] * $r['unit_price']);
-        $isPaid = $request->boolean('is_paid');
-
+    $order = DB::transaction(function () use ($data, $items, $isPaid) {
         $order = Order::create([
             'customer_id'   => auth()->user()->customer_id,
             'company_id'    => $data['company_id'] ?? null,
@@ -68,36 +88,37 @@ public function store(Request $request)
             'order_date'    => $data['order_date'],
             'delivery_date' => $data['delivery_date'] ?? null,
             'situation'     => $data['situation'] ?? 'hazırlanıyor',
-            'total_amount'  => $total,
+            'total_amount'  => $items->sum(fn($r) => $r['amount'] * $r['unit_price']),
             'is_paid'       => $isPaid,
             'paid_at'       => $isPaid ? now() : null,
         ]);
-foreach ($items as $i) {
-    $order->products()->attach(
-        $i['product_id'],
-        ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
-    );
 
-    if ($data['order_type'] === Order::SALE) {        // ---- SALE
-        $this->reserveStock($i['product_id'], $i['amount']);
-        $this->markSerialsReserved($i['product_id'],  // +++ YENİ
-                                   $i['amount'],
-                                   $order->id);
-    } else {                                          // ---- PURCHASE
-        $this->moveStock($i['product_id'],  $i['amount']);
-    }
-}
+        foreach ($items as $i) {
+            $order->products()->attach($i['product_id'], [
+                'amount'     => $i['amount'],
+                'unit_price' => $i['unit_price'],
+            ]);
+
+            if ($data['order_type'] === Order::SALE) {
+                // 1) Önce rezerve et
+                $this->reserveStock($i['product_id'], $i['amount']);
+                $this->markSerialsReserved($i['product_id'], $i['amount'], $order->id);
+
+                if ($isPaid) {
+                    // 2) Ödeme tamamlandıysa: rezerveyi ve stok miktarını düşür
+                    $this->finalizeSale($order);
+                }
+            }
+        }
+
+        return $order;
     });
 
-    $order->refresh();
-
-    if ($order->order_type === Order::SALE && $order->is_paid) {
-        $this->finalizeSale($order);
-    }
-
-    return redirect()->route('orders.index')
-                     ->with('success', 'Sipariş başarıyla eklendi!');
+    return $this->redirectAfterSave($order);
 }
+
+
+
 
 
     /* -------- GET /orders/{order}/edit ---------- */
@@ -141,64 +162,61 @@ foreach ($items as $i) {
 /* -------- PUT /orders/{order} ---------- */
 public function update(Request $request, Order $order)
 {
-    $oldQtyMap = $order->products->pluck('pivot.amount', 'id')->toArray();
+    $oldQtyMap = $order->products->pluck('pivot.amount','id')->toArray();
+    $data      = $this->validateOrder($request, $order);
+    $items     = $this->prepareItems($data['items'], $data['order_type'], $oldQtyMap);
+    $wasPaid   = $order->is_paid;
+    $isPaid    = $request->boolean('is_paid');
 
-    $data   = $this->validateOrder($request, $order);
-    $items  = $this->prepareItems($data['items'], $data['order_type'], $oldQtyMap);
-    $wasPaid = $order->is_paid;
+    DB::transaction(function () use ($order, $oldQtyMap, $data, $items, $wasPaid, $isPaid) {
+        // 1) Eskiden sale ise rezerveyi ve stoğu geri al
+        if ($order->order_type === Order::SALE) {
+            foreach ($oldQtyMap as $pid => $qty) {
+                $this->freeReservedStock($pid, $qty, $order->id);
+            }
+        }
 
-    DB::transaction(function () use ($request, $data, $items, $order, $oldQtyMap) {
-
-        /* eski rezervasyon / stok geri al */
-       foreach ($oldQtyMap as $pid => $qty) {
-    if ($order->order_type === Order::SALE) {
-        $this->freeReservedStock($pid, $qty, $order->id);   // *** 3. parametre eklendi
-    } else {
-        $this->moveStock($pid, -$qty);
-    }
-}
-
-        $total  = $items->sum(fn($r) => $r['amount'] * $r['unit_price']);
-        $isPaid = $request->boolean('is_paid');
-
+        // 2) Siparişi güncelle
         $order->update([
             'company_id'    => $data['company_id'] ?? null,
             'order_type'    => $data['order_type'],
             'order_date'    => $data['order_date'],
             'delivery_date' => $data['delivery_date'] ?? null,
             'situation'     => $data['situation'] ?? $order->situation,
-            'total_amount'  => $total,
+            'total_amount'  => collect($items)->sum(fn($r)=>$r['amount']*$r['unit_price']),
             'is_paid'       => $isPaid,
             'paid_at'       => $isPaid ? now() : null,
         ]);
 
+        // 3) Pivot temizle + yeni kalemler
         $order->products()->sync([]);
         foreach ($items as $i) {
-    $order->products()->attach(
-        $i['product_id'],
-        ['amount' => $i['amount'], 'unit_price' => $i['unit_price']]
-    );
+            $order->products()->attach($i['product_id'], [
+                'amount'     => $i['amount'],
+                'unit_price' => $i['unit_price'],
+            ]);
 
-    if ($data['order_type'] === Order::SALE) {
-        $this->reserveStock($i['product_id'], $i['amount']);
-        $this->markSerialsReserved($i['product_id'],          // +++ YENİ
-                                   $i['amount'],
-                                   $order->id);
-    } else {
-        $this->moveStock($i['product_id'],  $i['amount']);
-    }
-}
+            if ($data['order_type'] === Order::SALE) {
+                $this->reserveStock($i['product_id'], $i['amount']);
+                $this->markSerialsReserved($i['product_id'], $i['amount'], $order->id);
+            }
+        }
+
+        // 4) Eğer ödeme yeni onaylandıysa (sale + wasPaid=false → isPaid=true)
+        if (! $wasPaid && $isPaid && $order->order_type === Order::SALE) {
+            $this->finalizeSale($order);
+        }
     });
 
     $order->refresh();
 
-    if (!$wasPaid && $order->is_paid && $order->order_type === Order::SALE) {
-        $this->finalizeSale($order);
-    }
+    $nowPaidAndPurchase = ! $wasPaid
+        && $order->is_paid
+        && $order->order_type === Order::PURCHASE;
 
-    return redirect()->route('orders.index')
-                     ->with('success', 'Sipariş güncellendi!');
+    return $this->redirectAfterSave($order, $nowPaidAndPurchase);
 }
+
 
 /* === Seri: AVAILABLE → RESERVED ============================ */
 private function markSerialsReserved(int $productId, int $qty, int $orderId): void
@@ -298,7 +316,7 @@ if ($order->order_type === Order::SALE) {
 
     /** stok hareketi: delta kadar ekle/çıkar (+ artar, - düşer) */
     /** stok hareketi: delta (+ artar, - düşer) */
-private function moveStock(int $productId, int $delta): void
+public function moveStock(int $productId, int $delta): void
 {
     if ($delta === 0) {
         return;

@@ -44,29 +44,35 @@
 
   {{-- -------- Seri numaraları -------- --}}
   <h4>Seri Numaraları</h4>
-@if ($product->serials->isEmpty())
-    <p class="text-muted">Seri numarası kaydı bulunamadı.</p>
-@else
-    @php  /* durum → badge rengi */
-        $badgeMap = [
-            'available' => 'secondary',
-            'blocked'   => 'dark',
-            'reserved'  => 'warning',
-            'sold'      => 'success',
-        ];
-    @endphp
+<table class="table table-sm table-bordered mb-4">
+  <thead class="thead-light">
+    <tr>
+      <th>Seri No</th>
+      <th>Durum</th>
+    </tr>
+  </thead>
+  <tbody>
+    @forelse($product->serials as $sn)
+      <tr>
+        <td>{{ $sn->serial_number }}</td>
+        <td class="text-center">
+          @php
+            switch($sn->status) {
+              case \App\Models\ProductSerial::AVAILABLE: $c='secondary'; break;
+              case \App\Models\ProductSerial::RESERVED:  $c='warning';   break;
+              case \App\Models\ProductSerial::SOLD:      $c='success';   break;
+              default:                                   $c='dark';
+            }
+          @endphp
+          <span class="badge badge-{{ $c }}">{{ ucfirst($sn->status) }}</span>
+        </td>
+      </tr>
+    @empty
+      <tr><td colspan="2" class="text-center text-muted">— Seri numarası yok</td></tr>
+    @endforelse
+  </tbody>
+</table>
 
-    <ul class="list-group mb-4">
-        @foreach ($product->serials as $sn)
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ $sn->serial_number }}
-                <span class="badge badge-{{ $badgeMap[$sn->status] ?? 'secondary' }}">
-                    {{ ucfirst($sn->status) }}
-                </span>
-            </li>
-        @endforeach
-    </ul>
-@endif
 
   {{-- -------- Fiyatlar -------- --}}
   <h4>Fiyat Geçmişi</h4>

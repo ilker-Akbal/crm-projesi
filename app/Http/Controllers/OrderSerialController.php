@@ -13,24 +13,22 @@ class OrderSerialController extends Controller
 /* Formu göster */
 public function create(Order $order)
 {
-    // 1) Yetki
-    abort_if($order->customer_id !== auth()->user()->customer_id, 403);
+    abort_if($order->customer_id !== auth()->id(), 403);
 
-    // 2) Yalnızca SATIŞ ve henüz ödenmemiş siparişler için izin ver
-    abort_unless(
-        $order->order_type === Order::SALE && ! $order->is_paid,
-        403, 'Bu sipariş için seri numarası rezervasyonu kapalı.'
-    );
+    // 1) Satış ise: henüz ödenmemiş olmalı
+    if ($order->order_type === Order::SALE && $order->is_paid) {
+        abort(403, 'Bu satış için seri rezervasyonu kapalı.');
+    }
+
+    // 2) Satın-alma ise: her zaman izin ver
+    // ----------------------------------------------------
 
     // 3) Seri atanmamış ilk satırı bul
-    $line = $order->products()
-                  ->whereDoesntHave('serials')
-                  ->first();
+    $line = $order->products()->whereDoesntHave('serials')->first();
 
     if (! $line) {
-        return redirect()
-            ->route('orders.show', $order)
-            ->with('success', 'Tüm seri numaraları zaten kaydedilmiş.');
+        return redirect()->route('orders.show', $order)
+                         ->with('success', 'Tüm seri numaraları zaten kaydedilmiş.');
     }
 
     return view('orders.serials.create', [
@@ -40,45 +38,54 @@ public function create(Order $order)
     ]);
 }
 
+/* ---------- SERİLERİ KAYDET ---------- */
+// app/Http/Controllers/OrderSerialController.php
 
-
-    /* Seri numaralarını kaydet */
-    public function store(Request $request, Order $order)
+public function store(Request $request, Order $order)
 {
     $data = $request->validate([
         'product_id'  => 'required|exists:products,id',
-        'serials'     => 'required|array|min:1',
+        'serials'     => 'required|array|size:'.$request->input('qty'),
         'serials.*'   => 'required|string|distinct|unique:product_serials,serial_number',
     ]);
 
-    // siparişteki ilgili ürün satırı
     $product = $order->products()->findOrFail($data['product_id']);
     $expect  = $product->pivot->amount;
 
-    if (count($data['serials']) !== $expect) {
-        return back()->withErrors([
-            'serials' => "Bu ürün için tam $expect adet seri numarası girmelisiniz."
-        ])->withInput();
-    }
-
+    // 1) Seri kayıtları
     foreach ($data['serials'] as $sn) {
         ProductSerial::create([
             'order_id'      => $order->id,
             'product_id'    => $product->id,
             'serial_number' => $sn,
-            'status'        => ProductSerial::RESERVED, // ← rezerve olarak işaretle
+            'status'        => $order->order_type === Order::SALE
+                                 ? ProductSerial::RESERVED
+                                 : ProductSerial::AVAILABLE,
             'created_by'    => Auth::id(),
         ]);
     }
 
-    // sırada başka seri atanmamış ürün var mı?
-    $nextLine = $order->products()->whereDoesntHave('serials')->first();
+    // 2) Purchase siparişi için stok artışı burada
+    if ($order->order_type === Order::PURCHASE) {
+        // OrderController’daki moveStock() yardımcı metodunu çağırıyoruz
+        resolve(\App\Http\Controllers\OrderController::class)
+            ->moveStock($product->id, $expect);
+    }
 
-    return $nextLine
+    // 3) Sonraki ürün var mı?
+    $next = $order->products()->whereDoesntHave('serials')->first();
+
+    // 4) Hepsi tamamlandıysa siparişi “tamamlandı” yap
+    if (!$next && $order->order_type === Order::PURCHASE) {
+        $order->update(['situation' => 'tamamlandı']);
+    }
+
+    return $next
         ? redirect()->route('orders.serials.create', $order)
                     ->with('success', 'Seri numaraları kaydedildi – sonraki ürüne geçin.')
         : redirect()->route('orders.show', $order)
-                    ->with('success', 'Tüm seri numaraları kaydedildi!');
+                    ->with('success', 'Tüm seri numaraları girildi ve stoklara eklendi!');
 }
+
 
 }
