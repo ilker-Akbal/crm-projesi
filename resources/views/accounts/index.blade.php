@@ -5,16 +5,14 @@
   <div class="container-fluid">
     <div class="card card-outline card-primary">
 
-      <div class="card-header d-flex justify-content-between">
+      <div class="card-header">
         <h3 class="card-title">Hesaplar</h3>
-        <a href="{{ route('accounts.create') }}" class="btn btn-sm btn-primary">Hesap Ekle</a>
       </div>
 
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              
               <th>Müşteri</th>
               <th>Açılış Tarihi</th>
               <th style="width:140px">İşlemler</th>
@@ -23,7 +21,6 @@
           <tbody>
             @forelse($accounts as $acc)
               <tr>
-                
                 <td>{{ $acc->customer->customer_name }}</td>
                 <td>{{ \Carbon\Carbon::parse($acc->opening_date)->format('d.m.Y') }}</td>
                 <td>

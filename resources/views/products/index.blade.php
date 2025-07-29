@@ -12,65 +12,81 @@
       </div>
 
       <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Ürün Adı</th>
-              <th>Müşteri</th>
 
-              {{-- ▼ Yeni stok sütunları --}}
-              <th class="text-end">Toplam</th>
-              <th class="text-end">Bloke</th>
-              <th class="text-end">Rezerve</th>
-              <th class="text-end">Kullanılabilir</th>
-
-              <th class="text-end">Son&nbsp;Fiyat</th>
-              <th class="text-right">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse ($products as $prod)
-              @php
-                /* son stok kaydını çek */
-                $lastStock = $prod->stocks->sortByDesc('id')->first();
-              @endphp
+        {{-- Masaüstü için tablo --}}
+        <div class="desktop-table table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
               <tr>
-                <td>{{ $prod->product_name }}</td>
-                <td>{{ $prod->customer->customer_name ?? '—' }}</td>
-
-                {{-- ▼ Stok sayıları --}}
-                <td class="text-end">{{ $lastStock?->stock_quantity ?? 0 }}</td>
-                <td class="text-end">{{ $lastStock?->blocked_stock   ?? 0 }}</td>
-                <td class="text-end">{{ $lastStock?->reserved_stock  ?? 0 }}</td>
-                <td class="text-end">{{ $lastStock?->available_stock ?? 0 }}</td>
-
-                {{-- Son fiyat (accessor) --}}
-                <td class="text-end">
-                  {{ number_format($prod->latest_price, 2) }}
-                </td>
-
-                <td class="text-right">
-                  <a href="{{ route('products.show',  $prod) }}" class="btn btn-sm btn-info">Görüntüle</a>
-                  <a href="{{ route('products.edit',  $prod) }}" class="btn btn-sm btn-warning">Düzenle</a>
-                  <form action="{{ route('products.destroy', $prod) }}" method="POST" class="d-inline">
-                    @csrf @method('DELETE')
-                    <button  class="btn btn-sm btn-danger"
-                             onclick="return confirm('Bu ürünü silmek istediğinize emin misiniz?')">
-                      Sil
-                    </button>
-                  </form>
-                </td>
+                <th>Ürün Adı</th>
+                <th>Müşteri</th>
+                <th class="text-end">Toplam</th>
+                <th class="text-end">Bloke</th>
+                <th class="text-end">Rezerve</th>
+                <th class="text-end">Kullanılabilir</th>
+                <th class="text-end">Son Fiyat</th>
+                <th class="text-end">İşlemler</th>
               </tr>
-            @empty
-              <tr>
-                <td colspan="9" class="text-center">Ürün bulunamadı.</td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @forelse ($products as $prod)
+                @php
+                  $lastStock = $prod->stocks->sortByDesc('id')->first();
+                @endphp
+                <tr>
+                  <td>{{ $prod->product_name }}</td>
+                  <td>{{ $prod->customer->customer_name ?? '—' }}</td>
+                  <td class="text-end">{{ $lastStock?->stock_quantity ?? 0 }}</td>
+                  <td class="text-end">{{ $lastStock?->blocked_stock ?? 0 }}</td>
+                  <td class="text-end">{{ $lastStock?->reserved_stock ?? 0 }}</td>
+                  <td class="text-end">{{ $lastStock?->available_stock ?? 0 }}</td>
+                  <td class="text-end">{{ number_format($prod->latest_price, 2) }} ₺</td>
+                  <td class="text-end">
+                    <a href="{{ route('products.show', $prod) }}" class="btn btn-sm btn-info">Görüntüle</a>
+                    <a href="{{ route('products.edit', $prod) }}" class="btn btn-sm btn-warning">Düzenle</a>
+                    <form action="{{ route('products.destroy', $prod) }}" method="POST" class="d-inline">
+                      @csrf @method('DELETE')
+                      <button onclick="return confirm('Bu ürünü silmek istediğinize emin misiniz?')" class="btn btn-sm btn-danger">Sil</button>
+                    </form>
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="8" class="text-center">Ürün bulunamadı.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        {{-- Mobil için kart görünümü --}}
+        <div class="mobile-cards p-3">
+          @forelse($products as $prod)
+            @php
+              $lastStock = $prod->stocks->sortByDesc('id')->first();
+            @endphp
+            <div class="card shadow-sm p-3 mb-3">
+              <p><strong>Ürün Adı:</strong> {{ $prod->product_name }}</p>
+              <p><strong>Müşteri:</strong> {{ $prod->customer->customer_name ?? '—' }}</p>
+              <p><strong>Toplam:</strong> {{ $lastStock?->stock_quantity ?? 0 }}</p>
+              <p><strong>Bloke:</strong> {{ $lastStock?->blocked_stock ?? 0 }}</p>
+              <p><strong>Rezerve:</strong> {{ $lastStock?->reserved_stock ?? 0 }}</p>
+              <p><strong>Kullanılabilir:</strong> {{ $lastStock?->available_stock ?? 0 }}</p>
+              <p><strong>Son Fiyat:</strong> {{ number_format($prod->latest_price, 2) }} ₺</p>
+              <div class="mt-2">
+                <a href="{{ route('products.show', $prod) }}" class="btn btn-sm btn-info">Görüntüle</a>
+                <a href="{{ route('products.edit', $prod) }}" class="btn btn-sm btn-warning">Düzenle</a>
+                <form action="{{ route('products.destroy', $prod) }}" method="POST" class="d-inline">
+                  @csrf @method('DELETE')
+                  <button onclick="return confirm('Bu ürünü silmek istediğinize emin misiniz?')" class="btn btn-sm btn-danger">Sil</button>
+                </form>
+              </div>
+            </div>
+          @empty
+            <p class="text-center text-muted">Ürün bulunamadı.</p>
+          @endforelse
+        </div>
+
       </div>
 
-      {{-- sayfalama --}}
       @if(method_exists($products, 'links'))
         <div class="card-footer">
           {{ $products->links() }}
@@ -80,3 +96,20 @@
   </div>
 </section>
 @endsection
+
+@push('styles')
+<style>
+  /* Masaüstü ve mobil görünüm ayırımı */
+  .mobile-cards { display: none; }
+  @media (max-width: 768px) {
+    .desktop-table { display: none; }
+    .mobile-cards { display: block; }
+  }
+
+  /* Satır kırma */
+  .table td, .table th {
+    white-space: normal !important;
+    word-break: break-word;
+  }
+</style>
+@endpush

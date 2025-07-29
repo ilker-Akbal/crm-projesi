@@ -22,18 +22,21 @@ class Customer extends Model
 
     /* ---------- Audit ---------- */
     protected static function booted()
-    {
-        // Oluşturma esnasında
-        static::creating(function ($c) {
-            $c->created_by = Auth::id();   // nullable, oturum yoksa null
+{
+    static::creating(function ($c) {
+        if (Auth::check()) {
+            $c->created_by = Auth::id();
             $c->updated_by = Auth::id();
-        });
+        }
+    });
 
-        // Güncelleme esnasında
-        static::updating(function ($c) {
+    static::updating(function ($c) {
+        if (Auth::check()) {
             $c->updated_by = Auth::id();
-        });
-    }
+        }
+    });
+}
+    
 
     /* ---------- İlişkiler ---------- */
     public function orders()          { return $this->hasMany(Order::class); }
@@ -45,4 +48,6 @@ class Customer extends Model
     public function supportRequests() { return $this->hasMany(SupportRequest::class); }
     public function companies()       { return $this->hasMany(Company::class); }
     public function user()            { return $this->hasOne(User::class); }
+    
 }
+

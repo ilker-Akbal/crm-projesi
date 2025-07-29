@@ -32,20 +32,7 @@
               </div>
             </div>
 
-            {{-- Sipariş (opsiyonel) --}}
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="order_id">Sipariş (opsiyonel)</label>
-                <select name="order_id" id="order_id" class="form-control">
-                  <option value="">-- seçiniz --</option>
-                  @foreach($orders as $o)
-                    <option value="{{ $o->id }}" {{ old('order_id')==$o->id?'selected':'' }}>
-                      #{{ $o->id }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
+            
 
             {{-- Teklif / Geçerlilik Tarihleri --}}
             <div class="col-md-2">

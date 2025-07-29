@@ -12,9 +12,6 @@
       </div>
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-3">ID</dt>
-          <dd class="col-sm-9">{{ $support->id }}</dd>
-
           <dt class="col-sm-3">Müşteri</dt>
           <dd class="col-sm-9">{{ $support->customer->customer_name }}</dd>
 

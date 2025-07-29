@@ -28,7 +28,7 @@ use App\Http\Controllers\{
 
 /*
 |--------------------------------------------------------------------------
-| 1) Normal Misafir (Guest) Rotaları
+| 1) Misafir (Guest) Rotaları
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
@@ -38,17 +38,18 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 2) Normal Authed Kullanıcı Rotaları
+| 2) Auth’lu Kullanıcı Rotaları
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Logout
+
+    /* ---------- Oturum ---------- */
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard
+    /* ---------- Dashboard ---------- */
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 
-    // CRM Kaynakları
+    /* ---------- CRM Kaynakları ---------- */
     Route::resources([
         'companies'       => CompanyController::class,
         'contacts'        => ContactController::class,
@@ -62,16 +63,18 @@ Route::middleware('auth')->group(function () {
         'actions'         => ActionController::class,
         'reminders'       => ReminderController::class,
     ]);
+
+    // Sınırlı işlemler
     Route::resource('orders', OrderController::class)
          ->only(['index','create','store','edit','update','destroy']);
 
     Route::resource('product_stocks', ProductStockController::class)
          ->only(['index','create','store']);
 
+    /* ---------- Seri No işlemleri ---------- */
     Route::resource('product_serials', ProductSerialController::class)
          ->only(['index','create','store','destroy']);
 
-    // Ürün → Seri No girişi
     Route::get('products/{product}/serials_create',
         [ProductController::class,'createSerials']
     )->name('products.serials.create');
@@ -80,17 +83,17 @@ Route::middleware('auth')->group(function () {
         [ProductController::class,'storeSerials']
     )->name('products.serials.store');
 
-    Route::get('/orders/{order}/serials_create', 
-    [OrderSerialController::class, 'create'])
-        ->name('orders.serials.create');
-    Route::post('/orders/{order}/serials', 
-    [OrderSerialController::class, 'store'])
-        ->name('orders.serials.store');
+    Route::get('/orders/{order}/serials_create',
+        [OrderSerialController::class, 'create']
+    )->name('orders.serials.create');
 
-    // Support
+    Route::post('/orders/{order}/serials',
+        [OrderSerialController::class, 'store']
+    )->name('orders.serials.store');
+
+    /* ---------- Support Requests ---------- */
     Route::resource('product_stocks', ProductStockController::class)
-         ->only(['index','create','store','edit','update'])
-         ->middleware('auth');
+         ->only(['index','create','store','edit','update']);
 
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/',             [SupportController::class, 'index'])->name('index');
@@ -104,7 +107,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('{support}',  [SupportController::class, 'destroy'])->name('destroy');
     });
 
-    // Reports
+    /* ---------- Raporlar ---------- */
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/',                       [ReportController::class, 'index'])->name('index');
         Route::get('sales',                   [ReportController::class, 'sales'])->name('sales');
@@ -114,7 +117,7 @@ Route::middleware('auth')->group(function () {
         Route::get('support-request',         [ReportController::class, 'supportRequest'])->name('support');
     });
 
-    // Actions by Customer
+    /* ---------- Actions by Customer ---------- */
     Route::get('actions/by-customer', [ActionController::class, 'byCustomer'])
          ->name('actions.by-customer');
 });
@@ -129,13 +132,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin login sayfasına giren herkesi logout et
     Route::get('login', function () {
         Auth::logout();
-        return app(\App\Http\Controllers\AdminAuthController::class)->showLogin();
+        return app(AdminAuthController::class)->showLogin();
     })->name('login');
 
     Route::post('login', [AdminAuthController::class, 'login']);
 
-    // Giriş yapmış adminler
-    Route::middleware('isAdmin')->group(function () {
+    /* ---------- Giriş yapmış adminler ---------- */
+    Route::middleware(['isAdmin'])->group(function () {
         Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
         Route::get('/',       [AdminController::class, 'index'])->name('dashboard');
 
@@ -144,3 +147,23 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('customers', CustomerController::class);
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| 4) Admin alanından çıkınca otomatik logout
+|--------------------------------------------------------------------------
+|
+|  - URL admin/* ile BAŞLAMIYORSA ve giriş yapan user admin ise oturumu kapat.
+|  - Aynı URL’ye redirect; ikinci istekte gerçek rota çalışır.
+|
+*/
+Route::any('{path}', function (\Illuminate\Http\Request $request, $path) {
+    if (Auth::check() && Auth::user()->is_admin) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/' . ltrim($path, '/'));
+    }
+
+    abort(404); // Gerçek rota yoksa 404
+})->where('path', '^(?!admin).*');
