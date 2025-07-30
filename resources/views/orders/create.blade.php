@@ -39,13 +39,14 @@
               </div>
             </div>
             <div class="col-md-4">
-              <div class="form-group">
-                <label for="delivery_date">Teslim Tarihi</label>
-                <input  type="date" name="delivery_date" id="delivery_date"
-                        class="form-control" value="{{ old('delivery_date') }}">
-              </div>
-            </div>
-          </div>
+  <div class="form-group">
+    <label for="delivery_date">Teslim Tarihi *</label>
+    <input  type="date" name="delivery_date" id="delivery_date"
+            class="form-control @error('delivery_date') is-invalid @enderror"
+            value="{{ old('delivery_date') }}" required>
+    @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+</div>
 
           <div class="row">
             {{-- Sipariş Türü --}}

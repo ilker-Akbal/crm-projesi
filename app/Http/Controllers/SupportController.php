@@ -39,11 +39,11 @@ class SupportController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'             => 'required|string|max:255',
-            'explanation'       => 'nullable|string',
-            'situation'         => 'required|in:pending,resolved',
-            'registration_date' => 'required|date',
-        ]);
+    'title'             => 'required|string',
+    'explanation'       => 'required|string|min:10',
+    'situation'         => 'required|in:pending,resolved',
+    'registration_date' => 'required|date',
+]);
 
         SupportRequest::create($data + [
             'customer_id' => Auth::user()->customer_id,

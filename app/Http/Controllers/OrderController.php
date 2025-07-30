@@ -270,20 +270,19 @@ if ($order->order_type === Order::SALE) {
 
     /* ======== Yardımcılar ======== */
 
-    private function validateOrder(Request $request, ?Order $order=null): array
-    {
-        return $request->validate([
-            'company_id'         => 'nullable|exists:companies,id',
-            'order_type'         => 'required|in:sale,purchase',
-            'order_date'         => 'required|date',
-            'delivery_date'      => 'nullable|date|after_or_equal:order_date',
-            'items'              => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id|distinct',
-            'items.*.amount'     => 'required|numeric|min:1',
-            'situation'          => 'in:hazırlanıyor,tamamlandı',
-            'is_paid'            => 'sometimes|boolean',
-        ]);
-    }
+  private function validateOrder(Request $request, ?Order $order=null): array
+{
+    return $request->validate([
+        'customer_id'          => 'required|exists:customers,id',
+        'order_date'           => 'required|date',
+        'delivery_date'        => 'required|date|after_or_equal:order_date',
+        'order_type'           => 'required|in:sale,purchase',
+        'items'                => 'required|array|min:1',
+        'items.*.product_id'   => 'required|exists:products,id',
+        'items.*.amount'       => 'required|integer|min:1',
+        'items.*.unit_price'   => 'required|numeric|min:0',
+    ]);
+}
 
     /** stok kontrolü yalnızca satışta yapılır */
    private function prepareItems(

@@ -31,9 +31,10 @@
           <div class="form-group">
             <label for="explanation">Açıklama</label>
             <textarea name="explanation"
-                      id="explanation"
-                      rows="4"
-                      class="form-control @error('explanation') is-invalid @enderror">{{ old('explanation') }}</textarea>
+          id="explanation"
+          rows="4"
+          class="form-control @error('explanation') is-invalid @enderror"
+          required>{{ old('explanation') }}</textarea>
             @error('explanation') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
