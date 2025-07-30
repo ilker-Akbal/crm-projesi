@@ -36,9 +36,28 @@ public function serials()
     public function getLatestPriceAttribute()
     {
         return $this->prices()
-                    ->latest('updated_at')
-                    ->value('price') ?? 0;
+                ->orderByDesc('id')  // ← değiştirildi
+                ->value('price') ?? 0;
     }
+
+    // app/Models/Product.php
+public function getAvailableStockAttribute(): int
+{
+    $last = $this->stocks()
+                 ->orderByDesc('id')      // en yeni stok satırı
+                 ->first();
+
+    if (! $last) {
+        return 0;
+    }
+
+    return max(
+        0,
+        $last->stock_quantity
+      - $last->blocked_stock
+      - $last->reserved_stock
+    );
+}
 
     /* --- Mevcut stok (son stok kaydı) --- */
     public function getCurrentStockAttribute()

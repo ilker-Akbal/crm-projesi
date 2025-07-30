@@ -10,6 +10,7 @@ use App\Models\ProductStock;
 use App\Models\ProductPrice;
 use App\Models\ProductSerial;
 use App\Models\Order;   //  ← EKLEYİN
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -125,6 +126,7 @@ return view('products.edit', compact('product','availableSerials'));
 /* -------------------------------------------------
  |  PUT /products/{product}  →  Güncelle
  * ------------------------------------------------*/
+
 public function update(Request $request, Product $product)
 {
     $this->authorizeProduct($product);
@@ -137,66 +139,113 @@ public function update(Request $request, Product $product)
         'stock_quantity' => 'nullable|integer|min:0',
         'blocked_stock'  => 'nullable|integer|min:0',
         'reserved_stock' => 'nullable|integer|min:0',
+
+        /* ── seçilen seri numaraları ── */
+        'blocked_serials'   => 'array',
+        'blocked_serials.*' => [
+            'string',
+            Rule::exists('product_serials', 'serial_number')
+                ->where('product_id', $product->id)
+                ->where('status', ProductSerial::AVAILABLE),
+        ],
     ];
 
-    /* --- Bloke / Rezerve artış miktarları --- */
+    /* ---------- 2) Önceki / yeni değerler ---------- */
     $prevBlocked  = optional($product->stocks->last())->blocked_stock  ?? 0;
     $prevReserved = optional($product->stocks->last())->reserved_stock ?? 0;
 
     $newBlocked   = (int) $request->blocked_stock;
     $newReserved  = (int) $request->reserved_stock;
 
-    $blockDiff    = max(0, $newBlocked   - $prevBlocked);
-    $reserveDiff  = max(0, $newReserved  - $prevReserved);
+    $blockDiff   = max(0, $newBlocked  - $prevBlocked);   // ↑ artış kadar
+    $reserveDiff = max(0, $newReserved - $prevReserved);
 
-    /* ---  NEW  : toplam stok artışını hesapla --- */
     $prevTotal = optional($product->stocks->last())->stock_quantity ?? 0;
     $newTotal  = $request->filled('stock_quantity')
                ? (int) $request->stock_quantity
                : $prevTotal;
 
-    $addedQty  = max(0, $newTotal - $prevTotal);      // sadece artış miktarı
+    $addedQty  = max(0, $newTotal - $prevTotal);
 
-    /* --- Seri kontrolleri (blok/rezerve) aynen kalsın --- */
-    // …
-
+    /* ---------- 3) Validasyon ---------- */
     $data = $request->validate($rules);
+    $selectedSerials = collect($data['blocked_serials'] ?? [])
+                       ->filter()->unique()->values()->all();
 
-    /* ---------- 2) Transaction ---------- */
-    DB::transaction(function () use ($data,
-                                      $product,
-                                      $request,
-                                      $blockDiff,
-                                      $reserveDiff,
-                                      $newTotal) {
+    /* ---------- 4) Transaction ---------- */
+    DB::transaction(function () use (
+        $product, $data, $request,
+        $blockDiff, $reserveDiff,
+        $newTotal, $selectedSerials,$prevBlocked,$prevReserved    
+    ) {
+        /* 4a ─ Ürün bilgileri */
+        $product->update([
+            'product_name' => $data['product_name'],
+            'explanation'  => $data['explanation'] ?? $product->explanation,
+            'updated_by'   => Auth::id(),
+        ]);
 
-        /* 2a  Ürün */   /* … aynen … */
+        /* 4b ─ Fiyat */
+        if ($request->filled('price')) {
+            ProductPrice::create([
+                'product_id' => $product->id,
+                'price'      => $data['price'],
+                'updated_by' => Auth::id(),
+            ]);
+        }
 
-        /* 2b  Fiyat */  /* … aynen … */
-
-        /* 2c  Stok satırı */
+        /* 4c ─ Stok satırı */
         if ($request->filled('stock_quantity') ||
             $request->filled('blocked_stock')  ||
             $request->filled('reserved_stock')) {
 
             ProductStock::create([
                 'product_id'     => $product->id,
-                'stock_quantity' => $newTotal,             // ← yeni toplam
+                'stock_quantity' => $newTotal,
                 'blocked_stock'  => $request->filled('blocked_stock')
-                                      ? $data['blocked_stock']
-                                      : (optional($product->stocks->last())->blocked_stock ?? 0),
+                                        ? $data['blocked_stock']
+                                        : $prevBlocked,
                 'reserved_stock' => $request->filled('reserved_stock')
-                                      ? $data['reserved_stock']
-                                      : (optional($product->stocks->last())->reserved_stock ?? 0),
+                                        ? $data['reserved_stock']
+                                        : $prevReserved,
                 'update_date'    => now(),
                 'updated_by'     => Auth::id(),
             ]);
         }
 
-        /* 2d  Bloke / Rezerve seri güncellemesi */   /* … aynen … */
+        /* 4d ─ Seri numarası durum güncellemeleri */
+
+        /* — i) Kullanıcının seçtiği seri numaralarını BLOKED yap — */
+        if ($selectedSerials) {
+            ProductSerial::where('product_id', $product->id)
+                         ->whereIn('serial_number', $selectedSerials)
+                         ->update(['status' => ProductSerial::BLOCKED]);
+        }
+
+        /* — ii) Kalan diff’i otomatik tamamla (varsa) — */
+        $remaining = $blockDiff - count($selectedSerials);
+        if ($remaining > 0) {
+            $autoIds = $product->serials()
+                               ->where('status', ProductSerial::AVAILABLE)
+                               ->whereNotIn('serial_number', $selectedSerials)
+                               ->limit($remaining)
+                               ->pluck('id');
+            ProductSerial::whereIn('id', $autoIds)
+                         ->update(['status' => ProductSerial::BLOCKED]);
+        }
+
+        /* — iii) Rezerve artışı — */
+        if ($reserveDiff > 0) {
+            $ids = $product->serials()
+                           ->where('status', ProductSerial::AVAILABLE)
+                           ->limit($reserveDiff)
+                           ->pluck('id');
+            ProductSerial::whereIn('id', $ids)
+                         ->update(['status' => ProductSerial::RESERVED]);
+        }
     });
 
-    /* ---------- 3) Redirect ---------- */
+    /* ---------- 5) Redirect ---------- */
     return $addedQty > 0
         ? redirect()->route('products.serials.create',
                             ['product' => $product->id, 'added' => $addedQty])
@@ -204,6 +253,9 @@ public function update(Request $request, Product $product)
         : redirect()->route('products.index')
                     ->with('success', 'Ürün güncellendi.');
 }
+
+
+
 
 
 

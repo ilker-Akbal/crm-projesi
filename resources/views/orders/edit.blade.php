@@ -18,6 +18,15 @@
 
       <form action="{{ route('orders.update', $order) }}" method="POST">
         @csrf @method('PUT')
+@if($order->company?->company_name)
+  <div class="form-group">
+    <label>Firma</label>
+    <input type="text" class="form-control" 
+           value="{{ $order->company->company_name }}" readonly>
+    {{-- GİZLİ ALAN --}}
+    <input type="hidden" name="company_id" value="{{ $order->company_id }}">
+  </div>
+@endif
 
         <div class="card-body">
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">

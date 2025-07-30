@@ -42,7 +42,7 @@ class OrderController extends Controller
                 'id'          => $p->id,
                 'product_name'=> $p->product_name,
                 'unit_price'  => $p->latest_price,
-                'stock'       => $p->current_stock,
+                'stock'       => (int) ($p->available_stock ?? 0), 
             ]);
 
         return view('orders.create', compact('customers','companies','products'));
@@ -141,7 +141,7 @@ public function store(Request $request)
                 'id'          => $p->id,
                 'product_name'=> $p->product_name,
                 'unit_price'  => $p->latest_price,
-                'stock'       => $p->current_stock,
+                'stock'       => (int) ($p->available_stock ?? 0), 
             ]);
 
         return view('orders.edit', compact('order','customers','companies','products'));
@@ -154,7 +154,7 @@ public function store(Request $request)
         return PHP_INT_MAX;
     }
 
-    $current  = $p->current_stock;          // fiilî stok
+    $current  = $p->available_stock;          // fiilî stok
     $previous = $oldQtyMap[$p->id] ?? 0;    // eski siparişteki miktar
     return $current + $previous;            // “geri konmuş” sanal stok
 }

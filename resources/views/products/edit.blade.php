@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -36,7 +37,7 @@
             <textarea name="explanation"
                       id="explanation"
                       rows="3"
-                      class="form-control">@{{ old('explanation', $product->explanation) }}</textarea>
+                      class="form-control">{{ old('explanation', $product->explanation) }}</textarea>
           </div>
 
           <hr>
@@ -51,7 +52,7 @@
                     name="price"
                     id="price"
                     class="form-control text-end"
-                    placeholder="Mevcut: {{ $lastPrice? number_format($lastPrice->price,2) : 'N/A' }}">
+                    placeholder="Mevcut: {{ $lastPrice ? number_format($lastPrice->price,2) : 'N/A' }}">
             @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
@@ -60,96 +61,50 @@
           {{-- ---------- Stok ---------- --}}
           <h5>Stok Düzenle</h5>
           <div class="form-row">
+            {{-- Toplam --}}
             <div class="col-md-3 mb-3">
               <label for="stock_quantity">Toplam</label>
               <input type="number"
                      name="stock_quantity"
                      id="stock_quantity"
                      class="form-control text-end"
-                     placeholder="Mevcut: {{ $lastStock? $lastStock->stock_quantity : 'N/A' }}">
+                     placeholder="Mevcut: {{ $lastStock ? $lastStock->stock_quantity : 'N/A' }}">
             </div>
-{{-- -------- Bloke alanı -------- --}}
-<div class="col-md-3 mb-3">
-  <label for="blocked_stock">Bloke</label>
-  <input  type="number"
-          name="blocked_stock"
-          id="blocked_stock"
-          class="form-control text-end"
-          placeholder="Mevcut: {{ $lastStock? $lastStock->blocked_stock : 'N/A' }}"
-          oninput="renderSerialRows()">
-</div>
 
-{{-- -------- Seri satırları konteyneri -------- --}}
-<div class="col-12 mb-3" id="serialRows" style="display:none">
-  <label>Bloke edilecek seri numaraları</label>
-  <div id="rowsWrapper"></div>
-  <small class="form-text text-muted">
-    Her satırda bir seri seçin • toplam <span id="needQtyTxt">0</span> adet
-  </small>
-</div>
-
-@push('scripts')
-<script>
-/* ---------- Veriyi blade’den JS’e gönder ---------- */
-const allSerials = @json($availableSerials->pluck('serial_number'));
-
-function renderSerialRows() {
-  const qtyInput  = document.getElementById('blocked_stock');
-  const wrapper   = document.getElementById('rowsWrapper');
-  const box       = document.getElementById('serialRows');
-  const needTxt   = document.getElementById('needQtyTxt');
-
-  const qty = parseInt(qtyInput.value || 0);
-  needTxt.textContent = qty;
-
-  // kutuyu göster/gizle
-  box.style.display = qty > 0 ? 'block' : 'none';
-  wrapper.innerHTML = '';           // temizle
-
-  if (qty <= 0) return;
-
-  for (let i = 0; i < qty; i++) {
-    const sel = document.createElement('select');
-    sel.name  = `blocked_serials[${i}]`;
-    sel.className = 'form-control mb-2 serial-select';
-
-    // placeholder option
-    sel.append(new Option('-- seçin --', '', true, false));
-
-    allSerials.forEach(sn => {
-      sel.append(new Option(sn, sn));
-    });
-
-    sel.addEventListener('change', handleUniqueSelection);
-    wrapper.appendChild(sel);
-  }
-}
-
-/* ---------- Seçilen seriyi diğer satırlardan kaldır ---------- */
-function handleUniqueSelection(e) {
-  const selects = document.querySelectorAll('.serial-select');
-  const chosen  = [...selects].map(s => s.value).filter(v => v);
-
-  selects.forEach(sel => {
-    [...sel.options].forEach(opt => {
-      if (opt.value === '') return;           // placeholder
-      opt.disabled = chosen.includes(opt.value) && opt.value !== sel.value;
-    });
-  });
-}
-</script>
-@endpush
-
-
-
-
+            {{-- Bloke --}}
             <div class="col-md-3 mb-3">
-              <label for="reserved_stock">Rezerve</label>
-              <input type="number"
+              <label for="blocked_stock">Bloke</label>
+              <input  type="number"
+                      name="blocked_stock"
+                      id="blocked_stock"
+                      class="form-control text-end"
+                      placeholder="Mevcut: {{ $lastStock ? $lastStock->blocked_stock : 'N/A' }}"
+                      oninput="renderSerialRows()">
+            </div>
+
+            {{-- Seri numaraları konteyneri --}}
+            <div class="col-12 mb-3" id="serialRows" style="display:none">
+              <label>Bloke edilecek seri numaraları</label>
+              <div id="rowsWrapper"></div>
+              <small class="form-text text-muted">
+                Her satırda bir seri seçin • toplam <span id="needQtyTxt">0</span> adet
+              </small>
+            </div>
+
+            {{-- Rezerve (salt-okunur) --}}
+            <div class="col-md-3 mb-3">
+              <label>Rezerve</label>
+
+              {{-- ekrana sadece göster --}}
+              <input type="text"
+                     class="form-control-plaintext text-end"
+                     value="{{ $lastStock ? $lastStock->reserved_stock : 0 }}"
+                     readonly>
+
+              {{-- aynı değeri gizli olarak POST et --}}
+              <input type="hidden"
                      name="reserved_stock"
-                     id="reserved_stock"
-                     class="form-control text-end"
-                     placeholder="Mevcut: {{ $lastStock? $lastStock->reserved_stock : 'N/A' }}">
+                     value="{{ $lastStock ? $lastStock->reserved_stock : 0 }}">
             </div>
 
             <div class="col-md-3 mb-3 d-flex align-items-end">
@@ -171,3 +126,49 @@ function handleUniqueSelection(e) {
   </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+/* ---------- Veriyi blade’den JS’e gönder ---------- */
+const allSerials = @json($availableSerials->pluck('serial_number'));
+
+function renderSerialRows() {
+  const qtyInput  = document.getElementById('blocked_stock');
+  const wrapper   = document.getElementById('rowsWrapper');
+  const box       = document.getElementById('serialRows');
+  const needTxt   = document.getElementById('needQtyTxt');
+
+  const qty = parseInt(qtyInput.value || 0);
+  needTxt.textContent = qty;
+
+  box.style.display = qty > 0 ? 'block' : 'none';
+  wrapper.innerHTML = '';
+  if (qty <= 0) return;
+
+  for (let i = 0; i < qty; i++) {
+    const sel = document.createElement('select');
+    sel.name  = `blocked_serials[${i}]`;
+    sel.className = 'form-control mb-2 serial-select';
+
+    sel.append(new Option('-- seçin --', '', true, false));
+    allSerials.forEach(sn => sel.append(new Option(sn, sn)));
+
+    sel.addEventListener('change', handleUniqueSelection);
+    wrapper.appendChild(sel);
+  }
+}
+
+/* ---------- Aynı seri numarasını iki kez seçmeyi engelle ---------- */
+function handleUniqueSelection() {
+  const selects = document.querySelectorAll('.serial-select');
+  const chosen  = [...selects].map(s => s.value).filter(Boolean);
+
+  selects.forEach(sel => {
+    [...sel.options].forEach(opt => {
+      if (!opt.value) return; // placeholder
+      opt.disabled = chosen.includes(opt.value) && opt.value !== sel.value;
+    });
+  });
+}
+</script>
+@endpush
