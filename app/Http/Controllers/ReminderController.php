@@ -4,26 +4,27 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use App\Models\Reminder;
 use App\Models\Customer;
 use App\Models\User;
-use App\Models\Company;  // Şirketler için eklendi
-use Carbon\Carbon;       // Tarih işlemleri için eklendi
-
+use App\Models\Company;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Resend\Laravel\Facades\Resend;   
 class ReminderController extends Controller
 {
     /* -------------------------------------------------
      |  GET /reminders → Liste (Dinamik yıldönümü ekli)
      * ------------------------------------------------*/
-    public function index()
+        public function index()
     {
+        // 1) Mevcut hatırlatıcıları getir
         $reminders = Reminder::where('customer_id', Auth::user()->customer_id)
                              ->with(['customer', 'user'])
                              ->latest('reminder_date')
                              ->get();
 
-        // Şirketlerin yıldönümlerini dinamik olarak listeye ekle (veritabanına kaydetmeden)
+        // 2) Şirket yıl dönümlerini kontrol et
         $companies = Company::where('customer_id', Auth::user()->customer_id)
                             ->whereNotNull('foundation_date')
                             ->get();
@@ -31,21 +32,37 @@ class ReminderController extends Controller
         foreach ($companies as $company) {
             $foundation = Carbon::parse($company->foundation_date);
 
-            // Eğer bugünün ay-gün bilgisi kuruluş tarihiyle eşleşirse
             if ($foundation->format('m-d') === now()->format('m-d')) {
                 $years = now()->year - $foundation->year;
 
-                // Dinamik olarak hatırlatıcı ekle
+                /* ---------- TEKRAR KONTROLÜ ---------- */
+                $cacheKey = "anniv-sent:{$company->id}:" . now()->toDateString();
+                if (! Cache::add($cacheKey, true, now()->endOfDay())) {
+                    // bugün mail ve hatırlatıcı zaten oluşturulmuş, atla
+                    continue;
+                }
+                /* ------------------------------------- */
+
+                // — Dinamik hatırlatıcı listesine ekle (yalnızca ilk görmede)
                 $reminders->push(new Reminder([
-                    'title'         => "{$company->company_name} - {$years}. Yıl Dönümü Kutlaması",
+                    'title'         => "{$company->company_name} – {$years}. Yıl Dönümü Kutlaması",
                     'reminder_date' => now()->toDateString(),
-                    'explanation'   => "{$company->company_name} şirketinin {$years}. yıl dönümü kutlanıyor.",
+                    'explanation'   => "{$company->company_name} şirketinin {$years}. yıl dönümü.",
                     'customer_id'   => $company->customer_id,
                     'user_id'       => Auth::id(),
                 ]));
+
+                // — Kuruluşa tebrik e-postası gönder
+                Resend::emails()->send([
+                    'from'    => 'onboarding@resend.dev',
+                    'to'      => $company->email,
+                    'subject' => "{$company->company_name}’nin {$years}. Yıl Dönümü Kutlaması!",
+                    'html'    => view('emails.anniversary', compact('company', 'years'))->render(),
+                ]);
             }
         }
 
+        // 3) Görünümü döndür
         return view('reminders.index', compact('reminders'));
     }
 
@@ -88,7 +105,6 @@ class ReminderController extends Controller
         $this->authorizeReminder($reminder);
 
         $reminder->load(['customer', 'user']);
-
         return view('reminders.show', compact('reminder'));
     }
 
@@ -101,7 +117,6 @@ class ReminderController extends Controller
 
         $customers = Customer::whereKey(Auth::user()->customer_id)->get();
         $users     = User::orderBy('username')->get();
-
         return view('reminders.edit', compact('reminder', 'customers', 'users'));
     }
 
@@ -119,7 +134,6 @@ class ReminderController extends Controller
         ]);
 
         $reminder->update($data);
-
         return redirect()->route('reminders.index')
                          ->with('success', 'Hatırlatıcı başarıyla güncellendi.');
     }
@@ -130,9 +144,7 @@ class ReminderController extends Controller
     public function destroy(Reminder $reminder)
     {
         $this->authorizeReminder($reminder);
-
         $reminder->delete();
-
         return redirect()->route('reminders.index')
                          ->with('success', 'Hatırlatıcı başarıyla silindi.');
     }

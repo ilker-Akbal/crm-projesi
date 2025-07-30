@@ -1,3 +1,4 @@
+{{-- resources/views/reminders/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -8,6 +9,19 @@
         <h3 class="card-title">Hatırlatıcılar</h3>
         <a href="{{ route('reminders.create') }}" class="btn btn-sm btn-primary">Hatırlatıcı Ekle</a>
       </div>
+
+      {{-- -------- Mail Gönderim Sonuçları -------- --}}
+      @if(!empty($mailLogs))
+        <div class="p-3">
+          @foreach($mailLogs as $log)
+            <div class="alert alert-{{ $log['status'] ? 'success' : 'danger' }} mb-2 py-2 px-3">
+              <strong>{{ $log['company'] }}</strong> –
+              {{ $log['status'] ? 'Kutlama e-postası gönderildi.' : 'E-posta gönderilemedi! → '.$log['message'] }}
+            </div>
+          @endforeach
+        </div>
+      @endif
+
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover mb-0">
@@ -27,15 +41,7 @@
                   <td>{{ Str::limit($r->explanation, 50) }}</td>
                   <td>
                     @if(Str::contains($r->title, 'Yıl Dönümü'))
-                      <span style="
-                        display:inline-block;
-                        background-color:#facc15;
-                        color:#000;
-                        font-weight:bold;
-                        padding:4px 8px;
-                        border-radius:6px;
-                        font-size:0.8rem;
-                      ">
+                      <span class="badge" style="background:#facc15;color:#000;font-weight:bold">
                         🎉 KUTLAMA
                       </span>
                     @else
