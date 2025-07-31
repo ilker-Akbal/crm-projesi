@@ -127,6 +127,9 @@ return view('products.edit', compact('product','availableSerials'));
  |  PUT /products/{product}  →  Güncelle
  * ------------------------------------------------*/
 
+/* -------------------------------------------------
+ |  PUT /products/{product}  →  Güncelle   (B yöntemi)
+ * ------------------------------------------------*/
 public function update(Request $request, Product $product)
 {
     $this->authorizeProduct($product);
@@ -153,22 +156,20 @@ public function update(Request $request, Product $product)
     /* ---------- 2) Önceki / yeni değerler ---------- */
     $prevBlocked  = optional($product->stocks->last())->blocked_stock  ?? 0;
     $prevReserved = optional($product->stocks->last())->reserved_stock ?? 0;
+    $prevTotal    = optional($product->stocks->last())->stock_quantity ?? 0;
 
     $newBlocked   = (int) $request->blocked_stock;
     $newReserved  = (int) $request->reserved_stock;
+    $newTotal     = $request->filled('stock_quantity')
+                   ? (int) $request->stock_quantity
+                   : $prevTotal;
 
     $blockDiff   = max(0, $newBlocked  - $prevBlocked);   // ↑ artış kadar
     $reserveDiff = max(0, $newReserved - $prevReserved);
-
-    $prevTotal = optional($product->stocks->last())->stock_quantity ?? 0;
-    $newTotal  = $request->filled('stock_quantity')
-               ? (int) $request->stock_quantity
-               : $prevTotal;
-
-    $addedQty  = max(0, $newTotal - $prevTotal);
+    $addedQty    = max(0, $newTotal - $prevTotal);
 
     /* ---------- 3) Validasyon ---------- */
-    $data = $request->validate($rules);
+    $data           = $request->validate($rules);
     $selectedSerials = collect($data['blocked_serials'] ?? [])
                        ->filter()->unique()->values()->all();
 
@@ -176,7 +177,8 @@ public function update(Request $request, Product $product)
     DB::transaction(function () use (
         $product, $data, $request,
         $blockDiff, $reserveDiff,
-        $newTotal, $selectedSerials,$prevBlocked,$prevReserved    
+        $newTotal, $selectedSerials,
+        $prevBlocked, $prevReserved, $prevTotal
     ) {
         /* 4a ─ Ürün bilgileri */
         $product->update([
@@ -185,7 +187,7 @@ public function update(Request $request, Product $product)
             'updated_by'   => Auth::id(),
         ]);
 
-        /* 4b ─ Fiyat */
+        /* 4b ─ Fiyat (değiştiyse) */
         if ($request->filled('price')) {
             ProductPrice::create([
                 'product_id' => $product->id,
@@ -194,20 +196,17 @@ public function update(Request $request, Product $product)
             ]);
         }
 
-        /* 4c ─ Stok satırı */
-        if ($request->filled('stock_quantity') ||
-            $request->filled('blocked_stock')  ||
-            $request->filled('reserved_stock')) {
+        /* 4c ─ Bloke / rezerve değişikliği ⇒ yeni stok satırı
+                ❗  Stok miktarı değişikliği burada **kaydedilmez** (B yöntemi) */
+        $blockedChanged  = $request->filled('blocked_stock')  && $data['blocked_stock']  != $prevBlocked;
+        $reservedChanged = $request->filled('reserved_stock') && $data['reserved_stock'] != $prevReserved;
 
+        if ($blockedChanged || $reservedChanged) {
             ProductStock::create([
                 'product_id'     => $product->id,
-                'stock_quantity' => $newTotal,
-                'blocked_stock'  => $request->filled('blocked_stock')
-                                        ? $data['blocked_stock']
-                                        : $prevBlocked,
-                'reserved_stock' => $request->filled('reserved_stock')
-                                        ? $data['reserved_stock']
-                                        : $prevReserved,
+                'stock_quantity' => $prevTotal,   // miktar aynen kalır
+                'blocked_stock'  => $blockedChanged  ? $data['blocked_stock']  : $prevBlocked,
+                'reserved_stock' => $reservedChanged ? $data['reserved_stock'] : $prevReserved,
                 'update_date'    => now(),
                 'updated_by'     => Auth::id(),
             ]);
@@ -215,14 +214,14 @@ public function update(Request $request, Product $product)
 
         /* 4d ─ Seri numarası durum güncellemeleri */
 
-        /* — i) Kullanıcının seçtiği seri numaralarını BLOKED yap — */
+        // i) Kullanıcının seçtiği seri numaralarını BLOKED yap
         if ($selectedSerials) {
             ProductSerial::where('product_id', $product->id)
                          ->whereIn('serial_number', $selectedSerials)
                          ->update(['status' => ProductSerial::BLOCKED]);
         }
 
-        /* — ii) Kalan diff’i otomatik tamamla (varsa) — */
+        // ii) Kalan diff’i otomatik tamamla
         $remaining = $blockDiff - count($selectedSerials);
         if ($remaining > 0) {
             $autoIds = $product->serials()
@@ -234,7 +233,7 @@ public function update(Request $request, Product $product)
                          ->update(['status' => ProductSerial::BLOCKED]);
         }
 
-        /* — iii) Rezerve artışı — */
+        // iii) Rezerve artışı
         if ($reserveDiff > 0) {
             $ids = $product->serials()
                            ->where('status', ProductSerial::AVAILABLE)

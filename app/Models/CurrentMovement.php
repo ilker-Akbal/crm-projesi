@@ -15,6 +15,7 @@ class CurrentMovement extends Model
 
     protected $fillable = [
         'current_id',
+        'company_id', 
         'departure_date',
         'amount',
         'movement_type',
