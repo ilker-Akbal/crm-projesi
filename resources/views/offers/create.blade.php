@@ -11,7 +11,6 @@
         @csrf
         <div class="card-body">
           
-
           {{-- giriş yapan kullanıcının customer_id’si --}}
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
@@ -24,15 +23,13 @@
                   <option value="">-- seçiniz --</option>
                   @foreach($companies as $c)
                     <option value="{{ $c->id }}"
-                      {{ old('company_id')==$c->id ? 'selected' : '' }}>
+                      {{ old('company_id') == $c->id ? 'selected' : '' }}>
                       {{ $c->company_name }}
                     </option>
                   @endforeach
                 </select>
               </div>
             </div>
-
-            
 
             {{-- Teklif / Geçerlilik Tarihleri --}}
             <div class="col-md-2">
@@ -52,16 +49,12 @@
               </div>
             </div>
 
-            {{-- Durum --}}
-            <div class="col-md-4 mt-3">
+            {{-- Durum (sadece hazırlaniyor dropdown) --}}
+            <div class="col-md-4">
               <div class="form-group">
                 <label for="status">Durum</label>
                 <select name="status" id="status" class="form-control" required>
-                  @foreach(['hazırlanıyor','gönderildi','kabul','reddedildi'] as $st)
-                    <option value="{{ $st }}" {{ old('status',$st)==''.$st ? 'selected' : '' }}>
-                      {{ ucfirst($st) }}
-                    </option>
-                  @endforeach
+                  <option value="hazırlanıyor" selected>Hazırlanıyor</option>
                 </select>
               </div>
             </div>
@@ -77,7 +70,7 @@
             @foreach($oldItems as $i => $item)
               <div class="row mb-2 item-row">
                 <div class="col-md-5">
-                  <select name="items[{{ $i }}][product_id]" class="form-control" required>
+                  <select name="items[{{ $i }}][product_id]" class="form-control product-select" required>
                     <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
                       <option value="{{ $prod['id'] }}"
@@ -88,13 +81,14 @@
                   </select>
                 </div>
                 <div class="col-md-3">
-                  <input type="number" name="items[{{ $i }}][amount]" min="1" class="form-control"
+                  <input type="number" name="items[{{ $i }}][amount]" min="1" class="form-control amount"
                          value="{{ $item['amount'] ?? 1 }}" placeholder="Adet" required>
+                  <small class="text-muted stock-info"></small>
                 </div>
                 <div class="col-md-3">
-                  <input type="number" name="items[{{ $i }}][unit_price]" min="0" step="0.01"
-                         class="form-control" value="{{ $item['unit_price'] ?? 0 }}"
-                         placeholder="Birim Fiyat" required>
+                  <input type="text" class="form-control-plaintext unit-price-view" value="0.00" readonly>
+                  <input type="hidden" name="items[{{ $i }}][unit_price]"
+                         class="unit-price-hidden" value="{{ $item['unit_price'] ?? 0 }}">
                 </div>
                 <div class="col-md-1">
                   <button type="button" class="btn btn-danger remove-item">&times;</button>
@@ -108,9 +102,9 @@
           </button>
 
           <div class="d-flex justify-content-end mt-3">
-  <h5>Toplam: <span id="offer-total">0.00</span> ₺</h5>
-  <input type="hidden" name="total_amount" id="total_amount" value="0">
-</div>
+            <h5>Toplam: <span id="offer-total">0.00</span> ₺</h5>
+            <input type="hidden" name="total_amount" id="total_amount" value="0">
+          </div>
         </div>
 
         <div class="card-footer d-flex justify-content-end">

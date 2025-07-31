@@ -13,7 +13,6 @@
         @csrf @method('PUT')
         <div class="card-body">
           
-
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="row">
@@ -26,30 +25,12 @@
                   <option value="">-- seçiniz --</option>
                   @foreach($companies as $c)
                     <option value="{{ $c->id }}"
-                      {{ old('company_id', $offer->company_id) == $c->id ? 'selected' : '' }}>
-                      {{ $c->Company_name }}
+                      {{ (int) old('company_id', $offer->company_id) === $c->id ? 'selected' : '' }}>
+                      {{ $c->company_name }}
                     </option>
                   @endforeach
                 </select>
                 @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-              </div>
-            </div>
-
-            {{-- İlgili Sipariş --}}
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="order_id">Sipariş (opsiyonel)</label>
-                <select name="order_id" id="order_id"
-                        class="form-control @error('order_id') is-invalid @enderror">
-                  <option value="">-- seçiniz --</option>
-                  @foreach($orders as $o)
-                    <option value="{{ $o->id }}"
-                      {{ old('order_id', $offer->order_id) == $o->id ? 'selected' : '' }}>
-                      #{{ $o->id }} — {{ \Carbon\Carbon::parse($o->order_date)->format('Y-m-d') }}
-                    </option>
-                  @endforeach
-                </select>
-                @error('order_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
 
@@ -75,12 +56,12 @@
             </div>
 
             {{-- Durum --}}
-            <div class="col-md-4 mt-2">
+            <div class="col-md-4">
               <div class="form-group">
                 <label for="status">Durum</label>
                 <select name="status" id="status"
                         class="form-control @error('status') is-invalid @enderror" required>
-                  @foreach(['hazırlanıyor'=>'Hazırlanıyor','gönderildi'=>'Gönderildi','kabul'=>'Kabul','reddedildi'=>'Reddedildi'] as $key=>$label)
+                  @foreach(['gönderildi'=>'Gönderildi','kabul'=>'Kabul','reddedildi'=>'Reddedildi'] as $key=>$label)
                     <option value="{{ $key }}"
                       {{ old('status', $offer->status) === $key ? 'selected' : '' }}>
                       {{ $label }}
@@ -92,7 +73,7 @@
             </div>
           </div>
 
-          {{-- ---------- Teklif Kalemleri ---------- --}}
+          {{-- Teklif Kalemleri --}}
           <hr>
           <h5>Teklif Kalemleri</h5>
           <div id="items-container">

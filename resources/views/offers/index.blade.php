@@ -1,3 +1,4 @@
+{{-- resources/views/offers/index.blade.php veya ilgili dosya --}}
 @extends('layouts.app')
 
 @section('content')
@@ -15,8 +16,7 @@
           <table class="table table-hover mb-0">
             <thead>
               <tr>
-                <th>Müşteri</th>
-                <th>Sipariş #</th>
+                <th>Şirket</th>
                 <th>Teklif Tarihi</th>
                 <th>Geçerlilik Tarihi</th>
                 <th>Durum</th>
@@ -27,10 +27,9 @@
             <tbody>
               @forelse($offers as $offer)
               <tr>
-                <td>{{ $offer->customer->customer_name }}</td>
-                <td>{{ $offer->order_id ? '#'.$offer->order_id : '—' }}</td>
+                <td>{{ $offer->company?->company_name ?? '—' }}</td>
                 <td>{{ \Carbon\Carbon::parse($offer->offer_date)->format('d.m.Y') }}</td>
-                <td>{{ \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') }}</td>
+                <td>{{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}</td>
                 <td>{{ ucfirst($offer->status) }}</td>
                 <td class="text-end">{{ number_format($offer->total_amount, 2) }} ₺</td>
                 <td>
@@ -44,7 +43,7 @@
               </tr>
               @empty
               <tr>
-                <td colspan="7" class="text-center">Teklif bulunamadı.</td>
+                <td colspan="6" class="text-center">Teklif bulunamadı.</td>
               </tr>
               @endforelse
             </tbody>
@@ -55,10 +54,9 @@
         <div class="mobile-cards p-3">
           @forelse($offers as $offer)
           <div class="card shadow-sm p-3 mb-3">
-            <p><strong>Müşteri:</strong> {{ $offer->customer->customer_name }}</p>
-            <p><strong>Sipariş #:</strong> {{ $offer->order_id ? '#'.$offer->order_id : '—' }}</p>
+            <p><strong>Şirket:</strong> {{ $offer->company?->company_name ?? '—' }}</p>
             <p><strong>Teklif Tarihi:</strong> {{ \Carbon\Carbon::parse($offer->offer_date)->format('d.m.Y') }}</p>
-            <p><strong>Geçerlilik Tarihi:</strong> {{ \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') }}</p>
+            <p><strong>Geçerlilik Tarihi:</strong> {{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}</p>
             <p><strong>Durum:</strong> {{ ucfirst($offer->status) }}</p>
             <p><strong>Toplam:</strong> {{ number_format($offer->total_amount, 2) }} ₺</p>
             <div class="mt-2">
