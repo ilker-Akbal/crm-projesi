@@ -1,4 +1,4 @@
-{{-- resources/views/offers/create.blade.php --}}
+{{-- resources/views/offers/create.blade.php (Geçerlilik Tarihi zorunlu) --}}
 @extends('layouts.app')
 
 @section('content')
@@ -10,46 +10,36 @@
       <form action="{{ route('offers.store') }}" method="POST">
         @csrf
         <div class="card-body">
-          
-          {{-- giriş yapan kullanıcının customer_id’si --}}
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="row">
-            {{-- Şirket (opsiyonel) --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="company_id">Şirket (opsiyonel)</label>
                 <select name="company_id" id="company_id" class="form-control">
                   <option value="">-- seçiniz --</option>
                   @foreach($companies as $c)
-                    <option value="{{ $c->id }}"
-                      {{ old('company_id') == $c->id ? 'selected' : '' }}>
-                      {{ $c->company_name }}
-                    </option>
+                    <option value="{{ $c->id }}" @selected(old('company_id')==$c->id)>{{ $c->company_name }}</option>
                   @endforeach
                 </select>
               </div>
             </div>
 
-            {{-- Teklif / Geçerlilik Tarihleri --}}
             <div class="col-md-2">
               <div class="form-group">
                 <label for="offer_date">Teklif Tarihi</label>
-                <input type="date" name="offer_date" id="offer_date"
-                       class="form-control"
-                       value="{{ old('offer_date', today()->toDateString()) }}">
+                <input type="date" name="offer_date" id="offer_date" class="form-control" value="{{ old('offer_date', today()->toDateString()) }}" required>
               </div>
             </div>
 
             <div class="col-md-2">
               <div class="form-group">
-                <label for="valid_until">Geçerlilik Tarihi</label>
-                <input type="date" name="valid_until" id="valid_until"
-                       class="form-control" value="{{ old('valid_until') }}">
+                <label for="valid_until">Geçerlilik Tarihi *</label>
+                <input type="date" name="valid_until" id="valid_until" class="form-control @error('valid_until') is-invalid @enderror" value="{{ old('valid_until') }}" required>
+                @error('valid_until') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
 
-            {{-- Durum (sadece hazırlaniyor dropdown) --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="status">Durum</label>
@@ -60,46 +50,33 @@
             </div>
           </div>
 
-          {{-- --------- Teklif Kalemleri --------- --}}
-          <hr>
-          <h5>Teklif Kalemleri</h5>
-
+          {{-- Kalemler vs. (değişmedi) --}}
+          @php $oldItems = old('items', []); @endphp
+          <hr><h5>Teklif Kalemleri</h5>
           <div id="items-container">
-            @php $oldItems = old('items', []); @endphp
-
             @foreach($oldItems as $i => $item)
               <div class="row mb-2 item-row">
                 <div class="col-md-5">
                   <select name="items[{{ $i }}][product_id]" class="form-control product-select" required>
                     <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
-                      <option value="{{ $prod['id'] }}"
-                        {{ ($item['product_id'] ?? null) == $prod['id'] ? 'selected' : '' }}>
-                        {{ $prod['product_name'] }}
-                      </option>
+                      <option value="{{ $prod['id'] }}" @selected(($item['product_id']??null)==$prod['id'])>{{ $prod['product_name'] }}</option>
                     @endforeach
                   </select>
                 </div>
                 <div class="col-md-3">
-                  <input type="number" name="items[{{ $i }}][amount]" min="1" class="form-control amount"
-                         value="{{ $item['amount'] ?? 1 }}" placeholder="Adet" required>
+                  <input type="number" name="items[{{ $i }}][amount]" min="1" class="form-control amount" value="{{ $item['amount']??1 }}" required>
                   <small class="text-muted stock-info"></small>
                 </div>
                 <div class="col-md-3">
                   <input type="text" class="form-control-plaintext unit-price-view" value="0.00" readonly>
-                  <input type="hidden" name="items[{{ $i }}][unit_price]"
-                         class="unit-price-hidden" value="{{ $item['unit_price'] ?? 0 }}">
+                  <input type="hidden" name="items[{{ $i }}][unit_price]" class="unit-price-hidden" value="{{ $item['unit_price']??0 }}">
                 </div>
-                <div class="col-md-1">
-                  <button type="button" class="btn btn-danger remove-item">&times;</button>
-                </div>
+                <div class="col-md-1"><button type="button" class="btn btn-danger remove-item">&times;</button></div>
               </div>
             @endforeach
           </div>
-
-          <button type="button" id="add-item" class="btn btn-sm btn-outline-primary">
-            + Kalem Ekle
-          </button>
+          <button type="button" id="add-item" class="btn btn-sm btn-outline-primary">+ Kalem Ekle</button>
 
           <div class="d-flex justify-content-end mt-3">
             <h5>Toplam: <span id="offer-total">0.00</span> ₺</h5>
@@ -107,10 +84,7 @@
           </div>
         </div>
 
-        <div class="card-footer d-flex justify-content-end">
-          <a href="{{ route('offers.index') }}" class="btn btn-secondary mr-2">İptal</a>
-          <button type="submit" class="btn btn-primary">Kaydet</button>
-        </div>
+        <div class="card-footer d-flex justify-content-end"><a href="{{ route('offers.index') }}" class="btn btn-secondary mr-2">İptal</a><button type="submit" class="btn btn-primary">Kaydet</button></div>
       </form>
     </div>
   </div>

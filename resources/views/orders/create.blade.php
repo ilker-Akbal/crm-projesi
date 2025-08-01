@@ -1,4 +1,4 @@
-{{-- resources/views/orders/create.blade.php --}}
+{{-- resources/views/orders/create.blade.php (yeniden düzenlendi) --}}
 @extends('layouts.app')
 
 @section('content')
@@ -12,7 +12,7 @@
         <div class="card-body">
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
-          {{-- ---------- Sipariş Başlığı ---------- --}}
+          {{-- -------- Başlık Satırı -------- --}}
           <div class="row">
             {{-- Firma --}}
             <div class="col-md-4">
@@ -29,58 +29,28 @@
               </div>
             </div>
 
-            {{-- Sipariş / Teslim Tarihleri --}}
+            {{-- Sipariş / Teslim Tarihi --}}
             <div class="col-md-4">
               <div class="form-group">
                 <label for="order_date">Sipariş Tarihi *</label>
-                <input  type="date" name="order_date" id="order_date"
-                        class="form-control"
-                        value="{{ old('order_date', today()->toDateString()) }}" required>
+                <input type="date" id="order_date" name="order_date" required
+                       class="form-control"
+                       value="{{ old('order_date', today()->toDateString()) }}">
               </div>
             </div>
             <div class="col-md-4">
-  <div class="form-group">
-    <label for="delivery_date">Teslim Tarihi *</label>
-    <input  type="date" name="delivery_date" id="delivery_date"
-            class="form-control @error('delivery_date') is-invalid @enderror"
-            value="{{ old('delivery_date') }}" required>
-    @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-  </div>
-</div>
-
-          <div class="row">
-            {{-- Sipariş Türü --}}
-            <div class="col-md-6">
               <div class="form-group">
-                <label>Sipariş Türü *</label><br>
-                <label class="mr-3">
-                  <input type="radio" name="order_type" value="sale"
-                         {{ old('order_type','sale')=='sale' ? 'checked' : '' }}>
-                  Satış
-                </label>
-                <label>
-                  <input type="radio" name="order_type" value="purchase"
-                         {{ old('order_type')=='purchase' ? 'checked' : '' }}>
-                  Satın Alma
-                </label>
-              </div>
-            </div>
-
-            {{-- Ödeme Durumu --}}
-            <div class="col-md-6">
-              <div class="form-group">
-                <label>
-                  <input type="checkbox" name="is_paid" value="1"
-                         {{ old('is_paid') ? 'checked' : '' }}>
-                  Ödeme tamamlandı
-                </label>
+                <label for="delivery_date">Teslim Tarihi *</label>
+                <input type="date" id="delivery_date" name="delivery_date" required
+                       class="form-control @error('delivery_date') is-invalid @enderror"
+                       value="{{ old('delivery_date') }}">
+                @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
           </div>
 
-          {{-- ---------- Kalemler ---------- --}}
-          <h5 class="mt-4">Sipariş Kalemleri</h5>
-
+          {{-- -------- Sipariş Kalemleri BLOĞU -------- --}}
+          <h5 class="mt-3">Sipariş Kalemleri</h5>
           <div class="table-responsive">
             <table class="table table-bordered" id="order-items">
               <thead class="text-center">
@@ -94,16 +64,30 @@
               </thead>
               <tbody></tbody>
             </table>
-
-            <button type="button" class="btn btn-sm btn-secondary" id="add-row">
-              Satır Ekle
-            </button>
+            <button type="button" class="btn btn-sm btn-secondary" id="add-row">Satır Ekle</button>
           </div>
 
-          <div class="d-flex justify-content-end mt-3">
-            <h4>Toplam: <span id="order-total">0.00</span> ₺</h4>
-            <input type="hidden" name="total_amount" id="total_amount" value="0">
+          {{-- -------- Sipariş Türü -------- --}}
+          <div class="form-group mt-4">
+            <label>Sipariş Türü *</label><br>
+            <label class="mr-3">
+              <input type="radio" name="order_type" value="sale" {{ old('order_type','sale')=='sale' ? 'checked' : '' }}> Satış
+            </label>
+            <label>
+              <input type="radio" name="order_type" value="purchase" {{ old('order_type')=='purchase' ? 'checked' : '' }}> Satın Alma
+            </label>
           </div>
+
+          {{-- -------- Ödeme + Toplam -------- --}}
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              <label class="mb-0">
+                <input type="checkbox" name="is_paid" value="1" {{ old('is_paid') ? 'checked' : '' }}> Ödeme tamamlandı
+              </label>
+            </div>
+            <h4 class="mb-0">Toplam: <span id="order-total">0.00</span> ₺</h4>
+          </div>
+          <input type="hidden" name="total_amount" id="total_amount" value="0">
         </div>
 
         <div class="card-footer">

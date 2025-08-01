@@ -10,21 +10,22 @@ class Order extends Model
     use HasFactory;
 
     /*------------- Sabitler -------------*/
-    public const SALE      = 'sale';
-    public const PURCHASE  = 'purchase';
+    public const SALE     = 'sale';
+    public const PURCHASE = 'purchase';
 
     /*------------- Mass-assignment -------------*/
     protected $fillable = [
         'customer_id',
-        'order_type',             // sale | purchase
-        'situation',              // hazırlanıyor | tamamlandı
+        'company_id',            // ⭐ company_id burada
+        'order_type',
+        'situation',
         'order_date',
         'delivery_date',
         'total_amount',
         'is_paid',
         'paid_at',
         'payment_movement_id',
-        'updated_by','company_id',
+        'updated_by',
     ];
 
     /*------------- Dönüşümler -------------*/
@@ -37,7 +38,6 @@ class Order extends Model
 
     /*------------- İlişkiler -------------*/
     public function customer()      { return $this->belongsTo(Customer::class); }
-
     public function orderProducts() { return $this->hasMany(OrderProduct::class); }
 
     public function products()
@@ -46,13 +46,14 @@ class Order extends Model
                     ->withPivot(['amount', 'unit_price'])
                     ->withTimestamps();
     }
-public function serials() { return $this->hasMany(ProductSerial::class); }
-    /* Ödeme hareketi (OrderObserver oluşturuyor) */
-    public function paymentMovement()
+
+    public function serials()         { return $this->hasMany(ProductSerial::class); }
+    public function paymentMovement() { return $this->belongsTo(CurrentMovement::class, 'payment_movement_id'); }
+
+    public function company()
     {
-        
-    
-        return $this->belongsTo(CurrentMovement::class, 'payment_movement_id');
+        // Boşsa “―” gösterir; SoftDeletes varsa ->withTrashed() ekleyebilirsin
+        return $this->belongsTo(Company::class)
+                    ->withDefault(['company_name' => '―']);
     }
-    public function company() { return $this->belongsTo(Company::class); }
 }

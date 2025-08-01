@@ -1,3 +1,4 @@
+{{-- resources/views/accounts/index.blade.php (Gör butonu genişletildi) --}}
 @extends('layouts.app')
 
 @section('content')
@@ -15,7 +16,7 @@
             <tr>
               <th>Müşteri</th>
               <th>Açılış Tarihi</th>
-              <th style="width:140px">İşlemler</th>
+              <th style="width:120px" class="text-center">İşlem</th>
             </tr>
           </thead>
           <tbody>
@@ -23,17 +24,12 @@
               <tr>
                 <td>{{ $acc->customer->customer_name }}</td>
                 <td>{{ \Carbon\Carbon::parse($acc->opening_date)->format('d.m.Y') }}</td>
-                <td>
-                  <a href="{{ route('accounts.show',  $acc) }}" class="btn btn-xs btn-info">Gör</a>
-                  <a href="{{ route('accounts.edit',  $acc) }}" class="btn btn-xs btn-warning">Düzen</a>
-                  <form action="{{ route('accounts.destroy', $acc) }}" method="POST" class="d-inline">
-                    @csrf @method('DELETE')
-                    <button onclick="return confirm('Silinsin mi?')" class="btn btn-xs btn-danger">Sil</button>
-                  </form>
+                <td class="text-center">
+                  <a href="{{ route('accounts.show', $acc) }}" class="btn btn-sm btn-info w-100">Gör</a>
                 </td>
               </tr>
             @empty
-              <tr><td colspan="5" class="text-center">Kayıtlı hesap bulunamadı.</td></tr>
+              <tr><td colspan="3" class="text-center">Kayıtlı hesap bulunamadı.</td></tr>
             @endforelse
           </tbody>
         </table>

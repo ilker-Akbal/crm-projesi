@@ -1,3 +1,4 @@
+{{-- resources/views/orders/index.blade.php (güncellenmiş) --}}
 @extends('layouts.app')
 
 @section('content')
@@ -13,7 +14,7 @@
 
       <div class="card-body p-0">
 
-        {{-- Masaüstü için tablo --}}
+        {{-- Masaüstü tablo --}}
         <div class="desktop-table table-responsive">
           <table class="table table-hover mb-0">
             <thead>
@@ -33,46 +34,48 @@
               @forelse($orders as $o)
                 @php
                   $reserveQty = ($o->order_type === 'sale' && ! $o->is_paid)
-                                ? $o->products->sum('pivot.amount')
-                                : 0;
+                                ? $o->products->sum('pivot.amount') : 0;
                 @endphp
                 <tr>
                   <td>{{ $o->customer->customer_name }}</td>
                   <td>{{ $o->company->company_name ?? '—' }}</td>
 
-                  {{-- Tip (rozet) --}}
+                  {{-- Tip --}}
                   <td>
-                    @if($o->order_type === 'sale')
-                      <span class="badge bg-info text-dark">Satış</span>
-                    @else
-                      <span class="badge bg-secondary">Alış</span>
-                    @endif
+                    <span class="badge {{ $o->order_type==='sale' ? 'bg-info text-dark' : 'bg-secondary' }}">
+                      {{ $o->order_type==='sale' ? 'Satış' : 'Alış' }}
+                    </span>
                   </td>
 
                   <td>{{ $o->order_date?->format('d.m.Y') }}</td>
                   <td>{{ $o->delivery_date?->format('d.m.Y') ?? '—' }}</td>
 
-                  {{-- Ödeme durumu --}}
+                  {{-- Ödeme --}}
                   <td>
                     @if($o->is_paid)
-                      <span class="badge bg-success">
-                        Ödendi {{ $o->paid_at?->format('d.m.Y') }}
-                      </span>
+                      <span class="badge bg-success">Ödendi {{ $o->paid_at?->format('d.m.Y') }}</span>
                     @else
                       <span class="badge bg-warning text-dark">Bekliyor</span>
                     @endif
                   </td>
 
                   <td class="text-end">{{ $reserveQty ?: '—' }}</td>
-                  <td class="text-end">{{ number_format($o->total_amount, 2) }}</td>
+                  <td class="text-end">{{ number_format($o->total_amount, 2) }} ₺</td>
 
+                  {{-- İşlemler --}}
                   <td>
                     <a href="{{ route('orders.show', $o) }}" class="btn btn-sm btn-info">Göster</a>
-                    <a href="{{ route('orders.edit', $o) }}" class="btn btn-sm btn-warning">Düzenle</a>
-                    <form action="{{ route('orders.destroy', $o) }}" method="POST" class="d-inline">
-                      @csrf @method('DELETE')
-                      <button class="btn btn-sm btn-danger" onclick="return confirm('Silinsin mi?')">Sil</button>
-                    </form>
+
+                    @if(! $o->is_paid)
+                      <a href="{{ route('orders.edit', $o) }}" class="btn btn-sm btn-warning">Düzenle</a>
+                      <form action="{{ route('orders.destroy', $o) }}" method="POST" class="d-inline">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Silinsin mi?')">Sil</button>
+                      </form>
+                    @else
+                      <button class="btn btn-sm btn-secondary" disabled>Düzenle</button>
+                      <button class="btn btn-sm btn-secondary" disabled>Sil</button>
+                    @endif
                   </td>
                 </tr>
               @empty
@@ -84,38 +87,34 @@
           </table>
         </div>
 
-        {{-- Mobil için kart görünümü --}}
+        {{-- Mobil kartlar --}}
         <div class="mobile-cards p-3">
           @forelse($orders as $o)
             @php
               $reserveQty = ($o->order_type === 'sale' && ! $o->is_paid)
-                            ? $o->products->sum('pivot.amount')
-                            : 0;
+                            ? $o->products->sum('pivot.amount') : 0;
             @endphp
             <div class="card shadow-sm p-3 mb-3">
               <p><strong>Müşteri:</strong> {{ $o->customer->customer_name }}</p>
               <p><strong>Firma:</strong> {{ $o->company->company_name ?? '—' }}</p>
-              <p><strong>Tip:</strong> 
-                @if($o->order_type === 'sale') Satış @else Alış @endif
-              </p>
-              <p><strong>Sipariş Tarihi:</strong> {{ $o->order_date?->format('d.m.Y') }}</p>
-              <p><strong>Teslim Tarihi:</strong> {{ $o->delivery_date?->format('d.m.Y') ?? '—' }}</p>
-              <p><strong>Ödeme:</strong> 
-                @if($o->is_paid) 
-                  Ödendi ({{ $o->paid_at?->format('d.m.Y') }})
-                @else 
-                  Bekliyor
-                @endif
-              </p>
+              <p><strong>Tip:</strong> {{ $o->order_type==='sale' ? 'Satış' : 'Alış' }}</p>
+              <p><strong>Sipariş:</strong> {{ $o->order_date?->format('d.m.Y') }}</p>
+              <p><strong>Teslim:</strong> {{ $o->delivery_date?->format('d.m.Y') ?? '—' }}</p>
+              <p><strong>Ödeme:</strong> {{ $o->is_paid ? 'Ödendi' : 'Bekliyor' }}</p>
               <p><strong>Rezerve:</strong> {{ $reserveQty ?: '—' }}</p>
               <p><strong>Toplam:</strong> {{ number_format($o->total_amount, 2) }} ₺</p>
               <div class="mt-2">
-                <a href="{{ route('orders.show',$o) }}" class="btn btn-sm btn-info">Göster</a>
-                <a href="{{ route('orders.edit',$o) }}" class="btn btn-sm btn-warning">Düzenle</a>
-                <form action="{{ route('orders.destroy',$o) }}" method="POST" class="d-inline">
-                  @csrf @method('DELETE')
-                  <button onclick="return confirm('Silinsin mi?')" class="btn btn-sm btn-danger">Sil</button>
-                </form>
+                <a href="{{ route('orders.show', $o) }}" class="btn btn-sm btn-info">Göster</a>
+                @if(! $o->is_paid)
+                  <a href="{{ route('orders.edit', $o) }}" class="btn btn-sm btn-warning">Düzenle</a>
+                  <form action="{{ route('orders.destroy', $o) }}" method="POST" class="d-inline">
+                    @csrf @method('DELETE')
+                    <button onclick="return confirm('Silinsin mi?')" class="btn btn-sm btn-danger">Sil</button>
+                  </form>
+                @else
+                  <button class="btn btn-sm btn-secondary" disabled>Düzenle</button>
+                  <button class="btn btn-sm btn-secondary" disabled>Sil</button>
+                @endif
               </div>
             </div>
           @empty
@@ -131,17 +130,12 @@
 
 @push('styles')
 <style>
-  /* Masaüstü ve mobil görünümü ayır */
-  .mobile-cards { display: none; }
-  @media (max-width: 768px) {
-    .desktop-table { display: none; }
-    .mobile-cards { display: block; }
-  }
+/* Görünüm ayrımı */
+.mobile-cards{display:none}
+@media(max-width:768px){.desktop-table{display:none}.mobile-cards{display:block}}
 
-  /* Uzun metinlerin satır kırması */
-  .table td, .table th {
-    white-space: normal !important;
-    word-break: break-word;
-  }
+.table td,.table th{white-space:normal!important;word-break:break-word}
+
+button[disabled]{opacity:.5;cursor:not-allowed}
 </style>
 @endpush
