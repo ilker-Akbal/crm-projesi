@@ -49,6 +49,18 @@ Route::middleware('auth')->group(function () {
     /* ---------- Dashboard ---------- */
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 
+    /* ---------- PDF: Şirketler ---------- */
+    Route::get('companies/pdf',        [CompanyController::class, 'exportPdf'])->name('companies.pdf');
+    Route::get('companies/pdf/filter', [CompanyController::class, 'exportPdfWithFilter'])->name('companies.pdf.filter');
+
+    /* ---------- PDF: Siparişler ---------- */
+    Route::get('orders/pdf',        [OrderController::class, 'exportPdf'])->name('orders.pdf');
+    Route::get('orders/pdf/filter', [OrderController::class, 'exportPdfWithFilter'])->name('orders.pdf.filter');
+
+    /* ---------- PDF: Hesap Hareketleri ---------- */
+    Route::get('movements/pdf',        [MovementController::class, 'exportPdf'])->name('movements.pdf');
+    Route::get('movements/pdf/filter', [MovementController::class, 'exportPdfWithFilter'])->name('movements.pdf.filter');
+
     /* ---------- CRM Kaynakları ---------- */
     Route::resources([
         'companies'       => CompanyController::class,
@@ -64,7 +76,7 @@ Route::middleware('auth')->group(function () {
         'reminders'       => ReminderController::class,
     ]);
 
-    // Sınırlı işlemler
+    /* ---------- Sınırlı işlemler ---------- */
     Route::resource('orders', OrderController::class)
          ->only(['index','create','store','edit','update','destroy']);
 
@@ -75,23 +87,17 @@ Route::middleware('auth')->group(function () {
     Route::resource('product_serials', ProductSerialController::class)
          ->only(['index','create','store','destroy']);
 
-    Route::get('products/{product}/serials_create',
-        [ProductController::class,'createSerials']
-    )->name('products.serials.create');
+    Route::get('products/{product}/serials_create', [ProductController::class,'createSerials'])
+         ->name('products.serials.create');
+    Route::post('products/{product}/serials_create', [ProductController::class,'storeSerials'])
+         ->name('products.serials.store');
 
-    Route::post('products/{product}/serials_create',
-        [ProductController::class,'storeSerials']
-    )->name('products.serials.store');
+    Route::get('/orders/{order}/serials_create', [OrderSerialController::class, 'create'])
+         ->name('orders.serials.create');
+    Route::post('/orders/{order}/serials', [OrderSerialController::class, 'store'])
+         ->name('orders.serials.store');
 
-    Route::get('/orders/{order}/serials_create',
-        [OrderSerialController::class, 'create']
-    )->name('orders.serials.create');
-
-    Route::post('/orders/{order}/serials',
-        [OrderSerialController::class, 'store']
-    )->name('orders.serials.store');
-
-    /* ---------- Support Requests ---------- */
+    /* ---------- Support ---------- */
     Route::resource('product_stocks', ProductStockController::class)
          ->only(['index','create','store','edit','update']);
 
@@ -129,7 +135,6 @@ Route::middleware('auth')->group(function () {
 */
 Route::prefix('admin')->name('admin.')->group(function () {
 
-    // Admin login sayfasına giren herkesi logout et
     Route::get('login', function () {
         Auth::logout();
         return app(AdminAuthController::class)->showLogin();
@@ -137,12 +142,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::post('login', [AdminAuthController::class, 'login']);
 
-    /* ---------- Giriş yapmış adminler ---------- */
     Route::middleware(['isAdmin'])->group(function () {
         Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
         Route::get('/',       [AdminController::class, 'index'])->name('dashboard');
-
-        // Admin panel kaynakları
         Route::resource('users',     UserController::class);
         Route::resource('customers', CustomerController::class);
     });
@@ -152,10 +154,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 |--------------------------------------------------------------------------
 | 4) Admin alanından çıkınca otomatik logout
 |--------------------------------------------------------------------------
-|
-|  - URL admin/* ile BAŞLAMIYORSA ve giriş yapan user admin ise oturumu kapat.
-|  - Aynı URL’ye redirect; ikinci istekte gerçek rota çalışır.
-|
 */
 Route::any('{path}', function (\Illuminate\Http\Request $request, $path) {
     if (Auth::check() && Auth::user()->is_admin) {
@@ -164,6 +162,5 @@ Route::any('{path}', function (\Illuminate\Http\Request $request, $path) {
         $request->session()->regenerateToken();
         return redirect('/' . ltrim($path, '/'));
     }
-
-    abort(404); // Gerçek rota yoksa 404
+    abort(404);
 })->where('path', '^(?!admin).*');
