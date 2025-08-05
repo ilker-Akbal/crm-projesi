@@ -1,4 +1,4 @@
-{{-- resources/views/product_stocks/index.blade.php (Hareket & Miktar sütunları kaldırıldı) --}}
+{{-- resources/views/product_stocks/index.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -54,14 +54,19 @@
             </thead>
             <tbody>
               @forelse($movements as $idx=>$m)
-                @php $avail=$m->available_stock; $badge=$avail==0? 'danger':($avail<10?'warning':'success'); @endphp
+                @php
+                  $avail = $m->available_stock;
+                  $badge = $avail == 0 ? 'danger' : ($avail < 10 ? 'warning' : 'success');
+                @endphp
                 <tr class="text-center">
                   <td class="text-start">{{ $m->product->product_name }}</td>
                   <td class="text-end">{{ $m->stock_quantity }}</td>
                   <td class="text-end">{{ $m->blocked_stock }}</td>
                   <td class="text-end">{{ $m->reserved_stock }}</td>
                   <td><span class="badge badge-{{ $badge }}">{{ $avail }}</span></td>
-                  <td>{{ $m->update_date->format('d.m.Y') }}</td>
+                  <td title="{{ \Carbon\Carbon::parse($m->update_date)->format('H:i') }}">
+                    {{ \Carbon\Carbon::parse($m->update_date)->format('d.m.Y H:i') }}
+                  </td>
                 </tr>
               @empty
                 <tr><td colspan="6" class="text-center">Kayıt yok</td></tr>
@@ -76,14 +81,22 @@
     <div class="mobile-cards p-3">
       @php $movements=$productStocks->sortBy('update_date')->values(); @endphp
       @forelse($movements as $m)
-        @php $avail=$m->available_stock; $badge=$avail==0? 'danger':($avail<10?'warning':'success'); @endphp
+        @php
+          $avail = $m->available_stock;
+          $badge = $avail == 0 ? 'danger' : ($avail < 10 ? 'warning' : 'success');
+        @endphp
         <div class="card shadow-sm p-3 mb-3">
           <p><strong>Ürün:</strong> {{ $m->product->product_name }}</p>
           <p><strong>Toplam:</strong> {{ $m->stock_quantity }}</p>
           <p><strong>Bloke:</strong> {{ $m->blocked_stock }}</p>
           <p><strong>Rezerve:</strong> {{ $m->reserved_stock }}</p>
           <p><strong>Kullanılabilir:</strong> <span class="badge badge-{{ $badge }}">{{ $avail }}</span></p>
-          <p><strong>Güncelleme:</strong> {{ $m->update_date->format('d.m.Y') }}</p>
+          <p>
+            <strong>Güncelleme:</strong>
+            <span title="{{ \Carbon\Carbon::parse($m->update_date)->format('H:i') }}">
+              {{ \Carbon\Carbon::parse($m->update_date)->format('d.m.Y H:i') }}
+            </span>
+          </p>
         </div>
       @empty
         <p class="text-center text-muted">Kayıt yok</p>

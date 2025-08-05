@@ -15,7 +15,7 @@ return new class extends Migration
     $table->id();
     $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
     $table->integer('stock_quantity');
-    $table->date('update_date');
+    $table->datetime('update_date');
     $table->foreignId('updated_by')->nullable()->constrained('users');
     $table->timestamps();
 });

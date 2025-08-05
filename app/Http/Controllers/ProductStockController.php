@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
 use App\Models\ProductStock;
+use Carbon\Carbon;
 
 class ProductStockController extends Controller
 {
@@ -57,27 +58,25 @@ class ProductStockController extends Controller
 
     // Stok kaydet
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'product_id'     => 'required|exists:products,id',
-            'stock_quantity' => 'required|integer|min:0',
-            'blocked_stock'  => 'nullable|integer|min:0|max:'.$request->stock_quantity,
-            'reserved_stock' => 'nullable|integer|min:0|max:'.($request->stock_quantity - $request->blocked_stock),
-            'update_date'    => 'required|date',
-        ]);
+{
+    $request->validate([
+        'product_id'      => 'required|exists:products,id',
+        'stock_quantity'  => 'required|integer|min:0',
+        'blocked_stock'   => 'nullable|integer|min:0',
+        'reserved_stock'  => 'nullable|integer|min:0',
+        'update_date'     => 'required|date',
+    ]);
 
-        ProductStock::create([
-            'product_id'     => $data['product_id'],
-            'stock_quantity' => $data['stock_quantity'],
-            'blocked_stock'  => $data['blocked_stock']  ?? 0,
-            'reserved_stock' => $data['reserved_stock'] ?? 0,
-            'update_date'    => $data['update_date'],
-            'updated_by'     => Auth::id(),
-        ]);
+    $productStock = new ProductStock();
+    $productStock->product_id      = $request->product_id;
+    $productStock->stock_quantity  = $request->stock_quantity;
+    $productStock->blocked_stock   = $request->blocked_stock ?? 0;
+    $productStock->reserved_stock  = $request->reserved_stock ?? 0;
+    $productStock->update_date     = Carbon::parse($request->update_date); // ⬅️ BURASI ÖNEMLİ
+    $productStock->save();
 
-        return redirect()->route('product_stocks.index')
-                         ->with('success','Stok başarıyla eklendi.');
-    }
+    return redirect()->route('product_stocks.index')->with('success', 'Stok başarıyla eklendi.');
+}
 
     // Düzenleme formu
     public function edit(ProductStock $productStock)
@@ -95,29 +94,22 @@ class ProductStockController extends Controller
 
     // Güncelle
     public function update(Request $request, ProductStock $productStock)
-    {
-        if ($productStock->product->customer_id !== Auth::user()->customer_id) {
-            abort(403);
-        }
+{
+    $request->validate([
+        'product_id'      => 'required|exists:products,id',
+        'stock_quantity'  => 'required|integer|min:0',
+        'blocked_stock'   => 'nullable|integer|min:0',
+        'reserved_stock'  => 'nullable|integer|min:0',
+        'update_date'     => 'required|date',
+    ]);
 
-        $data = $request->validate([
-            'product_id'     => 'required|exists:products,id',
-            'stock_quantity' => 'required|integer|min:0',
-            'blocked_stock'  => 'nullable|integer|min:0|max:'.$request->stock_quantity,
-            'reserved_stock' => 'nullable|integer|min:0|max:'.($request->stock_quantity - $request->blocked_stock),
-            'update_date'    => 'required|date',
-        ]);
+    $productStock->product_id      = $request->product_id;
+    $productStock->stock_quantity  = $request->stock_quantity;
+    $productStock->blocked_stock   = $request->blocked_stock ?? 0;
+    $productStock->reserved_stock  = $request->reserved_stock ?? 0;
+    $productStock->update_date     = Carbon::parse($request->update_date); // ⬅️ BURASI
+    $productStock->save();
 
-        $productStock->update([
-            'product_id'     => $data['product_id'],
-            'stock_quantity' => $data['stock_quantity'],
-            'blocked_stock'  => $data['blocked_stock']  ?? 0,
-            'reserved_stock' => $data['reserved_stock'] ?? 0,
-            'update_date'    => $data['update_date'],
-            'updated_by'     => Auth::id(),
-        ]);
-
-        return redirect()->route('product_stocks.index')
-                         ->with('success','Stok başarıyla güncellendi.');
-    }
+    return redirect()->route('product_stocks.index')->with('success', 'Stok başarıyla güncellendi.');
+}
 }

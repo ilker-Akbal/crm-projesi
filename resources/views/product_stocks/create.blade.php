@@ -27,10 +27,10 @@
           </div>
         </div>
         <div class="form-group mt-3">
-          <label>Güncelleme Tarihi *</label>
-          <input type="date" name="update_date" class="form-control"
-                 value="{{ today()->toDateString() }}" required>
-        </div>
+  <label>Güncelleme Tarihi *</label>
+  <input type="datetime-local" name="update_date" class="form-control" 
+         value="{{ old('update_date', now()->format('Y-m-d\TH:i')) }}" required>
+</div>
       </div>
       <div class="card-footer text-right">
         <a href="{{ route('product_stocks.index') }}" class="btn btn-secondary mr-2">İptal</a>

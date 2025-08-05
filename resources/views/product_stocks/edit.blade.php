@@ -39,11 +39,21 @@
         </div>
 
         <div class="form-group mt-3">
-          <label>Güncelleme Tarihi *</label>
-          <input type="date" name="update_date" class="form-control"
-                 value="{{ old('update_date',$productStock->update_date->toDateString()) }}"
-                 required>
-        </div>
+  <label>Güncelleme Tarihi *</label>
+
+  @php
+    // Veriyi Carbon ile parse et, input formatına getir
+    $formattedDateTime = \Carbon\Carbon::parse($productStock->update_date)->format('Y-m-d\TH:i');
+  @endphp
+
+  <input type="datetime-local" name="update_date" class="form-control" 
+         value="{{ old('update_date', $formattedDateTime) }}" required>
+
+  <small class="text-muted d-block mt-1">
+    Blade formatlı değer: <code>{{ $formattedDateTime }}</code><br>
+    Orijinal veri (DB): <code>{{ $productStock->update_date }}</code>
+  </small>
+</div>
       </div>
       <div class="card-footer text-right">
         <a href="{{ route('product_stocks.index') }}" class="btn btn-secondary mr-2">İptal</a>

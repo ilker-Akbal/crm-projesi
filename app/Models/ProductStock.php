@@ -22,7 +22,7 @@ class ProductStock extends Model
     }
 
     protected $appends = ['available_stock'];
-protected $casts = ['update_date' => 'date'];
+protected $casts = ['update_date' => 'datetime'];
 
 public function getAvailableStockAttribute(): int
 {
