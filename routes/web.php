@@ -10,6 +10,7 @@ use App\Http\Controllers\{
     CompanyController,
     ContactController,
     OrderController,
+    OrderPdfController,
     OfferController,
     ProductController,
     ProductStockController,
@@ -54,8 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::get('companies/pdf/filter', [CompanyController::class, 'exportPdfWithFilter'])->name('companies.pdf.filter');
 
     /* ---------- PDF: Siparişler ---------- */
-    Route::get('orders/pdf',        [OrderController::class, 'exportPdf'])->name('orders.pdf');
-    Route::get('orders/pdf/filter', [OrderController::class, 'exportPdfWithFilter'])->name('orders.pdf.filter');
+    Route::get('orders/pdf',        [OrderPdfController::class, 'exportPdf'])->name('orders.pdf');
+    Route::get('orders/pdf/filter', [OrderPdfController::class, 'exportPdfWithFilter'])->name('orders.pdf.filter');
 
     /* ---------- PDF: Hesap Hareketleri ---------- */
     Route::get('movements/pdf',        [MovementController::class, 'exportPdf'])->name('movements.pdf');
