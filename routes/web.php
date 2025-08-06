@@ -58,6 +58,11 @@ Route::middleware('auth')->group(function () {
     Route::get('orders/pdf',        [OrderPdfController::class, 'exportPdf'])->name('orders.pdf');
     Route::get('orders/pdf/filter', [OrderPdfController::class, 'exportPdfWithFilter'])->name('orders.pdf.filter');
 
+    /* ---------- PDF: Kişiler ---------- */
+    Route::get('contacts/pdf',        [ContactController::class, 'exportPdf'])->name('contacts.pdf');
+    Route::get('contacts/pdf/filter', [ContactController::class, 'exportPdfWithFilter'])->name('contacts.pdf.filter');
+
+
     /* ---------- PDF: Hesap Hareketleri ---------- */
     Route::get('movements/pdf',        [MovementController::class, 'exportPdf'])->name('movements.pdf');
     Route::get('movements/pdf/filter', [MovementController::class, 'exportPdfWithFilter'])->name('movements.pdf.filter');
