@@ -102,9 +102,17 @@ class ReportController extends Controller
 
         // 3) Her stok kaydına 'available' alanını ekle
         foreach ($latestStocks as $stock) {
-            $soldQty = $sold[$stock->product_id] ?? 0;
-            $stock->available = max(0, $stock->stock_quantity - $soldQty);
-        }
+    $soldQty = $sold[$stock->product_id] ?? 0;
+
+    // Gerçek kullanılabilir stok: mevcut stok - rezerve - bloke
+    $available = $stock->stock_quantity - $stock->reserved_stock - $stock->blocked_stock;
+
+    // Satışlar da düşülecekse (ikisini aynı anda yapmamalısın!)
+    // $available -= $soldQty;
+
+    // Negatif değer olmasın
+    $stock->available = max(0, $available);
+}
 
         return view('reports.product_stock', [
             'stocks' => $latestStocks,
