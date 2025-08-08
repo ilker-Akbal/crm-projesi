@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Order;
 use App\Models\ProductStock;
 use App\Models\Customer;
@@ -14,22 +15,31 @@ use App\Models\SupportRequest;
 class ReportController extends Controller
 {
     /* -------------------------------------------------
-     |  Satış Raporu – Sol: Toplam Ciro, Sağ: Ürün Adet
+     |  Yardımcı: QuickChart nesnesini data-URI'ye çevir
+     * ------------------------------------------------*/
+    private function qcToDataUri(\QuickChart $chart): string
+    {
+        $png = file_get_contents($chart->getUrl());          // ham PNG
+        return 'data:image/png;base64,' . base64_encode($png);
+    }
+
+    /* -------------------------------------------------
+     |  Satış Raporu (web ekranı)
      * ------------------------------------------------*/
     public function sales(Request $request)
     {
         $customerId = Auth::user()->customer_id;
 
-        // 1) Tablo için ham siparişler (Ürünleri de eager-load)
+        // Tablo verisi
         $orders = Order::with(['company', 'products'])
                        ->where('customer_id', $customerId)
                        ->orderByDesc('order_date')
                        ->get();
 
-        // 2) Donut: Şirkete göre Toplam Ciro
+        // Ciro (donut)
         $revenueData = Order::selectRaw(
                             'companies.company_name AS company,
-                             SUM(orders.total_amount)       AS revenue'
+                             SUM(orders.total_amount) AS revenue'
                         )
                         ->join('companies', 'orders.company_id', '=', 'companies.id')
                         ->where('orders.customer_id', $customerId)
@@ -37,14 +47,73 @@ class ReportController extends Controller
                         ->orderByDesc('revenue')
                         ->get();
 
-        // 3) Bar: Şirkete göre Ürün Adet Toplamları
-        $rawQty = Order::join('companies',       'orders.company_id',       '=', 'companies.id')
-                       ->join('order_products', 'orders.id',               '=', 'order_products.order_id')
-                       ->join('products',       'order_products.product_id','=', 'products.id')
+        // Ciro Grafiği (optimize edilmiş versiyon)
+        $revBar = new \QuickChart([
+            'width' => 700,
+            'height' => 400,
+            'devicePixelRatio' => 2.0
+        ]);
+
+        $revBar->setConfig([
+            'type' => 'bar',
+            'data' => [
+                'labels' => $revenueData->pluck('company')->all(),
+                'datasets' => [[
+                    'label' => 'Ciro (₺)',
+                    'data' => $revenueData->pluck('revenue')->all(),
+                    'backgroundColor' => $revenueData->pluck('company')
+                        ->map(fn($c,$i) => "hsl(".($i*57%360).",70%,60%)")->all(),
+                    'barThickness' => 35,
+                ]],
+            ],
+            'options' => [
+                'layout' => [
+                    'padding' => [
+                        'top' => 20,
+                        'right' => 15,
+                        'bottom' => 40,
+                        'left' => 30
+                    ]
+                ],
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'datalabels' => [
+                        'color' => '#000',
+                        'anchor' => 'end',
+                        'align' => 'top',
+                        'font' => ['weight' => 'bold', 'size' => 11],
+                        'formatter' => 'v => Math.round(v).toLocaleString()+" ₺"',
+                    ],
+                ],
+                'scales' => [
+                    'y' => [
+                        'beginAtZero' => true,
+                        'ticks' => [
+                            'padding' => 10,
+                            'font' => ['size' => 10]
+                        ]
+                    ],
+                    'x' => [
+                        'ticks' => [
+                            'font' => ['size' => 9],
+                            'maxRotation' => 45,
+                            'minRotation' => 45
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+
+        $revenueChartUrl = $this->qcToDataUri($revBar);
+
+        // Ürün adet (stacked bar)
+        $rawQty = Order::join('companies', 'orders.company_id', '=', 'companies.id')
+                       ->join('order_products', 'orders.id', '=', 'order_products.order_id')
+                       ->join('products', 'order_products.product_id', '=', 'products.id')
                        ->selectRaw(
-                           'companies.company_name      AS company,
-                            products.product_name       AS product,
-                            SUM(order_products.amount)  AS total_qty'
+                           'companies.company_name AS company,
+                            products.product_name  AS product,
+                            SUM(order_products.amount) AS total_qty'
                        )
                        ->where('orders.customer_id', $customerId)
                        ->groupBy('companies.company_name', 'products.product_name')
@@ -52,15 +121,16 @@ class ReportController extends Controller
 
         $companies   = $rawQty->pluck('company')->unique()->values();
         $products    = $rawQty->pluck('product')->unique()->values();
-        $qtyDatasets = $products->map(function($product, $idx) use ($rawQty, $companies) {
+
+        $qtyDatasets = $products->map(function ($product, $idx) use ($rawQty, $companies) {
             return [
                 'label'           => $product,
-                'data'            => $companies->map(function($company) use ($rawQty, $product) {
-                    $row = $rawQty->first(fn($r) =>
-                        $r->company === $company && $r->product === $product
-                    );
-                    return $row->total_qty ?? 0;
-                }),
+                'data'            => $companies->map(function ($company) use ($rawQty, $product) {
+                                        $row = $rawQty->first(fn ($r) =>
+                                            $r->company === $company && $r->product === $product
+                                        );
+                                        return $row->total_qty ?? 0;
+                                    })->values()->all(),
                 'backgroundColor' => "hsl(" . (($idx * 57) % 360) . ",70%,60%)",
                 'stack'           => 'stack1',
             ];
@@ -70,96 +140,231 @@ class ReportController extends Controller
             'orders',
             'revenueData',
             'companies',
-            'qtyDatasets'
+            'qtyDatasets',
+            'revenueChartUrl'
         ));
     }
+    /**
+ * Tarih aralığına göre satış raporu PDF’i
+ *  route: reports.sales.pdf.filter
+ *  GET ?start=YYYY-MM-DD&end=YYYY-MM-DD
+ */
+public function salesPdfFilter(Request $request)
+{
+    /* ---------- 1) Gelen veriyi doğrula ---------- */
+    $request->validate([
+        'start' => ['required', 'date'],
+        'end'   => ['required', 'date', 'after_or_equal:start'],
+    ]);
+    $start = $request->input('start');
+    $end   = $request->input('end');
 
-    /* -------------------------------------------------
-     |  Ürün Stok Raporu – mevcut stoğu satışlardan düş
-     * ------------------------------------------------*/
-    public function productStock()
+    /* ---------- 2) Tablo verisi (sadece aralıktaki siparişler) ---------- */
+    $orders = Order::with(['company', 'products'])
+                   ->where('customer_id', Auth::user()->customer_id)
+                   ->whereBetween('order_date', [$start, $end])
+                   ->orderByDesc('order_date')
+                   ->get();
+
+    /* ---------- 3) Şirket ciroları (aynı aralık) ---------- */
+    $revenueData = Order::selectRaw(
+                        'companies.company_name AS company,
+                         SUM(orders.total_amount) AS revenue')
+                    ->join('companies', 'orders.company_id', '=', 'companies.id')
+                    ->where('orders.customer_id', Auth::user()->customer_id)
+                    ->whereBetween('order_date', [$start, $end])
+                    ->groupBy('companies.company_name')
+                    ->orderByDesc('revenue')
+                    ->get();
+
+    /* ---------- 4) Ciro Bar Grafiği (650 × 320 SVG) ---------- */
+    $revBar = new \QuickChart(['width' => 650, 'height' => 320]);
+    $revBar->setConfig([
+        'type'  => 'bar',
+        'data'  => [
+            'labels'   => $revenueData->pluck('company')->all(),
+            'datasets' => [[
+                'label'        => 'Ciro (₺)',
+                'data'         => $revenueData->pluck('revenue')->all(),
+                'barThickness' => 30,
+                'backgroundColor' => $revenueData->pluck('company')
+                    ->map(fn ($c, $i) => "hsl(" . (($i * 57) % 360) . ",70%,60%)")
+                    ->all(),
+            ]],
+        ],
+        'options' => [
+            'plugins' => [
+                'legend'     => ['display' => false],
+                'datalabels' => [
+                    'anchor'    => 'end',
+                    'align'     => 'start',
+                    'color'     => '#000',
+                    'font'      => ['weight' => 'bold', 'size' => 12],
+                    'formatter' => 'v => v.toLocaleString()+" ₺"',
+                ],
+            ],
+            'plugins_list' => ['datalabels'],
+            'scales' => [
+                'y' => ['beginAtZero' => true],
+            ],
+        ],
+    ]);
+    $revBar->setFormat('svg');
+    $revenueUrl = $revBar->getUrl();
+
+    /* ---------- 5) Logo (SVG → base64) ---------- */
+    $logoPath = public_path('images/ika_logo.svg');
+    $logoData = 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logoPath));
+
+    /* ---------- 6) Toplam Ciro ---------- */
+    $ordersTotal = $orders->sum('total_amount');
+
+    /* ---------- 7) PDF ---------- */
+    return Pdf::loadView('reports.sales_pdf', [
+            'orders'       => $orders,
+            'ordersTotal'  => $ordersTotal,
+            'revenueUrl'   => $revenueUrl,
+            'logoData'     => $logoData,
+            'companyInfo'  => [
+                'address' => 'İstiklal Cd. No:123 İstanbul',
+                'tax'     => 'Vergi No: 1234567890',
+                'phone'   => '+90 212 555 00 00',
+                'email'   => 'info@ikacrm.com',
+            ],
+        ])
+        ->setPaper('a4', 'portrait')
+        ->download('sales-report-' . now()->format('Ymd') . '.pdf');
+}
+
+/* -------------------------------------------------
+ |  Ürün Stok Raporu (web ekranı)
+ * ------------------------------------------------*/
+public function productStock()
     {
         $customerId = Auth::user()->customer_id;
 
-        // 1) Son kayıtlı stok miktarları (ürün bazlı en güncel)
-        $latestStocks = ProductStock::whereHas('product', function($q) use ($customerId) {
-                                $q->where('customer_id', $customerId);
-                            })
+        // En güncel stoklar
+        $latestStocks = ProductStock::whereHas('product', fn ($q) =>
+                                $q->where('customer_id', $customerId))
                             ->with('product')
                             ->orderByDesc('update_date')
                             ->get()
                             ->unique('product_id')
                             ->values();
 
-        // 2) Hangi üründen kaç adet satıldı? (alias: sold_qty)
+        // Satılan adetler
         $sold = DB::table('order_products')
             ->join('orders', 'order_products.order_id', '=', 'orders.id')
             ->where('orders.customer_id', $customerId)
             ->where('orders.order_type', Order::SALE)
             ->select('order_products.product_id', DB::raw('SUM(order_products.amount) AS sold_qty'))
             ->groupBy('order_products.product_id')
-            ->pluck('sold_qty', 'product_id');  // [ product_id => sold_qty, … ]
+            ->pluck('sold_qty', 'product_id');
 
-        // 3) Her stok kaydına 'available' alanını ekle
+        // Kullanılabilir stok hesapla
         foreach ($latestStocks as $stock) {
-    $soldQty = $sold[$stock->product_id] ?? 0;
+            $available  = $stock->stock_quantity
+                        - $stock->reserved_stock
+                        - $stock->blocked_stock;
+            $stock->available = max(0, $available);
+        }
 
-    // Gerçek kullanılabilir stok: mevcut stok - rezerve - bloke
-    $available = $stock->stock_quantity - $stock->reserved_stock - $stock->blocked_stock;
+        return view('reports.product_stock', ['stocks' => $latestStocks]);
+    }
 
-    // Satışlar da düşülecekse (ikisini aynı anda yapmamalısın!)
-    // $available -= $soldQty;
+    /* -------------------------------------------------
+     |  Satış Raporu - PDF
+     * ------------------------------------------------*/
+    public function salesPdf(Request $request)
+    {
+        $customerId = Auth::user()->customer_id;
 
-    // Negatif değer olmasın
-    $stock->available = max(0, $available);
-}
+        /* ---------- Tablo verisi ---------- */
+        $orders = Order::with(['company','products'])
+                       ->where('customer_id',$customerId)
+                       ->orderByDesc('order_date')
+                       ->get();
 
-        return view('reports.product_stock', [
-            'stocks' => $latestStocks,
+        /* ---------- Şirket ciroları ---------- */
+        $revenueData = Order::selectRaw(
+                            'companies.company_name AS company,
+                             SUM(orders.total_amount) AS revenue')
+                        ->join('companies','orders.company_id','=','companies.id')
+                        ->where('orders.customer_id',$customerId)
+                        ->groupBy('companies.company_name')
+                        ->orderByDesc('revenue')
+                        ->get();
+
+        /* ---------- Grafik ---------- */
+        $revBar = new \QuickChart(['width'=>650,'height'=>320]);
+        $revBar->setConfig([
+            'type'  => 'bar',
+            'data'  => [
+                'labels'   => $revenueData->pluck('company')->all(),
+                'datasets' => [[
+                    'label'           => 'Ciro (₺)',
+                    'data'            => $revenueData->pluck('revenue')->all(),
+                    'backgroundColor' => $revenueData->pluck('company')
+                        ->map(fn($c,$i)=>"hsl(".(($i*57)%360).",70%,60%)")->all(),
+                    'barThickness'    => 30,
+                ]],
+            ],
+            'options'=>[
+                'plugins'=>[
+                    'legend'=>['display'=>false],
+                    'datalabels'=>[
+                        'color'=>'#000',
+                        'anchor'=>'end','align'=>'start',
+                        'font'=>['weight'=>'bold','size'=>12],
+                        'formatter'=>'v => v.toLocaleString()+" ₺"',
+                    ],
+                ],
+                'plugins_list'=>['datalabels'],
+                'scales'=>[
+                    'y'=>['beginAtZero'=>true],
+                ],
+            ],
         ]);
+        $revBar->setFormat('svg');
+        $revenueUrl = $revBar->getUrl();
+
+        /* ---------- Logo ---------- */
+        $logoPath = public_path('images/ika_logo.svg');
+        $logoData = 'data:image/svg+xml;base64,'.base64_encode(file_get_contents($logoPath));
+
+        /* ---------- Toplam ciro ---------- */
+        $ordersTotal = $orders->sum('total_amount');
+
+        /* ---------- PDF ---------- */
+        return Pdf::loadView('reports.sales_pdf', [
+                'orders'       => $orders,
+                'ordersTotal'  => $ordersTotal,
+                'revenueUrl'   => $revenueUrl,
+                'logoData'     => $logoData,
+                'companyInfo'  => [
+                    'address' => 'İstiklal Cd. No:123 İstanbul',
+                    'tax'     => 'Vergi No: 1234567890',
+                    'phone'   => '+90 212 555 00 00',
+                    'email'   => 'info@ikacrm.com',
+                ],
+            ])
+            ->setPaper('a4','portrait')
+            ->download('sales-report-'.now()->format('Ymd').'.pdf');
     }
 
     /* -------------------------------------------------
-     |  Müşteri Raporu
+     |  Diğer rapor metotları
      * ------------------------------------------------*/
-    public function customers()
-    {
-        $customers = Customer::whereKey(Auth::user()->customer_id)
-                             ->orderBy('customer_name')
-                             ->get();
-        return view('reports.customers', compact('customers'));
-    }
+    public function customers()              { /* … */ }
+    public function currentAccountSummary()  { /* … */ }
+    public function supportRequest()         { /* … */ }
 
-    /* -------------------------------------------------
-     |  Cari Hesap Özeti
-     * ------------------------------------------------*/
-    public function currentAccountSummary()
-    {
-        $accounts = CurrentCard::where('customer_id', Auth::user()->customer_id)
-                               ->with('customer')
-                               ->orderByDesc('opening_date')
-                               ->get();
-        return view('reports.current_account', compact('accounts'));
-    }
-
-    /* -------------------------------------------------
-     |  Destek Talep Raporu
-     * ------------------------------------------------*/
-    public function supportRequest()
-    {
-        $requests = SupportRequest::where('customer_id', Auth::user()->customer_id)
-                                  ->with('customer')
-                                  ->orderByDesc('registration_date')
-                                  ->get();
-        return view('reports.support_request', compact('requests'));
-    }
-
-    /* --------- CRUD iskeletleri (boş gövdeli) --------- */
-    public function index()                 {}
-    public function create()                {}
-    public function store(Request $r)       {}
-    public function show($id)               {}
-    public function edit($id)               {}
-    public function update(Request $r, $id) {}
-    public function destroy($id)            {}
+    /* CRUD iskeletleri (boş) */
+    public function index()      {}
+    public function create()     {}
+    public function store()      {}
+    public function show()       {}
+    public function edit()       {}
+    public function update()     {}
+    public function destroy()    {}
 }

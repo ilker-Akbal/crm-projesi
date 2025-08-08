@@ -26,7 +26,6 @@ use App\Http\Controllers\{
     ProductSerialController,
     OrderSerialController
 };
-
 /*
 |--------------------------------------------------------------------------
 | 1) Misafir (Guest) Rotaları
@@ -60,7 +59,6 @@ Route::middleware('auth')->group(function () {
 
     /* ---------- PDF: Kişiler ---------- */
     Route::get('contacts/pdf',        [ContactController::class, 'exportPdf'])->name('contacts.pdf');
-    Route::get('contacts/pdf/filter', [ContactController::class, 'exportPdfWithFilter'])->name('contacts.pdf.filter');
 
 
     /* ---------- PDF: Hesap Hareketleri ---------- */
@@ -118,16 +116,23 @@ Route::middleware('auth')->group(function () {
         Route::put('{support}',     [SupportController::class, 'update'])->name('update');
         Route::delete('{support}',  [SupportController::class, 'destroy'])->name('destroy');
     });
+/* ---------- Raporlar ---------- */
+Route::prefix('reports')->name('reports.')->group(function () {
 
-    /* ---------- Raporlar ---------- */
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/',                       [ReportController::class, 'index'])->name('index');
-        Route::get('sales',                   [ReportController::class, 'sales'])->name('sales');
-        Route::get('customers',               [ReportController::class, 'customers'])->name('customers');
-        Route::get('product-stock',           [ReportController::class, 'productStock'])->name('product_stock');
-        Route::get('current-account-summary', [ReportController::class, 'currentAccountSummary'])->name('account_summary');
-        Route::get('support-request',         [ReportController::class, 'supportRequest'])->name('support');
-    });
+    Route::get('/',  [ReportController::class, 'index'])->name('index');
+    Route::get('sales',                   [ReportController::class, 'sales'])->name('sales');
+    Route::get('customers',               [ReportController::class, 'customers'])->name('customers');
+    Route::get('product-stock',           [ReportController::class, 'productStock'])->name('product_stock');
+    Route::get('current-account-summary', [ReportController::class, 'currentAccountSummary'])->name('account_summary');
+    Route::get('support-request',         [ReportController::class, 'supportRequest'])->name('support');
+    Route::get('sales/pdf/filter', [ReportController::class, 'salesPdfFilter'])->name('sales.pdf.filter');
+
+
+    /* ---------- PDF ---------- */
+    Route::get('sales/pdf',         [ReportController::class, 'salesPdf'])       ->name('sales.pdf');
+    Route::get('sales/pdf/filter',  [ReportController::class, 'salesPdfFilter']) ->name('sales.pdf.filter');
+});
+
 
     /* ---------- Actions by Customer ---------- */
     Route::get('actions/by-customer', [ActionController::class, 'byCustomer'])
@@ -170,3 +175,7 @@ Route::any('{path}', function (\Illuminate\Http\Request $request, $path) {
     }
     abort(404);
 })->where('path', '^(?!admin).*');
+
+
+
+

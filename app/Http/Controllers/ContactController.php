@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 use App\Models\Contact;
 use App\Models\Company;
 
@@ -24,7 +23,7 @@ class ContactController extends Controller
         }
 
         $contacts  = $query->latest('updated_at')->get();
-        $companies = Company::orderBy('company_name')->get();   // Selectbox doldurmak için
+        $companies = Company::orderBy('company_name')->get();   // Selectbox için
 
         return view('contacts.index', compact('contacts', 'companies'));
     }
@@ -49,40 +48,6 @@ class ContactController extends Controller
 
         return Pdf::loadView('contacts.pdf', compact('contacts', 'range'))
                   ->download('kisiler.pdf');
-    }
-
-    /* ───────────────────────────────────────────────────────────
-       GET /contacts/pdf/filter   → Tarih + isteğe bağlı firma filtresi
-    ─────────────────────────────────────────────────────────── */
-    public function exportPdfWithFilter(Request $request)
-    {
-        $request->validate([
-            'start' => ['required', 'date'],
-            'end'   => ['required', 'date', 'after_or_equal:start'],
-        ]);
-
-        $query = Contact::with('company')
-                 ->whereBetween('created_at', [$request->start, $request->end]);
-
-        if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
-        }
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(fn($qry) =>
-                $qry->where('name',  'like', "%$q%")
-                    ->orWhere('email','like', "%$q%"));
-        }
-
-        $contacts = $query->orderBy('created_at','desc')->get();
-
-        $range = [
-            Carbon::parse($request->start)->format('d.m.Y'),
-            Carbon::parse($request->end)->format('d.m.Y'),
-        ];
-
-        return Pdf::loadView('contacts.pdf', compact('contacts','range'))
-                  ->download("kisiler_{$request->start}_{$request->end}.pdf");
     }
 
     /* ───────────────────────────────────────────────────────────
