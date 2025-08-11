@@ -355,9 +355,30 @@ public function productStock()
     /* -------------------------------------------------
      |  Diğer rapor metotları
      * ------------------------------------------------*/
-    public function customers()              { /* … */ }
-    public function currentAccountSummary()  { /* … */ }
-    public function supportRequest()         { /* … */ }
+    public function customers()              { 
+         $customers = Customer::whereKey(Auth::user()->customer_id)
+                             ->orderBy('customer_name')
+                             ->get();
+        return view('reports.customers', compact('customers'));
+    }
+     public function currentAccountSummary()
+    {
+        $accounts = CurrentCard::where('customer_id', Auth::user()->customer_id)
+                               ->with('customer')
+                               ->orderByDesc('opening_date')
+                               ->get();
+
+        return view('reports.current_account', compact('accounts'));
+    }
+    public function supportRequest()
+    {
+        $requests = SupportRequest::where('customer_id', Auth::user()->customer_id)
+                                  ->with('customer')
+                                  ->orderByDesc('registration_date')
+                                  ->get();
+
+        return view('reports.support_request', compact('requests'));
+    }
 
     /* CRUD iskeletleri (boş) */
     public function index()      {}
