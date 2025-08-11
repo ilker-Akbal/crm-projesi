@@ -1,4 +1,8 @@
-{{-- resources/views/layouts/navbar.blade.php --}}
+@php
+    $isAdminArea = request()->is('admin*');
+@endphp
+
+@if(!$isAdminArea)
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
   {{-- Sol kısım --}}
   <ul class="navbar-nav">
@@ -12,15 +16,14 @@
 
   {{-- Sağ kısım --}}
   <ul class="navbar-nav ml-auto">
-    {{-- Yıldönümü Hatırlatmaları (Kırmızı Takvim + Siyah Yazılı Badge) --}}
+    {{-- Yıldönümü Hatırlatmaları --}}
     @php
-      use App\Models\Company;
-      use Carbon\Carbon;
-
-      $anniversaryCount = Company::where('customer_id', auth()->user()->customer_id ?? null)
+      $anniversaryCount = \App\Models\Company::where('customer_id', auth()->user()->customer_id ?? null)
         ->whereNotNull('foundation_date')
         ->get()
-        ->filter(fn($company) => Carbon::parse($company->foundation_date)->format('m-d') === now()->format('m-d'))
+        ->filter(function($company) {
+            return \Carbon\Carbon::parse($company->foundation_date)->format('m-d') === now()->format('m-d');
+        })
         ->count();
     @endphp
 
@@ -28,10 +31,7 @@
       <a class="nav-link position-relative d-flex align-items-center gap-1" 
          href="{{ route('reminders.index') }}" 
          title="Bugün Kutlamalar Var">
-        {{-- Takvim ikonu kırmızı --}}
         <i class="fas fa-calendar-day" style="font-size:1.4rem; color:##82CDFF; margin-left:4px;"></i>
-
-        {{-- Eğer yıldönümü varsa, siyah yazılı badge --}}
         @if($anniversaryCount > 0)
           <span class="badge navbar-badge" style="
               background-color: #facc15;
@@ -75,3 +75,4 @@
     @endauth
   </ul>
 </nav>
+@endif

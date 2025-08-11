@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
 {
@@ -46,11 +47,14 @@ class UserController extends Controller
             'password.min'         => 'Parola en az 8 karakter olmalıdır.',
         ]);
 
-        $data['active']   = $request->has('active');
+        // Checkbox işaretli ise 1, değilse 0
+        $data['active'] = $request->boolean('active');
         $data['password'] = $data['password'] ? bcrypt($data['password']) : null;
 
-        // created_by ve updated_by model booted() ile otomatik setleniyor
         User::create($data);
+
+        // Dashboard KPI cache'ini temizle
+        Cache::forget('admin:kpis:v3');
 
         return redirect()
             ->route('admin.users.index')
@@ -90,15 +94,19 @@ class UserController extends Controller
             'password.min'         => 'Parola en az 8 karakter olmalıdır.',
         ]);
 
-        $data['active'] = $request->has('active');
+        // Checkbox işaretli ise 1, değilse 0
+        $data['active'] = $request->boolean('active');
+
         if ($data['password']) {
             $data['password'] = bcrypt($data['password']);
         } else {
             unset($data['password']);
         }
 
-        // updated_by, model booted() ile otomatik güncelleniyor
         $user->update($data);
+
+        // Dashboard KPI cache'ini temizle
+        Cache::forget('admin:kpis:v3');
 
         return redirect()
             ->route('admin.users.index')
@@ -109,18 +117,18 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         DB::transaction(function () use ($user) {
-            // Fallback olarak ilk kullanıcı ID'si
             $fallback = User::first()?->id ?? null;
 
-            // Müşterilerde created_by/updated_by alanlarını güncelle
-            \App\Models\Customer::where('created_by', $user->id)
+            Customer::where('created_by', $user->id)
                 ->update(['created_by' => $fallback]);
-            \App\Models\Customer::where('updated_by', $user->id)
+            Customer::where('updated_by', $user->id)
                 ->update(['updated_by' => $fallback]);
 
-            // Kullanıcıyı sil
             $user->delete();
         });
+
+        // Dashboard KPI cache'ini temizle
+        Cache::forget('admin:kpis:v3');
 
         return redirect()
             ->route('admin.users.index')
