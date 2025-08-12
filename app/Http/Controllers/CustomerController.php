@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\Account;
@@ -18,7 +19,17 @@ class CustomerController extends Controller
     {
         // user & account ilişkileriyle birlikte yükleyelim
         $customers = Customer::with(['user', 'account'])->get();
-        return view('customers.index', compact('customers'));
+        
+        // Liste (sayfalama)
+        $customers = Customer::orderBy('customer_name')->paginate(20);
+
+        // Son 7 gün içinde EKLENEN veya GÜNCELLENEN kayıt sayısı (updated_at bazlı)
+        $last7 = Customer::where('created_at', '>=', Carbon::now()->subDays(7))->count();
+
+        // Gerçek toplam (paginatordan bağımsız)
+        $total = Customer::count();
+
+        return view('customers.index', compact('customers', 'last7', 'total'));
     }
 
     /**
@@ -153,4 +164,5 @@ class CustomerController extends Controller
             ->route('admin.customers.index')
             ->with('success', 'Müşteri, kullanıcı ve hesabı silindi.');
     }
+    
 }

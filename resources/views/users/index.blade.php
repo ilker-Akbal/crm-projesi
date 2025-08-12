@@ -33,15 +33,8 @@
     box-shadow: var(--shadow);
     margin-bottom: 18px;
   }
-  .hero:before{
-    content:""; position:absolute; inset:-1px; border-radius: 20px; padding:1px;
-    background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(6,182,212,.35), transparent 70%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
-  }
   .hero-title{ font-weight: 800; font-size: clamp(1.2rem, 2.2vw, 1.6rem); letter-spacing:.2px }
   .hero-sub{ color: var(--muted) }
-
   .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:10px; }
   .btn-glass{
     border:1px solid var(--stroke);
@@ -59,21 +52,6 @@
   .btn-glass:hover{ transform: translateY(-1px); }
   .btn-primary-grad{ background: linear-gradient(135deg, var(--primary), var(--primary-2)); color:#fff; border:none; }
   .btn-danger-grad{ background: linear-gradient(135deg, var(--danger), #b5179e); color:#fff; border:none; }
-
-  .search-input{
-    border:1px solid var(--stroke);
-    background: var(--panel);
-    color: var(--text);
-    height: 42px;
-    border-radius: 12px;
-    padding: 0 .9rem;
-    outline:none;
-    min-width:260px;
-    box-shadow: var(--shadow);
-  }
-  .search-input::placeholder{ color: var(--muted); }
-
-  /* Cam tablo */
   .glass-table{
     width:100%;
     border-collapse: separate;
@@ -98,8 +76,6 @@
     border: none;
   }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; }
-
-  /* Küçük rozetler */
   .badge-success{
     background: linear-gradient(135deg, #22c55e, #15803d);
     color:#fff; padding:4px 10px; border-radius:6px; font-size:.8rem;
@@ -108,8 +84,6 @@
     background: linear-gradient(135deg, #ef4444, #b91c1c);
     color:#fff; padding:4px 10px; border-radius:6px; font-size:.8rem;
   }
-
-  /* Ripple */
   .ripple{ position:absolute; border-radius:50%; transform: scale(0); pointer-events:none;
     background: radial-gradient(circle, rgba(255,255,255,.6) 0%, rgba(255,255,255,.25) 40%, transparent 70%);
     animation: ripple .6s ease-out forwards;
@@ -138,19 +112,8 @@
       </div>
     </div>
 
-    {{-- Arama/Form araçları (opsiyonel) --}}
+    {{-- Kayıt sayısı --}}
     <div class="toolbar">
-      <form method="GET" action="{{ route('admin.users.index') }}" class="d-flex gap-2 align-items-center">
-        <input type="text" name="q" value="{{ request('q') }}" class="search-input" placeholder="İsim...">
-        <button type="submit" class="btn-glass">
-          <i class="fas fa-search"></i> Ara
-        </button>
-        @if(request()->has('q') && request('q')!=='')
-          <a href="{{ route('admin.users.index') }}" class="btn-glass btn-danger-grad">
-            <i class="fas fa-times"></i> Temizle
-          </a>
-        @endif
-      </form>
       <div>
         @isset($users)
           <span class="btn-glass" style="pointer-events:none;">
@@ -178,10 +141,18 @@
           @php
             $displayName = $user->username
                           ?? ($user->name ?? trim(($user->first_name ?? '').' '.($user->last_name ?? '')));
+            $roleMap = [
+              'supplier' => 'Tedarikçi',
+              'candidate' => 'Aday',
+              'manager' => 'Yönetici',
+              'admin' => 'Yönetici',
+              'user' => 'Kullanıcı'
+            ];
+            $roleText = $roleMap[$user->role] ?? ucfirst($user->role ?? 'Kullanıcı');
           @endphp
           <tr class="glass-row">
             <td>{{ $displayName ?? '—' }}</td>
-            <td>{{ ucfirst($user->role ?? 'user') }}</td>
+            <td>{{ $roleText }}</td>
             <td>
               @if(!empty($user->active))
                 <span class="badge-success">Evet</span>
@@ -225,7 +196,6 @@
 
 @push('scripts')
 <script>
-  // Ripple efekti
   document.querySelectorAll('.ripple-src').forEach(el => {
     el.addEventListener('click', function(e){
       const rect = this.getBoundingClientRect();
