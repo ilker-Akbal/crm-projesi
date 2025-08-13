@@ -88,8 +88,22 @@
           <label for="role">Rol *</label>
           <select id="role" name="role" class="form-select @error('role') is-invalid @enderror" required>
             <option value="" disabled>-- Seçiniz --</option>
+
+            @php
+              // Rol -> Türkçe etiket haritası
+              $roleLabels = [
+                'admin'     => 'Admin',
+                'user'      => 'Kullanıcı',
+                'manager'   => 'Yönetici',
+                'supplier'  => 'Tedarikçi',
+                'candidate' => 'Aday',
+              ];
+            @endphp
+
             @foreach($roles as $r)
-              <option value="{{ $r }}" {{ old('role',$user->role)===$r?'selected':'' }}>{{ ucfirst($r) }}</option>
+              <option value="{{ $r }}" {{ old('role',$user->role)===$r?'selected':'' }}>
+                {{ $roleLabels[$r] ?? ucfirst($r) }}
+              </option>
             @endforeach
           </select>
           @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror

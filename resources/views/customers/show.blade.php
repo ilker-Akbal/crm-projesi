@@ -80,12 +80,25 @@
 
   {{-- Detay kartı --}}
   <div class="glass-card">
+    @php
+      $typeMap = [
+        'individual' => 'Bireysel',
+        'corporate'  => 'Kurumsal',
+        'supplier'   => 'Tedarikçi',
+        'candidate'  => 'Aday',
+        'manager'    => 'Yönetici',
+        'customer'   => 'Müşteri' 
+      ];
+      $typeValue = $customer->customer_type ?? '';
+      $typeText  = $typeMap[$typeValue] ?? ucfirst($typeValue);
+    @endphp
+
     <p><strong>ID:</strong> {{ $customer->id }}</p>
-    <p><strong>Ad:</strong> {{ $customer->customer_name }}</p>
-    <p><strong>Tip:</strong> {{ $customer->customer_type }}</p>
-    <p><strong>Telefon:</strong> {{ $customer->phone }}</p>
-    <p><strong>E-posta:</strong> {{ $customer->email }}</p>
-    <p><strong>Adres:</strong> {{ $customer->address }}</p>
+    <p><strong>Ad:</strong> {{ $customer->customer_name ?? '—' }}</p>
+    <p><strong>Tip:</strong> {{ $typeText ?: '—' }}</p>
+    <p><strong>Telefon:</strong> {{ $customer->phone ?? '—' }}</p>
+    <p><strong>E-posta:</strong> {{ $customer->email ?? '—' }}</p>
+    <p><strong>Adres:</strong> {{ $customer->address ?? '—' }}</p>
   </div>
 
 </div>

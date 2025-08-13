@@ -89,6 +89,27 @@
     animation: ripple .6s ease-out forwards;
   }
   @keyframes ripple{ to{ transform: scale(12); opacity:0; } }
+
+  /* 🔍 Arama kutusu stilleri */
+  .search-input{
+    height: 42px;
+    border-radius: 12px;
+    border:1px solid var(--stroke);
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    padding: 0 .9rem;
+    min-width: 260px;
+    font-weight: 600;
+    color: var(--text);
+    outline: none;
+  }
+  .search-input::placeholder{ color: var(--muted); font-weight: 500; }
+  .no-results{
+    text-align:center; padding:24px; color: var(--muted);
+  }
+
+  /* 🔽 Client pager */
+  #clientPager .btn-glass[disabled]{ opacity:.55; cursor: not-allowed; }
 </style>
 @endpush
 
@@ -112,7 +133,7 @@
       </div>
     </div>
 
-    {{-- Kayıt sayısı --}}
+    {{-- Kayıt sayısı + Canlı arama --}}
     <div class="toolbar">
       <div>
         @isset($users)
@@ -121,6 +142,14 @@
             {{ method_exists($users,'total') ? $users->total() : $users->count() }} kayıt
           </span>
         @endisset
+      </div>
+
+      {{-- 🔍 Canlı Arama --}}
+      <div class="search-wrap" style="display:flex;gap:8px;align-items:center;">
+        <input id="userSearch" type="text" placeholder="Kullanıcı ara..." class="search-input" autocomplete="off" />
+        <button id="clearSearch" class="btn-glass" type="button" title="Temizle">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -184,18 +213,26 @@
     </table>
   </div>
 
-  {{-- Sayfalama --}}
+  {{-- Laravel Sayfalama (JS bunu gizleyecek) --}}
   @if(method_exists($users,'links'))
-    <div class="mt-3">
+    <div class="mt-3" id="paginationWrap">
       {{ $users->withQueryString()->links() }}
     </div>
   @endif
+
+  {{-- 🔽 Frontend (JS) sayfalama --}}
+  <div id="clientPager" class="d-flex align-items-center justify-content-center" style="gap:8px; margin-top:12px; flex-wrap:wrap;">
+    <button id="prevPage" class="btn-glass" type="button" aria-label="Önceki">&laquo;</button>
+    <div id="pageNumbers" class="d-flex" style="gap:6px; flex-wrap:wrap;"></div>
+    <button id="nextPage" class="btn-glass" type="button" aria-label="Sonraki">&raquo;</button>
+  </div>
 
 </div>
 @endsection
 
 @push('scripts')
 <script>
+  // Ripple efekti
   document.querySelectorAll('.ripple-src').forEach(el => {
     el.addEventListener('click', function(e){
       const rect = this.getBoundingClientRect();
@@ -210,5 +247,130 @@
       setTimeout(() => ripple.remove(), 650);
     });
   });
+
+  // 🔍 Canlı arama + numaralı client-side sayfalama (10/sayfa)
+  (function(){
+    const PAGE_SIZE = 10; // her sayfada 10 kayıt
+    const trLower = (s) => (s || '').toLocaleLowerCase('tr');
+
+    const input     = document.getElementById('userSearch');
+    const clearBtn  = document.getElementById('clearSearch');
+
+    const tbody     = document.querySelector('table.glass-table tbody');
+    const rows      = tbody ? Array.from(tbody.querySelectorAll('tr.glass-row')) : [];
+
+    const laravelPagination = document.getElementById('paginationWrap');
+
+    // Client pager
+    const pagerWrap   = document.getElementById('clientPager');
+    const prevBtn     = document.getElementById('prevPage');
+    const nextBtn     = document.getElementById('nextPage');
+    const pageNumbers = document.getElementById('pageNumbers');
+
+    let noRowEl = null;
+    function ensureNoResultsEl(){
+      if(!noRowEl){
+        noRowEl = document.createElement('tr');
+        noRowEl.className = 'glass-row';
+        noRowEl.innerHTML = `<td colspan="4" class="no-results">Sonuç bulunamadı.</td>`;
+      }
+    }
+
+    const indicesAll = rows.map((_, i) => i);
+    let filteredIdx  = indicesAll.slice();
+    let currentPage  = 1;
+
+    function hideAll(){
+      rows.forEach(tr => tr.style.display = 'none');
+      if(noRowEl && tbody?.contains(noRowEl)) tbody.removeChild(noRowEl);
+    }
+
+    function renderPage(){
+      // Server-side pagination'ı gizle
+      if(laravelPagination) laravelPagination.style.display = 'none';
+
+      hideAll();
+
+      if(filteredIdx.length === 0){
+        ensureNoResultsEl();
+        if(!tbody.contains(noRowEl)) tbody.appendChild(noRowEl);
+        buildPager(1);
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filteredIdx.length / PAGE_SIZE));
+      if(currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end   = Math.min(start + PAGE_SIZE, filteredIdx.length);
+
+      for(let i = start; i < end; i++){
+        const idx = filteredIdx[i];
+        rows[idx].style.display = '';
+      }
+
+      buildPager(totalPages);
+    }
+
+    function buildPager(totalPages){
+      if(!pagerWrap) return;
+
+      // Prev/Next
+      prevBtn.disabled = (currentPage === 1);
+      nextBtn.disabled = (currentPage === totalPages);
+
+      prevBtn.onclick = () => { if(currentPage > 1){ currentPage--; renderPage(); } };
+      nextBtn.onclick = () => { if(currentPage < totalPages){ currentPage++; renderPage(); } };
+
+      // 1-2-3 … (maks 7 buton)
+      pageNumbers.innerHTML = '';
+      const MAX = 7;
+      let start = Math.max(1, currentPage - 3);
+      let end   = Math.min(totalPages, start + MAX - 1);
+      start     = Math.max(1, end - MAX + 1);
+
+      const addBtn = (label, page, opts={active:false, disabled:false}) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn-glass';
+        b.textContent = label;
+        if(opts.active){ b.style.fontWeight = '800'; }
+        if(opts.disabled){ b.disabled = true; }
+        if(!opts.disabled){
+          b.addEventListener('click', () => { currentPage = page; renderPage(); });
+        }
+        pageNumbers.appendChild(b);
+      };
+
+      if(start > 1){ addBtn('1', 1); if(start > 2) addBtn('…', currentPage, {disabled:true}); }
+      for(let p = start; p <= end; p++){
+        addBtn(String(p), p, {active: p === currentPage});
+      }
+      if(end < totalPages){ if(end < totalPages - 1) addBtn('…', currentPage, {disabled:true}); addBtn(String(totalPages), totalPages); }
+    }
+
+    function runFilter(){
+      const q = trLower(input?.value?.trim() || '');
+      filteredIdx = [];
+      rows.forEach((tr, i) => {
+        const text = trLower(tr.textContent);
+        const match = q === '' ? true : text.includes(q);
+        if(match) filteredIdx.push(i);
+      });
+      currentPage = 1; // aramada başa dön
+      renderPage();
+    }
+
+    // Eventler
+    input?.addEventListener('input', runFilter);
+    clearBtn?.addEventListener('click', () => {
+      input.value = '';
+      runFilter();
+      input.focus();
+    });
+
+    // İlk yükleme
+    runFilter();
+  })();
 </script>
 @endpush
