@@ -10,19 +10,22 @@ use App\Models\ProductSerial;
 class ProductSerialController extends Controller
 {
     // Seri numaralarını listeler
-    public function index()
-    {
-        // Sadece kendi müşterinize ait ürünlerin seri numaralarını çekin
-        $serials = ProductSerial::with('product')
-            ->whereHas('product', function($q) {
-                $q->where('customer_id', Auth::user()->customer_id);
-            })
-            ->orderBy('product_id')
-            ->orderBy('serial_number')
-            ->get();
+    public function index(Request $request)
+{
+    $query = ProductSerial::with('product');
 
-        return view('product_serials.index', compact('serials'));
+    if ($request->filled('q')) {
+        $q = $request->q;
+        $query->where('serial_number', 'like', "%{$q}%")
+              ->orWhereHas('product', function($sub) use ($q) {
+                  $sub->where('product_name', 'like', "%{$q}%");
+              });
     }
+
+    $serials = $query->orderBy('id', 'desc')->get();
+
+    return view('product_serials.index', compact('serials'));
+}
 
     // Yeni seri numarası formu
     public function create()
