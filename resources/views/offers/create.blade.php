@@ -1,4 +1,4 @@
-{{-- resources/views/offers/create.blade.php (Geçerlilik Tarihi zorunlu) --}}
+{{-- resources/views/offers/create.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
@@ -13,44 +13,71 @@
           <input type="hidden" name="customer_id" value="{{ auth()->user()->customer_id }}">
 
           <div class="row">
-            <div class="col-md-4">
+            {{-- Şirket --}}
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="company_id">Şirket (opsiyonel)</label>
-                <select name="company_id" id="company_id" class="form-control">
+                <select name="company_id" id="company_id" class="form-control @error('company_id') is-invalid @enderror">
                   <option value="">-- seçiniz --</option>
                   @foreach($companies as $c)
                     <option value="{{ $c->id }}" @selected(old('company_id')==$c->id)>{{ $c->company_name }}</option>
                   @endforeach
                 </select>
+                @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
 
-            <div class="col-md-2">
+            {{-- Teklif Tarihi --}}
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="offer_date">Teklif Tarihi</label>
-                <input type="date" name="offer_date" id="offer_date" class="form-control" value="{{ old('offer_date', today()->toDateString()) }}" required>
+                <input type="date" name="offer_date" id="offer_date"
+                       class="form-control @error('offer_date') is-invalid @enderror"
+                       value="{{ old('offer_date', today()->toDateString()) }}" required>
+                @error('offer_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
 
-            <div class="col-md-2">
+            {{-- Teslimat Tarihi (YENİ) --}}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="delivery_date">Teslimat Tarihi</label>
+                <input type="date" name="delivery_date" id="delivery_date"
+                       class="form-control @error('delivery_date') is-invalid @enderror"
+                       value="{{ old('delivery_date') }}">
+                @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+            </div>
+
+            {{-- Geçerlilik Tarihi --}}
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="valid_until">Geçerlilik Tarihi *</label>
-                <input type="date" name="valid_until" id="valid_until" class="form-control @error('valid_until') is-invalid @enderror" value="{{ old('valid_until') }}" required>
+                <input type="date" name="valid_until" id="valid_until"
+                       class="form-control @error('valid_until') is-invalid @enderror"
+                       value="{{ old('valid_until') }}" required>
                 @error('valid_until') <div class="invalid-feedback">{{ $message }}</div> @enderror
-              </div>
-            </div>
-
-            <div class="col-md-4">
-              <div class="form-group">
-                <label for="status">Durum</label>
-                <select name="status" id="status" class="form-control" required>
-                  <option value="hazırlanıyor" selected>Hazırlanıyor</option>
-                </select>
               </div>
             </div>
           </div>
 
-          {{-- Kalemler vs. (değişmedi) --}}
+          {{-- Durum --}}
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="status">Durum</label>
+                <select name="status" id="status" class="form-control @error('status') is-invalid @enderror" required>
+                  <option value="hazırlanıyor" {{ old('status','hazırlanıyor')==='hazırlanıyor'?'selected':'' }}>Hazırlanıyor</option>
+                  <option value="gönderildi"  {{ old('status')==='gönderildi'?'selected':'' }}>Gönderildi</option>
+                  <option value="kabul"       {{ old('status')==='kabul'?'selected':'' }}>Kabul</option>
+                  <option value="reddedildi"  {{ old('status')==='reddedildi'?'selected':'' }}>Reddedildi</option>
+                </select>
+                @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+            </div>
+          </div>
+
+          {{-- Kalemler --}}
           @php $oldItems = old('items', []); @endphp
           <hr><h5>Teklif Kalemleri</h5>
           <div id="items-container">
@@ -84,7 +111,10 @@
           </div>
         </div>
 
-        <div class="card-footer d-flex justify-content-end"><a href="{{ route('offers.index') }}" class="btn btn-secondary mr-2">İptal</a><button type="submit" class="btn btn-primary">Kaydet</button></div>
+        <div class="card-footer d-flex justify-content-end">
+          <a href="{{ route('offers.index') }}" class="btn btn-secondary mr-2">İptal</a>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </div>
       </form>
     </div>
   </div>
@@ -95,10 +125,9 @@
 <script>
 $(function () {
 
-  const products = @json($products);              // [{id,product_name,unit_price,stock}, …]
+  const products = @json($products);
   let   rowIndex = $('#items-container .item-row').length;
 
-  /* ---------- yardımcılar ---------- */
   function optionList() {
     return products.map(p =>
       `<option value="${p.id}" data-price="${p.unit_price}" data-stock="${p.stock}">
@@ -136,8 +165,7 @@ $(function () {
     $('#offer-total').text(total.toFixed(2));
   }
 
-  /* ---------- satır ekle ---------- */
-  $('#add-row, #add-item, #add-row').on('click', ()=>{      // id adı değişti
+  $('#add-item').on('click', ()=>{
     $('#items-container').append(`
       <div class="row mb-2 item-row">
         <div class="col-md-5">
@@ -164,14 +192,12 @@ $(function () {
     refreshDisabledOptions();
   });
 
-  /* ---------- satır sil ---------- */
   $(document).on('click','.remove-item',function(){
     $(this).closest('.item-row').remove();
     refreshDisabledOptions();
     recalcTotals();
   });
 
-  /* ---------- ürün seçimi ---------- */
   $(document).on('change','.product-select',function(){
     const val=this.value, row=$(this).closest('.item-row');
 
@@ -200,17 +226,14 @@ $(function () {
     refreshDisabledOptions(); recalcTotals();
   });
 
-  /* ---------- miktar değişimi ---------- */
   $(document).on('input','.amount',function(){
     const max=parseInt($(this).attr('max')||0,10);
     if(max&&+this.value>max) this.value=max;
     recalcTotals();
   });
 
-  /* ilk yüklemede */
   refreshDisabledOptions();
   recalcTotals();
-
 });
 </script>
 @endpush

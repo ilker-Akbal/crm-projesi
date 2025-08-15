@@ -53,6 +53,9 @@
                 @php
                   $reserveQty = ($o->order_type === 'sale' && ! $o->is_paid)
                                 ? $o->products->sum('pivot.amount') : 0;
+
+                  // OFFER FALLBACK: varsa Offer.delivery_date, yoksa Order.delivery_date
+                  $deliv = $o->offer?->delivery_date ?? $o->delivery_date;
                 @endphp
                 <tr>
                   <td>{{ $o->customer->customer_name }}</td>
@@ -63,7 +66,7 @@
                     </span>
                   </td>
                   <td>{{ $o->order_date?->format('d.m.Y') }}</td>
-                  <td>{{ $o->delivery_date?->format('d.m.Y') ?? '—' }}</td>
+                  <td>{{ $deliv?->format('d.m.Y') ?? '—' }}</td>
                   <td>
                     @if($o->is_paid)
                       <span class="badge bg-success">Ödendi</span>
@@ -102,13 +105,14 @@
             @php
               $reserveQty = ($o->order_type === 'sale' && ! $o->is_paid)
                             ? $o->products->sum('pivot.amount') : 0;
+              $deliv = $o->offer?->delivery_date ?? $o->delivery_date; // OFFER FALLBACK (mobil)
             @endphp
             <div class="card shadow-sm p-3 mb-3">
               <p><strong>Müşteri:</strong> {{ $o->customer->customer_name }}</p>
               <p><strong>Firma:</strong> {{ $o->company->company_name ?? '—' }}</p>
               <p><strong>Tip:</strong> {{ $o->order_type==='sale' ? 'Satış' : 'Alış' }}</p>
               <p><strong>Sipariş:</strong> {{ $o->order_date?->format('d.m.Y') }}</p>
-              <p><strong>Teslim:</strong> {{ $o->delivery_date?->format('d.m.Y') ?? '—' }}</p>
+              <p><strong>Teslim:</strong> {{ $deliv?->format('d.m.Y') ?? '—' }}</p>
               <p><strong>Ödeme:</strong> {{ $o->is_paid ? 'Ödendi' : 'Bekliyor' }}</p>
               <p><strong>Rezerve:</strong> {{ $reserveQty ?: '—' }}</p>
               <p><strong>Toplam:</strong> {{ number_format($o->total_amount,2) }} ₺</p>

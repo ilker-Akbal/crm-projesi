@@ -1,5 +1,4 @@
 <?php
-// app/Models/Offer.php
 
 namespace App\Models;
 
@@ -11,9 +10,11 @@ class Offer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_id','company_id',
+        'customer_id',
+        'company_id',
         'order_id',
         'offer_date',
+        'delivery_date', // ← yeni alan eklendi
         'valid_until',
         'status',
         'updated_by',
@@ -21,20 +22,37 @@ class Offer extends Model
     ];
 
     protected $casts = [
-      'offer_date'  => 'date',
-      'valid_until' => 'date',
+        'offer_date'    => 'date',
+        'delivery_date' => 'date', // ← yeni alan eklendi
+        'valid_until'   => 'date',
     ];
 
-    public function customer()  { return $this->belongsTo(Customer::class); }
-    public function order()     { return $this->belongsTo(Order::class); }
-    public function lines()     { return $this->hasMany(OfferProduct::class); }
-    public function company() { return $this->belongsTo(Company::class); }
-    public function products()
-{
-    return $this->belongsToMany(Product::class, 'offer_products')
-                ->withPivot(['amount', 'unit_price'])
-                ->wherePivot('amount', '>', 0)   // <-- filtre eklendi
-                ->withTimestamps();
-}
+    // İlişkiler
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function lines()
+    {
+        return $this->hasMany(OfferProduct::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'offer_products')
+                    ->withPivot(['amount', 'unit_price'])
+                    ->wherePivot('amount', '>', 0) // 0’dan büyük olanlar
+                    ->withTimestamps();
+    }
 }

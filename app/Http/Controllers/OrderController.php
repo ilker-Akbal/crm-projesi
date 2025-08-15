@@ -16,15 +16,16 @@ use App\Models\ProductSerial;
 class OrderController extends Controller
 {
     /* -------- GET /orders ---------- */
-    public function index()
-    {
-        $orders = Order::where('customer_id', Auth::user()->customer_id)
-                       ->with(['customer', 'company'])
-                       ->latest('order_date')
-                       ->get();
+public function index()
+{
+    $orders = Order::where('customer_id', Auth::user()->customer_id)
+        ->with(['customer', 'company', 'offer.company'])
+        ->latest('order_date')
+        ->get();
 
-        return view('orders.index', compact('orders'));
-    }
+    return view('orders.index', compact('orders')); // ← EKLENECEK
+}
+
 
     /* -------- GET /orders/create ---------- */
     public function create()
@@ -54,7 +55,7 @@ class OrderController extends Controller
     /* ----------------- REDIRECT HELPER ----------------- */
     protected function redirectAfterSave(Order $order, bool $justPaid = false)
     {
-        $isPurchase       = $order->order_type === Order::PURCHASE;
+        $isPurchase         = $order->order_type === Order::PURCHASE;
         $shouldEnterSerials = $isPurchase
             && ($justPaid || $order->is_paid && !$justPaid);
 
@@ -236,7 +237,7 @@ class OrderController extends Controller
             'Bu siparişe erişim yetkiniz yok.'
         );
 
-        $order->load('customer', 'company', 'orderProducts.product');
+        $order->load('customer', 'company', 'offer', 'orderProducts.product'); // ← offer yüklendi
 
         return view('orders.show', compact('order'));
     }
@@ -246,7 +247,7 @@ class OrderController extends Controller
     private function validateOrder(Request $request, ?Order $order = null): array
     {
         return $request->validate([
-            'company_id'           => 'nullable|exists:companies,id', // ⭐
+            'company_id'           => 'nullable|exists:companies,id',
             'order_date'           => 'required|date',
             'delivery_date'        => 'required|date|after_or_equal:order_date',
             'order_type'           => 'required|in:' . Order::SALE . ',' . Order::PURCHASE,
@@ -334,36 +335,63 @@ class OrderController extends Controller
         $stock->increment('reserved_stock', $qty);
     }
 
-    /** Satış ödeme onayı → stok düşümü */
-    private function finalizeSale(Order $order): void
-    {
-        foreach ($order->products as $p) {
-            $qty   = $p->pivot->amount;
-            $stock = ProductStock::latest('id')->firstWhere('product_id', $p->id);
+    /** Satış ödeme onayı → rezervi çöz, stoğu düş */
+private function finalizeSale(Order $order): void
+{
+    foreach ($order->products as $p) {
+        $qty = (int)$p->pivot->amount;
+        if ($qty <= 0) continue;
 
-            if (! $stock) continue;
-
-            $stock->decrement('reserved_stock', $qty);
-            $stock->decrement('stock_quantity', $qty);
-
-            ProductSerial::where('order_id', $order->id)
-                         ->where('product_id', $p->id)
-                         ->update(['status' => ProductSerial::SOLD]);
+        $stock = ProductStock::latest('id')->firstWhere('product_id', $p->id);
+        if (! $stock) {
+            throw ValidationException::withMessages([
+                'stok' => "Stok kaydı bulunamadı (ürün #{$p->id})."
+            ]);
         }
+
+        // Rezerv yetersizse önce tamamla (mümkünse)
+        $have      = (int)$stock->reserved_stock;
+        $blocked   = (int)$stock->blocked_stock;
+        $onHand    = (int)$stock->stock_quantity;
+        $available = max(0, $onHand - $have - $blocked);
+
+        if ($have < $qty) {
+            $missing = $qty - $have;
+            if ($available < $missing) {
+                throw ValidationException::withMessages([
+                    'stok' => "Rezerv yetersiz (ürün #{$p->id}): gerekli {$qty}, rezerve {$have}, elde {$available}."
+                ]);
+            }
+            // eksik rezervi tamamla
+            $stock->increment('reserved_stock', $missing);
+        }
+
+        // Güvenli azaltmalar (negatif olmaz)
+        $this->safeDecrement($stock, 'reserved_stock', $qty);
+        $this->safeDecrement($stock, 'stock_quantity', $qty);
+
+        // Seri numaralarını SATILDI yap
+        ProductSerial::where('order_id', $order->id)
+            ->where('product_id', $p->id)
+            ->update(['status' => ProductSerial::SOLD]);
     }
+}
+
 
     /** Rezerv iptali (satış silme/güncelleme) */
-    private function freeReservedStock(int $productId, int $qty, int $orderId): void
-    {
-        if ($qty <= 0) return;
+private function freeReservedStock(int $productId, int $qty, int $orderId): void
+{
+    if ($qty <= 0) return;
 
-        $stock = ProductStock::latest('id')->firstWhere('product_id', $productId);
-        if ($stock) {
-            $stock->decrement('reserved_stock', $qty);
-        }
-
-        $this->unreserveSerials($productId, $qty, $orderId);
+    $stock = ProductStock::latest('id')->firstWhere('product_id', $productId);
+    if ($stock) {
+        // asla negatif olmaz
+        $this->safeDecrement($stock, 'reserved_stock', $qty);
     }
+
+    $this->unreserveSerials($productId, $qty, $orderId);
+}
+
 
     /* ---- Seri numarası yardımcıları ---- */
     private function markSerialsReserved(int $productId, int $qty, int $orderId): void
@@ -376,6 +404,22 @@ class OrderController extends Controller
                 'order_id' => $orderId,
             ]);
     }
+    /** Bir stok sütununu asla 0'ın altına düşürmeden azaltır (MySQL unsigned safe). */
+private function safeDecrement(\App\Models\ProductStock $stock, string $column, int $by): void
+{
+    $by = max(0, (int)$by);
+    if ($by === 0) return;
+
+    // UNSIGNED underflow’u engelle: önce koşul, sonra çıkarma
+    $expr = "CASE WHEN {$column} >= {$by} THEN {$column} - {$by} ELSE 0 END";
+
+    // Eloquent update + raw ifade
+    $stock->update([
+        $column => \Illuminate\Support\Facades\DB::raw($expr),
+    ]);
+}
+
+
 
     private function unreserveSerials(int $productId, int $qty, int $orderId): void
     {

@@ -1,4 +1,3 @@
-{{-- resources/views/offers/index.blade.php veya ilgili dosya --}}
 @extends('layouts.app')
 
 @section('content')
@@ -26,10 +25,21 @@
             </thead>
             <tbody>
               @forelse($offers as $offer)
-              <tr>
+              @php
+                // Geçerlilik tarihi geçmişse kontrolü
+                $isExpired = $offer->valid_until && \Carbon\Carbon::parse($offer->valid_until)->isPast();
+              @endphp
+              <tr class="{{ $isExpired ? 'expired-offer' : '' }}">
                 <td>{{ $offer->company?->company_name ?? '—' }}</td>
                 <td>{{ \Carbon\Carbon::parse($offer->offer_date)->format('d.m.Y') }}</td>
-                <td>{{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}</td>
+                <td>
+                  @if($isExpired)
+                    <span class="text-danger fw-bold me-1">
+                      <i class="fas fa-times-circle"></i>
+                    </span>
+                  @endif
+                  {{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}
+                </td>
                 <td>{{ ucfirst($offer->status) }}</td>
                 <td class="text-end">{{ number_format($offer->total_amount, 2) }} ₺</td>
                 <td>
@@ -53,10 +63,20 @@
         {{-- Mobil için kart görünümü --}}
         <div class="mobile-cards p-3">
           @forelse($offers as $offer)
-          <div class="card shadow-sm p-3 mb-3">
+          @php
+            $isExpired = $offer->valid_until && \Carbon\Carbon::parse($offer->valid_until)->isPast();
+          @endphp
+          <div class="card shadow-sm p-3 mb-3 {{ $isExpired ? 'expired-offer' : '' }}">
             <p><strong>Şirket:</strong> {{ $offer->company?->company_name ?? '—' }}</p>
             <p><strong>Teklif Tarihi:</strong> {{ \Carbon\Carbon::parse($offer->offer_date)->format('d.m.Y') }}</p>
-            <p><strong>Geçerlilik Tarihi:</strong> {{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}</p>
+            <p><strong>Geçerlilik Tarihi:</strong>
+              @if($isExpired)
+                <span class="text-danger fw-bold me-1">
+                  <i class="fas fa-times-circle"></i>
+                </span>
+              @endif
+              {{ $offer->valid_until ? \Carbon\Carbon::parse($offer->valid_until)->format('d.m.Y') : '—' }}
+            </p>
             <p><strong>Durum:</strong> {{ ucfirst($offer->status) }}</p>
             <p><strong>Toplam:</strong> {{ number_format($offer->total_amount, 2) }} ₺</p>
             <div class="mt-2">
@@ -92,6 +112,15 @@
   .table td, .table th {
     white-space: normal !important;
     word-break: break-word;
+  }
+
+  /* Süresi dolmuş teklifler için kırmızı renk ve ikon */
+  .expired-offer {
+    color: #dc3545; /* Bootstrap'in danger rengi */
+    font-weight: bold;
+  }
+  .expired-offer .text-muted {
+      color: #dc3545 !important;
   }
 </style>
 @endpush

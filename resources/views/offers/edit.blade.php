@@ -17,7 +17,7 @@
 
           <div class="row">
             {{-- Şirket --}}
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="company_id">Şirket (opsiyonel)</label>
                 <select name="company_id" id="company_id"
@@ -34,8 +34,8 @@
               </div>
             </div>
 
-            {{-- Tarihler --}}
-            <div class="col-md-2">
+            {{-- Teklif Tarihi --}}
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="offer_date">Teklif Tarihi</label>
                 <input type="date" name="offer_date" id="offer_date"
@@ -45,7 +45,19 @@
               </div>
             </div>
 
-            <div class="col-md-2">
+            {{-- Teslimat Tarihi (YENİ) --}}
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="delivery_date">Teslimat Tarihi</label>
+                <input type="date" name="delivery_date" id="delivery_date"
+                       class="form-control @error('delivery_date') is-invalid @enderror"
+                       value="{{ old('delivery_date', optional($offer->delivery_date)->format('Y-m-d')) }}">
+                @error('delivery_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              </div>
+            </div>
+
+            {{-- Geçerlilik Tarihi --}}
+            <div class="col-md-3">
               <div class="form-group">
                 <label for="valid_until">Geçerlilik Tarihi</label>
                 <input type="date" name="valid_until" id="valid_until"
@@ -54,14 +66,16 @@
                 @error('valid_until') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
+          </div>
 
-            {{-- Durum --}}
+          {{-- Durum --}}
+          <div class="row">
             <div class="col-md-4">
               <div class="form-group">
                 <label for="status">Durum</label>
                 <select name="status" id="status"
                         class="form-control @error('status') is-invalid @enderror" required>
-                  @foreach(['gönderildi'=>'Gönderildi','kabul'=>'Kabul','reddedildi'=>'Reddedildi'] as $key=>$label)
+                  @foreach(['gönderildi'=>'Gönderildi','kabul'=>'Kabul','reddedildi'=>'Reddedildi','hazırlanıyor'=>'Hazırlanıyor'] as $key=>$label)
                     <option value="{{ $key }}"
                       {{ old('status', $offer->status) === $key ? 'selected' : '' }}>
                       {{ $label }}
@@ -84,7 +98,7 @@
                       ])->toArray()) as $i => $item)
               <div class="row mb-2 item-row">
                 <div class="col-md-5">
-                  <select name="items[{{ $i }}][product_id]" class="form-control" required>
+                  <select name="items[{{ $i }}][product_id]" class="form-control product-select" required>
                     <option value="">-- Ürün Seçiniz --</option>
                     @foreach($products as $prod)
                       <option value="{{ $prod['id'] }}"
@@ -96,7 +110,7 @@
                 </div>
                 <div class="col-md-3">
                   <input type="number" name="items[{{ $i }}][amount]" min="1"
-                         class="form-control" value="{{ $item['amount'] }}" required>
+                         class="form-control amount" value="{{ $item['amount'] }}" required>
                 </div>
                 <div class="col-md-3">
                   <input type="number" name="items[{{ $i }}][unit_price]" min="0" step="0.01"
@@ -136,14 +150,14 @@
     container.insertAdjacentHTML('beforeend', `
       <div class="row mb-2 item-row">
         <div class="col-md-5">
-          <select name="items[${idx}][product_id]" class="form-control" required>
+          <select name="items[${idx}][product_id]" class="form-control product-select" required>
             <option value="">-- Ürün Seçiniz --</option>
             ${productOptions}
           </select>
         </div>
         <div class="col-md-3">
           <input type="number" name="items[${idx}][amount]" min="1"
-                 class="form-control" required>
+                 class="form-control amount" required>
         </div>
         <div class="col-md-3">
           <input type="number" name="items[${idx}][unit_price]" min="0" step="0.01"

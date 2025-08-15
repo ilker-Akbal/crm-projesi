@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="content">
+<section id="movements-page" class="content">
     <div class="container-fluid">
         <div class="card card-outline card-primary">
 
@@ -38,7 +38,6 @@
 
             {{-- =================== Veri Hazırlama =================== --}}
             @php
-                // "İlk eklenen → son eklenen" sırasını koru
                 $rows = ($movements instanceof \Illuminate\Pagination\AbstractPaginator)
                         ? $movements->getCollection()->sortBy([['departure_date','asc'], ['id','asc']])
                         : $movements->sortBy([['departure_date','asc'], ['id','asc']]);
@@ -92,10 +91,14 @@
                 @endforelse
             </div>
 
-            {{-- Sayfalama --}}
+            {{-- Sayfalama kaldırıldı --}}
+            {{-- 
             @if (method_exists($movements,'links'))
-                <div class="card-footer">{{ $movements->links() }}</div>
+                <div class="card-footer">
+                    {{ $movements->links() }}
+                </div>
             @endif
+            --}}
 
         </div>
     </div>
@@ -104,6 +107,34 @@
 
 @push('styles')
 <style>
+/* Bu sayfaya özel: içerik alanını temizle */
+#movements-page,
+#movements-page .container-fluid,
+#movements-page .card,
+#movements-page .card-body {
+  background: #f4f6f9 !important;
+  background-image: none !important;
+}
+
+#movements-page *::before,
+#movements-page *::after {
+  content: none !important;
+  background: none !important;
+}
+
+#movements-page .blob,
+#movements-page .shape,
+#movements-page .decor,
+#movements-page .bg-decor,
+#movements-page [class*="blob"],
+#movements-page [class*="shape"],
+#movements-page [class*="decor"] {
+  display: none !important;
+}
+
+.content-wrapper { overflow: hidden !important; }
+
+/* Mevcut sayfa minör stiller */
 .mobile-cards{display:none}
 @media (max-width:768px){.desktop-table{display:none}.mobile-cards{display:block}}
 .table td,.table th{white-space:normal!important;word-break:break-word}

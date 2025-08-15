@@ -16,7 +16,7 @@ class Order extends Model
     /*------------- Mass-assignment -------------*/
     protected $fillable = [
         'customer_id',
-        'company_id',            // ⭐ company_id burada
+        'company_id',
         'order_type',
         'situation',
         'order_date',
@@ -52,8 +52,21 @@ class Order extends Model
 
     public function company()
     {
-        // Boşsa “―” gösterir; SoftDeletes varsa ->withTrashed() ekleyebilirsin
         return $this->belongsTo(Company::class)
                     ->withDefault(['company_name' => '―']);
+    }
+
+    public function getDisplayCompanyNameAttribute()
+    {
+    return $this->company?->company_name 
+        ?? $this->offer?->company?->company_name 
+        ?? '—';
+    }
+
+
+    /** Offer -> Order (offers.order_id foreign key) ters ilişkisi */
+    public function offer()
+    {
+        return $this->hasOne(Offer::class, 'order_id'); // ← eklendi
     }
 }

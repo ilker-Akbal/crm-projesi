@@ -63,10 +63,11 @@ class DashboardController extends Controller
 
         /* --------------- YAKLAŞAN TESLİMLER -------------------- */
         $upcoming = Order::where('customer_id', $customerId)
-                         ->whereBetween('delivery_date', [today(), today()->addDays(10)])
-                         ->orderBy('delivery_date')
-                         ->with('customer')
-                         ->get();
+                 ->whereBetween('delivery_date', [today(), today()->addDays(10)])
+                 ->orderBy('delivery_date')
+                 ->with('customer')
+                 ->paginate(5); // <-- Burada get() metodunu silin.
+
 
         /* --------------- DÜŞÜK STOK ÜRÜNLER -------------------- */
         $lowStock = Product::where('customer_id', $customerId)
