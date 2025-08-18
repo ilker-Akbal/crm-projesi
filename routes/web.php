@@ -173,7 +173,7 @@ Route::any('{path}', function (\Illuminate\Http\Request $request, $path) {
         $request->session()->regenerateToken();
         return redirect('/' . ltrim($path, '/'));
     }
-    abort(404);
+    abort(404); //Gerçek rota yoksa 404
 })->where('path', '^(?!admin).*');
 
 
